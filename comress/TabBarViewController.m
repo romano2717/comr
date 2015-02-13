@@ -66,24 +66,20 @@
 
 - (void)checkBlockCount
 {
-    NSDate *date = nil;
+    blocks = nil;
     
-    FMResultSet *rsDate = [db executeQuery:@"select max(id) as max,date from request_date"];
-    
-    while ([rsDate next]) {
-        double timeStamp = [rsDate doubleForColumn:@"date"];
-        if([rsDate intForColumn:@"max"] > 0)
-            date = [NSDate dateWithTimeIntervalSince1970:timeStamp];
-    }
+    blocks = [[Blocks alloc] init];
     
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"Z"];
+    [formatter setDateFormat:@"Z"]; //for getting the timezone part of the date only.
     
-    NSString *jsonDate = @"/Date(1420093779+0800)/";
+    NSString *jsonDate = @"/Date(1388505600000+0800)/";
     
-    if(date != nil)
-        jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [date timeIntervalSince1970],[formatter stringFromDate:date]];
-    
+    if(blocks.last_request_date != nil)
+    {
+        jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [blocks.last_request_date timeIntervalSince1970],[formatter stringFromDate:blocks.last_request_date]];
+    }
+
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
     

@@ -12,6 +12,7 @@
 #import "AFManager.h"
 #import "Device_token.h"
 #import "Users.h"
+#import "Blocks.h"
 
 @interface TabBarViewController : UITabBarController
 {
@@ -20,5 +21,6 @@
     FMDatabase *db;
     FMDatabaseQueue *databaseQueue;
     Users *user;
+    Blocks *blocks;
 }
 @end

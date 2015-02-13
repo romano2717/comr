@@ -788,11 +788,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "comress/TabBarViewController.m"
-            timestampString = "445501557.844558"
+            timestampString = "445513784.533385"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "143"
-            endingLineNumber = "143"
+            startingLineNumber = "139"
+            endingLineNumber = "139"
             landmarkName = "-prepareForSegue:sender:"
             landmarkType = "5">
          </BreakpointContent>
@@ -1172,12 +1172,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "comress/InitializerViewController.m"
-            timestampString = "445492411.687833"
+            timestampString = "445513479.177282"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "48"
-            endingLineNumber = "48"
-            landmarkName = "-startDownloadForPage:totalPage:"
+            startingLineNumber = "51"
+            endingLineNumber = "51"
+            landmarkName = "-startDownloadBlocksForPage:totalPage:requestDate:"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
@@ -1188,12 +1188,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "comress/InitializerViewController.m"
-            timestampString = "445492411.687833"
+            timestampString = "445513479.177282"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "92"
-            endingLineNumber = "92"
-            landmarkName = "-startDownloadForPage:totalPage:"
+            startingLineNumber = "85"
+            endingLineNumber = "85"
+            landmarkName = "-startDownloadBlocksForPage:totalPage:requestDate:"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
@@ -1204,12 +1204,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "comress/InitializerViewController.m"
-            timestampString = "445500324.001864"
+            timestampString = "445513479.177282"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "109"
-            endingLineNumber = "109"
-            landmarkName = "-startDownloadForPage:totalPage:"
+            startingLineNumber = "105"
+            endingLineNumber = "105"
+            landmarkName = "-startDownloadBlocksForPage:totalPage:requestDate:"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
@@ -1220,11 +1220,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "comress/TabBarViewController.m"
-            timestampString = "445501557.844558"
+            timestampString = "445513784.533385"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "103"
-            endingLineNumber = "103"
+            startingLineNumber = "99"
+            endingLineNumber = "99"
             landmarkName = "-checkBlockCount"
             landmarkType = "5">
          </BreakpointContent>
@@ -1236,12 +1236,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "comress/InitializerViewController.m"
-            timestampString = "445500324.001864"
+            timestampString = "445513479.177282"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "101"
-            endingLineNumber = "101"
-            landmarkName = "-startDownloadForPage:totalPage:"
+            startingLineNumber = "94"
+            endingLineNumber = "94"
+            landmarkName = "-startDownloadBlocksForPage:totalPage:requestDate:"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
@@ -1252,28 +1252,28 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "comress/InitializerViewController.m"
-            timestampString = "445492670.069054"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "77"
-            endingLineNumber = "77"
-            landmarkName = "-startDownloadForPage:totalPage:"
-            landmarkType = "5">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "comress/InitializerViewController.m"
-            timestampString = "445492816.536114"
+            timestampString = "445513479.177282"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "69"
             endingLineNumber = "69"
-            landmarkName = "-startDownloadForPage:totalPage:"
+            landmarkName = "-startDownloadBlocksForPage:totalPage:requestDate:"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "comress/InitializerViewController.m"
+            timestampString = "445513479.177282"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "61"
+            endingLineNumber = "61"
+            landmarkName = "-startDownloadBlocksForPage:totalPage:requestDate:"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
@@ -1354,6 +1354,22 @@
             startingLineNumber = "100"
             endingLineNumber = "100"
             landmarkName = "-dataForPopoverInTextField:"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "comress/TabBarViewController.m"
+            timestampString = "445513784.533385"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "71"
+            endingLineNumber = "71"
+            landmarkName = "-checkBlockCount"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>

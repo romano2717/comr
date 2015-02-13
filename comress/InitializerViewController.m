@@ -24,7 +24,10 @@
     databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
     db = [myDatabase prepareDatabaseFor:self];
     
-    [self startDownloadForPage:1 totalPage:0];
+    
+    blocks = [[Blocks alloc] init];
+    
+    [self startDownloadBlocksForPage:1 totalPage:0 requestDate:nil];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -43,28 +46,17 @@
 */
 
 
-- (void)startDownloadForPage:(int)page totalPage:(int)totPage
+- (void)startDownloadBlocksForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate
 {
     __block int currentPage = page;
+    __block NSDate *requestDate = reqDate;
     
-    NSDate *date = nil;
+    NSString *jsonDate = @"/Date(1388505600000+0800)/";
     
-    FMResultSet *rsDate = [db executeQuery:@"select max(id) as max,date from request_date"];
-    
-    while ([rsDate next]) {
-        double timeStamp = [rsDate doubleForColumn:@"date"];
-        if([rsDate intForColumn:@"max"] > 0)
-            date = [NSDate dateWithTimeIntervalSince1970:timeStamp];
-    }
-    
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"Z"];
-    
-    NSString *jsonDate = @"/Date(1420093779+0800)/";
-    
-    //if(date != nil)
-      //  jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [date timeIntervalSince1970],[formatter stringFromDate:date]];
-    
+    if(currentPage > 1)
+        jsonDate = [NSString stringWithFormat:@"%@",requestDate];
+
+
     self.processLabel.text = [NSString stringWithFormat:@"Downloading blocks page... %d/%d",currentPage,totPage];
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:page], @"lastRequestTime" : jsonDate};
@@ -76,7 +68,8 @@
         NSDictionary *dict = [responseObject objectForKey:@"BlockContainer"];
 
         int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
-        
+        NSDate *LastRequestDate = [dict valueForKey:@"LastRequestDate"];
+        DDLogVerbose(@"%@",LastRequestDate);
         //prepare to download the blocks!
         NSArray *dictArray = [dict objectForKey:@"BlockList"];
         
@@ -102,11 +95,14 @@
         if(currentPage < totalPage)
         {
             currentPage++;
-            [self startDownloadForPage:currentPage totalPage:totalPage];
+            [self startDownloadBlocksForPage:currentPage totalPage:totalPage requestDate:LastRequestDate];
         }
         else
         {
+            [blocks updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
+            
             self.processLabel.text = @"Download complete";
+            
             [self dismissViewControllerAnimated:YES completion:nil];
         }
         

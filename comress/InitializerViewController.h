@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "Database.h"
 #import "AFManager.h"
+#import "Blocks.h"
 
 @interface InitializerViewController : UIViewController
 {
@@ -16,6 +17,8 @@
     AFManager *myAfManager;
     FMDatabaseQueue *databaseQueue;
     FMDatabase *db;
+    
+    Blocks *blocks;
 }
 @property (nonatomic, weak) IBOutlet UILabel *processLabel;
 
