@@ -20,6 +20,7 @@
 		4D4CB52D1A89D7DA008AFD00 /* MessageData.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D4CB52C1A89D7DA008AFD00 /* MessageData.m */; };
 		4D91D5B41A8DC23F00A21DBA /* comress.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 4D91D5B31A8DC23F00A21DBA /* comress.sqlite */; };
 		4D91D5B71A8DC40900A21DBA /* Device_token.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5B61A8DC40900A21DBA /* Device_token.m */; };
+		4D91D5C81A8DE54800A21DBA /* MPGTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5C71A8DE54800A21DBA /* MPGTextField.m */; };
 		4D99E7E51A80C430005EDDAE /* ImageOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D99E7E41A80C430005EDDAE /* ImageOptions.m */; };
 		4D99E7E81A80CA78005EDDAE /* ImagePreviewViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D99E7E71A80CA78005EDDAE /* ImagePreviewViewController.m */; };
 		4DA203C51A79CBA100C7E5C7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DA203C41A79CBA100C7E5C7 /* main.m */; };
@@ -170,6 +171,8 @@
 		4D91D5B31A8DC23F00A21DBA /* comress.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = comress.sqlite; sourceTree = "<group>"; };
 		4D91D5B51A8DC40900A21DBA /* Device_token.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Device_token.h; sourceTree = "<group>"; };
 		4D91D5B61A8DC40900A21DBA /* Device_token.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Device_token.m; sourceTree = "<group>"; };
+		4D91D5C61A8DE54800A21DBA /* MPGTextField.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPGTextField.h; sourceTree = "<group>"; };
+		4D91D5C71A8DE54800A21DBA /* MPGTextField.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPGTextField.m; sourceTree = "<group>"; };
 		4D99E7E31A80C430005EDDAE /* ImageOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageOptions.h; sourceTree = "<group>"; };
 		4D99E7E41A80C430005EDDAE /* ImageOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageOptions.m; sourceTree = "<group>"; };
 		4D99E7E61A80CA78005EDDAE /* ImagePreviewViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImagePreviewViewController.h; sourceTree = "<group>"; };
@@ -497,6 +500,15 @@
 			name = Chat;
 			sourceTree = "<group>";
 		};
+		4D91D5C51A8DE53400A21DBA /* autocomplete */ = {
+			isa = PBXGroup;
+			children = (
+				4D91D5C61A8DE54800A21DBA /* MPGTextField.h */,
+				4D91D5C71A8DE54800A21DBA /* MPGTextField.m */,
+			);
+			name = autocomplete;
+			sourceTree = "<group>";
+		};
 		4DA203B61A79CBA000C7E5C7 = {
 			isa = PBXGroup;
 			children = (
@@ -563,6 +575,7 @@
 		4DA203EA1A79CC2B00C7E5C7 /* Libs */ = {
 			isa = PBXGroup;
 			children = (
+				4D91D5C51A8DE53400A21DBA /* autocomplete */,
 				4DD6FE7C1A884CE200CBBE1D /* sdwebimage */,
 				4DE265F61A846F5F009C566F /* cutompicker */,
 				4DAEA6B11A834D6400A6EFBE /* sehumanizedtimediff */,
@@ -1142,6 +1155,7 @@
 				4DD6FEA31A884CFF00CBBE1D /* SDWebImageDownloader.m in Sources */,
 				4DA207F41A79DA0A00C7E5C7 /* JSQMessagesCellTextView.m in Sources */,
 				4DD6FEC41A88B68400CBBE1D /* AFNetworkActivityLogger.m in Sources */,
+				4D91D5C81A8DE54800A21DBA /* MPGTextField.m in Sources */,
 				4D0C2F861A7B4C7C009E5E53 /* Comment.m in Sources */,
 				4DA2090B1A7A09A000C7E5C7 /* DDASLLogger.m in Sources */,
 				4DA22FB51A7F332D00A7AAEC /* SettingsViewController.m in Sources */,

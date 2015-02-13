@@ -790,10 +790,10 @@
                                                 <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
-                                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="sRU-OQ-SVd">
+                                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="sRU-OQ-SVd" customClass="MPGTextField">
                                                 <rect key="frame" x="8" y="42" width="552" height="30"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                                <textInputTraits key="textInputTraits"/>
+                                                <textInputTraits key="textInputTraits" keyboardType="numberPad"/>
                                             </textField>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Address:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SxR-7i-Wg4">
                                                 <rect key="frame" x="8" y="80" width="86" height="12"/>
@@ -889,10 +889,10 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                                                            <rect key="frame" x="0.0" y="0.0" width="80" height="80"/>
+                                                            <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                                             <autoresizingMask key="autoresizingMask"/>
                                                             <subviews>
-                                                                <imageView userInteractionEnabled="NO" tag="1" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" image="bulb_off.png" translatesAutoresizingMaskIntoConstraints="NO" id="UyS-n6-qnE">
+                                                                <imageView userInteractionEnabled="NO" tag="1" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="bulb_off.png" translatesAutoresizingMaskIntoConstraints="NO" id="UyS-n6-qnE">
                                                                     <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                                 </imageView>
@@ -900,10 +900,14 @@
                                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                                         </view>
                                                         <constraints>
-                                                            <constraint firstAttribute="bottom" secondItem="UyS-n6-qnE" secondAttribute="bottom" id="3c6-XX-y9s"/>
+                                                            <constraint firstAttribute="bottom" secondItem="UyS-n6-qnE" secondAttribute="bottom" id="3c6-XX-y9s">
+                                                                <variation key="widthClass=compact" constant="0.0"/>
+                                                            </constraint>
                                                             <constraint firstItem="UyS-n6-qnE" firstAttribute="top" secondItem="rKW-tB-xNj" secondAttribute="top" id="817-Px-F6Y"/>
                                                             <constraint firstItem="UyS-n6-qnE" firstAttribute="leading" secondItem="rKW-tB-xNj" secondAttribute="leading" id="Chy-Um-oBR"/>
-                                                            <constraint firstAttribute="trailing" secondItem="UyS-n6-qnE" secondAttribute="trailing" id="JH3-8Y-aZG"/>
+                                                            <constraint firstAttribute="trailing" secondItem="UyS-n6-qnE" secondAttribute="trailing" id="JH3-8Y-aZG">
+                                                                <variation key="widthClass=compact" constant="0.0"/>
+                                                            </constraint>
                                                         </constraints>
                                                     </collectionViewCell>
                                                 </cells>
@@ -1007,7 +1011,7 @@
                         <outlet property="collectionView" destination="Gku-Iv-ego" id="zj3-X4-aa0"/>
                         <outlet property="descriptionTextView" destination="PWv-7c-hKn" id="gk2-ic-scB"/>
                         <outlet property="levelTextField" destination="gLx-bh-e0O" id="JV7-eI-8g6"/>
-                        <outlet property="postalCodeTextField" destination="sRU-OQ-SVd" id="7sD-kc-7gJ"/>
+                        <outlet property="postalCodeTextField" destination="sRU-OQ-SVd" id="vQY-cB-mhI"/>
                         <outlet property="postalCodesNearYouButton" destination="0Vu-SM-Vmk" id="50T-3v-4uE"/>
                         <outlet property="scrollView" destination="haa-4Y-ZOF" id="fMv-Mn-tn9"/>
                         <outlet property="severityTextField" destination="Upb-nO-Uki" id="0Fp-YY-pIb"/>
@@ -1284,6 +1288,6 @@
     <inferredMetricsTieBreakers>
         <segue reference="SMc-XH-H8D"/>
         <segue reference="q2U-TG-uMs"/>
-        <segue reference="Olt-rM-pEr"/>
+        <segue reference="wel-of-2Aw"/>
     </inferredMetricsTieBreakers>
 </document>

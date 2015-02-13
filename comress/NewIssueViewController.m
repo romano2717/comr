@@ -19,7 +19,7 @@
 @property (nonatomic, strong) NSMutableArray *postalCodeResultsArray;
 @property (nonatomic, strong) NSMutableArray *addressResultsArray;
 @property (nonatomic, strong) NSMutableArray *placeMarksArray;
-@property (nonatomic, strong) NSArray *blocksArray;
+@property (nonatomic, strong) NSMutableArray *blocksArray;
 
 @end
 
@@ -40,9 +40,7 @@
     
     blocks = [[Blocks alloc] init];
     
-    self.blocksArray = [blocks fetchBlocksWithBlockId:nil];
     
-
     //watch when keyboard is up/down
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillChange:) name:UIKeyboardWillChangeFrameNotification object:nil];
     
@@ -70,6 +68,52 @@
     if([locationManager respondsToSelector:@selector(requestWhenInUseAuthorization)])
         [locationManager requestWhenInUseAuthorization];
     
+    blocks = [[Blocks alloc] init];
+    
+    [self generateData];
+    
+    //for autocomplete
+    [self.postalCodeTextField setDelegate:self];
+}
+
+- (void)generateData
+{
+    self.blocksArray = [[NSMutableArray alloc] init];
+    
+    NSArray *theBlocks = [blocks fetchBlocksWithBlockId:nil];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+       
+        [theBlocks enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+            NSString *postal_code = [NSString stringWithFormat:@"%@ - %@",[obj valueForKey:@"postal_code"],[obj valueForKey:@"street_name"]];
+            
+            [self.blocksArray addObject:[NSDictionary dictionaryWithObjectsAndKeys:postal_code,@"DisplayText",obj,@"CustomObject", nil]];
+        }];
+        
+    });
+}
+
+#pragma mark MPGTextField Delegate Methods
+
+- (NSArray *)dataForPopoverInTextField:(MPGTextField *)textField
+{
+    if ([textField isEqual:self.postalCodeTextField]) {
+        return self.blocksArray;
+    }
+    
+    return nil;
+    
+}
+
+- (BOOL)textFieldShouldSelect:(MPGTextField *)textField
+{
+    return YES;
+}
+
+- (void)textField:(MPGTextField *)textField didEndEditingWithSelection:(NSDictionary *)result
+{
+    self.postalCodeTextField.text = [[result objectForKey:@"CustomObject"] valueForKey:@"postal_code"];
+    self.addressTextField.text = [[result objectForKey:@"CustomObject"] valueForKey:@"street_name"];
 }
 
 - (void)keyboardWillChange:(NSNotification *)notification {
