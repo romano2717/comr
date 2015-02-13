@@ -91,26 +91,15 @@
                     {
                         [db commit];
                         
-                        BOOL q2;
-                        [db beginTransaction];
-                        q2 = [db executeUpdate:@"update client set user_guid = ?",client.user_guid];
-                        
-                        if(!q2)
-                            [db rollback];
-                        else
+                        if(self.presentingViewController != nil) //the tab was presented modall, dismiss it first.
                         {
-                            [db commit];
-                            
-                            if(self.presentingViewController != nil) //the tab was presented modall, dismiss it first.
-                            {
-                                [self dismissViewControllerAnimated:YES completion:nil];
-                                [self.navigationController popToRootViewControllerAnimated:YES];
-                            }
-                            else //the tab was presented at first launch(user previously logged)
-                            {
-                                [self dismissViewControllerAnimated:YES completion:nil];
-                                [self performSegueWithIdentifier:@"modal_login" sender:self];
-                            }
+                            [self dismissViewControllerAnimated:YES completion:nil];
+                            [self.navigationController popToRootViewControllerAnimated:YES];
+                        }
+                        else //the tab was presented at first launch(user previously logged)
+                        {
+                            [self dismissViewControllerAnimated:YES completion:nil];
+                            [self performSegueWithIdentifier:@"modal_login" sender:self];
                         }
                     }
                 }

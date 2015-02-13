@@ -161,6 +161,30 @@
         else
             [db commit];
     }
+    
+    
+    //register token to server
+    myAfManager = [AFManager sharedMyAfManager];
+    
+    AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
+    
+    device_token = [[Device_token alloc] init];
+    user = [[Users alloc] init];
+    
+    NSNumber *deviceId = user.device_id ? user.device_id : [NSNumber numberWithInt:0];
+    
+    if([deviceId intValue] != 0) //the use is currently logged in
+    {
+        NSString *urlParams = [NSString stringWithFormat:@"deviceId=%@&deviceToken=%@",deviceId,device_token.device_token];
+        
+        [manager GET:[NSString stringWithFormat:@"%@%@%@",myAfManager.api_url,api_update_device_token,urlParams] parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+            
+            DDLogVerbose(@"update device token %@",responseObject);
+            
+        } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+            DDLogVerbose(@"%@ [%@-%@]",error,THIS_FILE,THIS_METHOD);
+        }];
+    }
 }
 
 @end

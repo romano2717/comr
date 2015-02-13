@@ -16,6 +16,7 @@
 #import "Post.h"
 #import "PostImage.h"
 #import "ActionSheetStringPicker.h"
+#import "Blocks.h"
 
 @interface NewIssueViewController : UIViewController<UICollectionViewDataSource,UICollectionViewDelegate, UIActionSheetDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate,UITextFieldDelegate, UIPickerViewDataSource,UIPickerViewDelegate,UIScrollViewDelegate,CLLocationManagerDelegate>
 {
@@ -24,6 +25,7 @@
     Users *user;
     Post *post;
     PostImage *postImage;
+    Blocks *blocks;
 }
 
 @property (nonatomic, weak) IBOutlet UIScrollView *scrollView;

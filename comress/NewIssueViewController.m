@@ -19,6 +19,7 @@
 @property (nonatomic, strong) NSMutableArray *postalCodeResultsArray;
 @property (nonatomic, strong) NSMutableArray *addressResultsArray;
 @property (nonatomic, strong) NSMutableArray *placeMarksArray;
+@property (nonatomic, strong) NSArray *blocksArray;
 
 @end
 
@@ -37,6 +38,11 @@
     self.addressResultsArray = [[NSMutableArray alloc] init];
     self.placeMarksArray = [[NSMutableArray alloc] init];
     
+    blocks = [[Blocks alloc] init];
+    
+    self.blocksArray = [blocks fetchBlocksWithBlockId:nil];
+    
+
     //watch when keyboard is up/down
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillChange:) name:UIKeyboardWillChangeFrameNotification object:nil];
     

@@ -7,7 +7,20 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "Database.h"
 
 @interface Blocks : NSObject
+{
+    Database *myDatabase;
+    FMDatabaseQueue *databaseQueue;
+}
+@property (nonatomic, strong) NSNumber *pk_id;
+@property (nonatomic, strong) NSNumber *block_id;
+@property (nonatomic, strong) NSString *block_no;
+@property (nonatomic, strong) NSNumber *is_own_block;
+@property (nonatomic, strong) NSString *postal_code;
+@property (nonatomic, strong) NSString *street_name;
+
+- (NSArray *)fetchBlocksWithBlockId:(NSNumber *)the_block_id;
 
 @end

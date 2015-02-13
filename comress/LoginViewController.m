@@ -59,8 +59,12 @@
         //get app version
         NSString *appVersion = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"];
         
+        user = [[Users alloc] init];
+        
+        NSNumber *deviceId = user.device_id ? user.device_id : [NSNumber numberWithInt:0];
+        
         AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
-        NSDictionary *params = @{ @"loginUser" : @{@"UserId" : userId, @"CompanyId" : companyId, @"Password" : password, @"DeviceToken" : deviceToken, @"AppVersion" : appVersion, @"OsType" : @"2"}};
+        NSDictionary *params = @{ @"loginUser" : @{@"UserId" : userId, @"CompanyId" : companyId, @"Password" : password, @"DeviceToken" : deviceToken, @"AppVersion" : appVersion, @"OsType" : @"2"},@"DeviceId":deviceId};
         
         DDLogVerbose(@"%@",params);
         
@@ -84,13 +88,14 @@
                 NSString *res_GroupName = [ActiveUser valueForKey:@"GroupName"];
                 NSString *res_UserName = [ActiveUser valueForKey:@"UserName"];
                 NSString *res_SessionId = [ActiveUser valueForKey:@"SessionId"];
+                NSNumber *res_deviceId = [NSNumber numberWithInt:[[ActiveUser valueForKey:@"DeviceId"] intValue]];
                 
                 //update/insert user
                 FMResultSet *rsUser = [db executeQuery:@"select user_id from users where user_id = ?",res_UserId];
                 if([rsUser next])
                 {
                     [db beginTransaction];
-                    user_q = [db executeUpdate:@"update users set company_id = ?, user_id = ?, company_name = ?, group_id = ?, group_name = ?, full_name = ? guid = ?" ,res_CompanyId,res_UserId,res_CompanyName,res_GroupId,res_GroupName,res_UserName,res_SessionId, nil];
+                    user_q = [db executeUpdate:@"update users set company_id = ?, user_id = ?, company_name = ?, group_id = ?, group_name = ?, full_name = ? guid = ?, device_id = ?" ,res_CompanyId,res_UserId,res_CompanyName,res_GroupId,res_GroupName,res_UserName,res_SessionId,res_deviceId, nil];
                     if(!user_q)
                     {
                         [db rollback];
@@ -101,7 +106,7 @@
                 else
                 {
                     [db beginTransaction];
-                    user_q = [db executeUpdate:@"insert into users (company_id, user_id, company_name, group_id, group_name, full_name, guid) values (?,?,?,?,?,?,?)",res_CompanyId,res_UserId,res_CompanyName,res_GroupId,res_GroupName,res_UserName,res_SessionId];
+                    user_q = [db executeUpdate:@"insert into users (company_id, user_id, company_name, group_id, group_name, full_name, guid, device_id) values (?,?,?,?,?,?,?,?)",res_CompanyId,res_UserId,res_CompanyName,res_GroupId,res_GroupName,res_UserName,res_SessionId,res_deviceId];
                     if(!user_q)
                     {
                         [db rollback];
@@ -125,9 +130,23 @@
                     
                     else
                         [db commit];
-                    
-
                 }
+                
+                //register token to server
+                AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
+                
+                device_token = [[Device_token alloc] init];
+                
+                NSString *urlParams = [NSString stringWithFormat:@"deviceId=%@&deviceToken=%@",res_deviceId,device_token.device_token];
+                
+                [manager GET:[NSString stringWithFormat:@"%@%@%@",myAfManager.api_url,api_update_device_token,urlParams] parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+                    
+                    DDLogVerbose(@"update device token %@",responseObject);
+                    
+                } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+                    DDLogVerbose(@"%@ [%@-%@]",error,THIS_FILE,THIS_METHOD);
+                }];
+                
                 
                 if(loginOk)
                 {

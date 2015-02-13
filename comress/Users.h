@@ -25,7 +25,7 @@
 @property (nonatomic, strong) NSString *company_name;
 @property (nonatomic, strong) NSNumber *group_id;
 @property (nonatomic, strong) NSString *group_name;
-
+@property (nonatomic, strong) NSNumber *device_id;
 
 
 @end

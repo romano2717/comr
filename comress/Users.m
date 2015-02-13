@@ -19,7 +19,8 @@ company_id,
 user_id,
 company_name,
 group_id,
-group_name;
+group_name,
+device_id;
 
 -(id)init {
     if (self = [super init]) {
@@ -54,6 +55,7 @@ group_name;
                 company_name = [userRs stringForColumn:@"company_name"];
                 group_id = [NSNumber numberWithInt:[[userRs stringForColumn:@"group_id"] intValue]];
                 group_name = [userRs stringForColumn:@"group_name"];
+                device_id = [NSNumber numberWithInt:[userRs intForColumn:@"device_id"]];
             }
         }
         [db close];

@@ -10,11 +10,15 @@
 #import "AppWideImports.h"
 #import "Database.h"
 #import "AFManager.h"
+#import "Device_token.h"
+#import "Users.h"
 
 @interface TabBarViewController : UITabBarController
 {
     Database *myDatabase;
     AFManager *myAfManager;
     FMDatabase *db;
+    FMDatabaseQueue *databaseQueue;
+    Users *user;
 }
 @end

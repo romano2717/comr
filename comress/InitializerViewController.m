@@ -24,7 +24,7 @@
     databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
     db = [myDatabase prepareDatabaseFor:self];
     
-    [self downloadBlocksForPage:1 totalPage:0];
+    [self startDownloadForPage:1 totalPage:0];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -42,13 +42,10 @@
 }
 */
 
-- (void)downloadBlocksForPage:(int)page totalPage:(int)totPage
+
+- (void)startDownloadForPage:(int)page totalPage:(int)totPage
 {
     __block int currentPage = page;
-    __block int totalPage = 0;
-    __block int totalRows = 0;
-    
-    self.processLabel.text = [NSString stringWithFormat:@"Downloading blocks page... %d/%d",currentPage,totPage];
     
     NSDate *date = nil;
     
@@ -65,9 +62,10 @@
     
     NSString *jsonDate = @"/Date(1420093779+0800)/";
     
-    if(date != nil)
-        jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [date timeIntervalSince1970],[formatter stringFromDate:date]];
+    //if(date != nil)
+      //  jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [date timeIntervalSince1970],[formatter stringFromDate:date]];
     
+    self.processLabel.text = [NSString stringWithFormat:@"Downloading blocks page... %d/%d",currentPage,totPage];
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:page], @"lastRequestTime" : jsonDate};
     
@@ -76,35 +74,8 @@
     [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_download_blocks] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
         
         NSDictionary *dict = [responseObject objectForKey:@"BlockContainer"];
-        
-        NSDate *date = [dict valueForKey:@"LastRequestDate"];
-        currentPage = [[dict valueForKey:@"CurrentPage"] intValue];
-        totalPage = [[dict valueForKey:@"TotalPages"] intValue];
-        totalRows = [[dict valueForKey:@"TotalRows"] intValue];
-        
-        //save block count
-        [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
-            FMResultSet *rsBlockCount = [theDb executeQuery:@"select count(*) as total from blocks"];
-            while ([rsBlockCount next]) {
-                if([rsBlockCount intForColumn:@"total"] < totalRows)
-                {
-                    //clear the blocks to sync with new block count
-                    BOOL qDelBlocks = [theDb executeUpdate:@"delete from blocks"];
-                    
-                    if(!qDelBlocks)
-                    {
-                        *rollback = YES;
-                        return;
-                    }
-                }
-                else //we have the latest block count. close initializer
-                {
-                    [self dismissViewControllerAnimated:YES completion:nil];
-                    return;
-                }
-            }
-        }];
-        
+
+        int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
         
         //prepare to download the blocks!
         NSArray *dictArray = [dict objectForKey:@"BlockList"];
@@ -125,23 +96,13 @@
                     *rollback = YES;
                     return;
                 }
-                
-                BOOL qLastReqDate = [theDb executeUpdate:@"insert into request_date(date) values(?)",date];
-                
-                if(!qLastReqDate)
-                {
-                    *rollback = YES;
-                    return;
-                }
             }];
         }
-        
-        
         
         if(currentPage < totalPage)
         {
             currentPage++;
-            [self downloadBlocksForPage:currentPage totalPage:totalPage];
+            [self startDownloadForPage:currentPage totalPage:totalPage];
         }
         else
         {
@@ -154,5 +115,8 @@
         DDLogVerbose(@"%@ [%@-%@]",error,THIS_FILE,THIS_METHOD);
     }];
 }
+
+
+
 
 @end

@@ -889,10 +889,10 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                                                            <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
+                                                            <rect key="frame" x="0.0" y="0.0" width="80" height="80"/>
                                                             <autoresizingMask key="autoresizingMask"/>
                                                             <subviews>
-                                                                <imageView userInteractionEnabled="NO" tag="1" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="bulb_off.png" translatesAutoresizingMaskIntoConstraints="NO" id="UyS-n6-qnE">
+                                                                <imageView userInteractionEnabled="NO" tag="1" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" image="bulb_off.png" translatesAutoresizingMaskIntoConstraints="NO" id="UyS-n6-qnE">
                                                                     <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                                 </imageView>
@@ -1141,6 +1141,7 @@
                     <tabBarItem key="tabBarItem" systemItem="more" id="FBD-v7-Kns"/>
                     <connections>
                         <outlet property="userFullNameLabel" destination="0S5-Vp-pl3" id="Ko7-dP-eYb"/>
+                        <segue destination="onP-e6-mVT" kind="presentation" identifier="modal_login" id="SMc-XH-H8D"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="scx-zi-ydS" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -1281,7 +1282,7 @@
         <image name="bulb_off.png" width="29" height="36"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="cqu-JP-Kpv"/>
+        <segue reference="SMc-XH-H8D"/>
         <segue reference="q2U-TG-uMs"/>
         <segue reference="Olt-rM-pEr"/>
     </inferredMetricsTieBreakers>
