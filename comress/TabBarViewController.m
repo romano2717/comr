@@ -61,22 +61,10 @@
         [self performSegueWithIdentifier:@"modal_activation" sender:self];
     if(needToLogin)
         [self performSegueWithIdentifier:@"modal_login" sender:self];
-    else //init
+    else if(!needToActivate && !needToLogin) //init
     {
-        //check if all blocks have been downloaded
-        FMResultSet *rsBlocksCount = [db executeQuery:@"select count(*) as total from blocks"];
-        
-        int blocksCount = 0;
-        
-        if([rsBlocksCount next])
-            blocksCount = [rsBlocksCount intForColumn:@"total"];
-        
-        if(blocksCount == 0)
-        {
-            [self performSegueWithIdentifier:@"modal_initializer" sender:self];
-        }
+        [self performSegueWithIdentifier:@"modal_initializer" sender:self];
     }
-    
 }
 
 - (void)didReceiveMemoryWarning {

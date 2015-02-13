@@ -973,7 +973,6 @@
 				4DA203BB1A79CBA100C7E5C7 /* Sources */,
 				4DA203BC1A79CBA100C7E5C7 /* Frameworks */,
 				4DA203BD1A79CBA100C7E5C7 /* Resources */,
-				4D91D5B21A8D8E2300A21DBA /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -1096,22 +1095,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		4D91D5B21A8D8E2300A21DBA /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ -z \"`git branch | grep master`\" ]; then\ngit co -b master\nelse\ngit co master\nfi\n\ngit add .\ngit commit -a -m \"`date +'Build on %F at %r'`\"\n# ignore git-commit exiting >0, since nothing to commit is fine\nexit 0";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		4DA203BB1A79CBA100C7E5C7 /* Sources */ = {

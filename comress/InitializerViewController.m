@@ -24,14 +24,13 @@
     databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
     db = [myDatabase prepareDatabaseFor:self];
     
-    [self downloadBlocksForPage:1];
+    [self downloadBlocksForPage:1 totalPage:0];
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
-
 
 /*
 #pragma mark - Navigation
@@ -43,124 +42,32 @@
 }
 */
 
-- (void)downloadBlocksForPage2:(int)page
+- (void)downloadBlocksForPage:(int)page totalPage:(int)totPage
 {
-    self.processLabel.text = @"Downloading block information...";
+    __block int currentPage = page;
+    __block int totalPage = 0;
+    __block int totalRows = 0;
     
-    AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
-
-    NSDate *date = [NSDate date];
+    self.processLabel.text = [NSString stringWithFormat:@"Downloading blocks page... %d/%d",currentPage,totPage];
     
-    FMResultSet *rsDate = [db executeQuery:@"select max(id),date from request_date"];
+    NSDate *date = nil;
+    
+    FMResultSet *rsDate = [db executeQuery:@"select max(id) as max,date from request_date"];
     
     while ([rsDate next]) {
         double timeStamp = [rsDate doubleForColumn:@"date"];
-        if(timeStamp > 0)
+        if([rsDate intForColumn:@"max"] > 0)
             date = [NSDate dateWithTimeIntervalSince1970:timeStamp];
     }
     
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     [formatter setDateFormat:@"Z"];
     
-    //NSString *jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [date timeIntervalSince1970],[formatter stringFromDate:date]];
     NSString *jsonDate = @"/Date(1420093779+0800)/";
-
-    NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:page], @"lastRequestTime" : jsonDate};
-
-    __block BOOL blockInsertOk = YES;
     
-    [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_download_blocks] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
-        
-        NSArray *arr = [[responseObject objectForKey:@"BlockContainer"] objectForKey:@"BlockList"];
-        
-        //update label
-        self.processLabel.text = @"Saving block information...";
-        
-        for (int i = 0; i < arr.count; i++) {
-            
-            NSDictionary *dict = [arr objectAtIndex:i];
-            
-            [db beginTransaction];
-            BOOL qClearBlocks = [db executeUpdate:@"delete from blocks"];
-            
-            if(!qClearBlocks)
-            {
-                blockInsertOk = NO;
-                [db rollback];
-
-            }
-            else
-                [db commit];
-            
-            [db beginTransaction];
-            BOOL qInsBlock = [db executeUpdate:@"insert into blocks(block_id,block_no,is_own_block,postal_code,street_name) values (?,?,?,?,?)",[dict valueForKey:@"BlkId"],[dict valueForKey:@"BlkNo"],[dict valueForKey:@"IsOwnBlk"],[dict valueForKey:@"PostalCode"],[dict valueForKey:@"StreetName"]];
-            
-            if(!qInsBlock)
-            {
-                blockInsertOk = NO;
-                [db rollback];
-            }
-            else
-                [db commit];
-            
-        }
-        
-        
-        //update block count
-
-        NSNumber *count = [NSNumber numberWithInt:(int)arr.count];
-        
-        [db beginTransaction];
-        BOOL qBlockCount = [db executeUpdate:@"update blocks_count set total = ?",count];
-        
-        if(!qBlockCount)
-        {
-            [db rollback];
-        }
-        
-        if(blockInsertOk)
-        {
-            [db commit];
-            
-            self.processLabel.text = @"Download complete.";
-            
-            FMResultSet *rsBlocksList = [db executeQuery:@"select * from blocks"];
-            while ([rsBlocksList next]) {
-                DDLogVerbose(@"new blocks %@",[rsBlocksList resultDictionary]);
-            }
-            
-            //[self dismissViewControllerAnimated:YES completion:nil];
-        }
-
-        
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        
-        DDLogVerbose(@"%@ [%@-%@]",error,THIS_FILE,THIS_METHOD);
-        
-    }];
+    if(date != nil)
+        jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [date timeIntervalSince1970],[formatter stringFromDate:date]];
     
-}
-
-- (void)downloadBlocksForPage:(int)page
-{
-
-    self.processLabel.text = @"Downloading block information...";
-    
-    NSDate *date = [NSDate date];
-    
-    FMResultSet *rsDate = [db executeQuery:@"select max(id),date from request_date"];
-    
-    while ([rsDate next]) {
-        double timeStamp = [rsDate doubleForColumn:@"date"];
-        if(timeStamp > 0)
-            date = [NSDate dateWithTimeIntervalSince1970:timeStamp];
-    }
-    
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"Z"];
-    
-    //NSString *jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [date timeIntervalSince1970],[formatter stringFromDate:date]];
-    NSString *jsonDate = @"/Date(1420093779+0800)/";
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:page], @"lastRequestTime" : jsonDate};
     
@@ -169,9 +76,38 @@
     [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_download_blocks] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
         
         NSDictionary *dict = [responseObject objectForKey:@"BlockContainer"];
-        NSArray *dictArray = [dict objectForKey:@"BlockList"];
         
-        __block BOOL blocksInserted = NO;
+        NSDate *date = [dict valueForKey:@"LastRequestDate"];
+        currentPage = [[dict valueForKey:@"CurrentPage"] intValue];
+        totalPage = [[dict valueForKey:@"TotalPages"] intValue];
+        totalRows = [[dict valueForKey:@"TotalRows"] intValue];
+        
+        //save block count
+        [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+            FMResultSet *rsBlockCount = [theDb executeQuery:@"select count(*) as total from blocks"];
+            while ([rsBlockCount next]) {
+                if([rsBlockCount intForColumn:@"total"] < totalRows)
+                {
+                    //clear the blocks to sync with new block count
+                    BOOL qDelBlocks = [theDb executeUpdate:@"delete from blocks"];
+                    
+                    if(!qDelBlocks)
+                    {
+                        *rollback = YES;
+                        return;
+                    }
+                }
+                else //we have the latest block count. close initializer
+                {
+                    [self dismissViewControllerAnimated:YES completion:nil];
+                    return;
+                }
+            }
+        }];
+        
+        
+        //prepare to download the blocks!
+        NSArray *dictArray = [dict objectForKey:@"BlockList"];
         
         for (int i = 0; i < dictArray.count; i++) {
             NSDictionary *dictBlock = [dictArray objectAtIndex:i];
@@ -189,11 +125,30 @@
                     *rollback = YES;
                     return;
                 }
-
+                
+                BOOL qLastReqDate = [theDb executeUpdate:@"insert into request_date(date) values(?)",date];
+                
+                if(!qLastReqDate)
+                {
+                    *rollback = YES;
+                    return;
+                }
             }];
         }
         
-        [self dismissViewControllerAnimated:YES completion:nil];
+        
+        
+        if(currentPage < totalPage)
+        {
+            currentPage++;
+            [self downloadBlocksForPage:currentPage totalPage:totalPage];
+        }
+        else
+        {
+            self.processLabel.text = @"Download complete";
+            [self dismissViewControllerAnimated:YES completion:nil];
+        }
+        
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error,THIS_FILE,THIS_METHOD);
