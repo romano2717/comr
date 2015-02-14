@@ -35,6 +35,12 @@
     self.showLoadEarlierMessagesHeader = YES;
     
     [self fetchComments];
+    
+    //init location manager
+    locationManager = [[CLLocationManager alloc] init];
+    locationManager.distanceFilter = 100;
+    locationManager.desiredAccuracy = kCLLocationAccuracyBest;
+    locationManager.delegate = self;
 }
 
 - (void)fetchComments
@@ -101,13 +107,14 @@
 #pragma mark show post info
 - (void)popPostInformation
 {
-    DDLogVerbose(@"%@",self.postInfoDict);
-    
     PostInfoViewController *postInfoVc = [self.storyboard instantiateViewControllerWithIdentifier:@"PostInfoViewController"];
     postInfoVc.postInfoDict = self.postInfoDict;
     
-    UIPopoverController *popVc = [[UIPopoverController alloc] initWithContentViewController:postInfoVc];
-    [popVc presentPopoverFromRect:self.navigationController.navigationBar.frame inView:self.view permittedArrowDirections:UIPopoverArrowDirectionUp animated:YES];
+    FPPopoverController *popover = [[FPPopoverController alloc] initWithViewController:postInfoVc];
+    popover.arrowDirection = FPPopoverArrowDirectionUp;
+    popover.contentSize = CGSizeMake(CGRectGetWidth(self.view.frame) * 0.90, CGRectGetHeight(self.view.frame) * 0.90);
+    
+    [popover presentPopoverFromView:self.navigationController.navigationBar];
 }
 
 
@@ -115,7 +122,6 @@
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
-
 
 #pragma mark - Navigation
 
@@ -135,6 +141,13 @@
             photoItemCopy.appliesMediaViewMaskAsOutgoing = NO;
             imagPrev.image = [UIImage imageWithCGImage:photoItemCopy.image.CGImage];
         }
+    }
+    if([segue.identifier isEqualToString:@"modal_post_info"])
+    {
+        PostInfoViewController *postInfoVc = [self.storyboard instantiateViewControllerWithIdentifier:@"PostInfoViewController"];
+        postInfoVc.postInfoDict = self.postInfoDict;
+        
+        postInfoVc = segue.destinationViewController;
     }
 }
 
@@ -166,7 +179,7 @@
             
         case 2:
         {
-
+            [self shareLocation];
             break;
         }
             
@@ -176,6 +189,65 @@
             break;
         }
     }
+}
+
+#pragma mark - share location
+- (void)shareLocation
+{
+    [locationManager startUpdatingLocation];
+}
+
+- (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations
+{
+    CLLocation *loc = [locations lastObject];
+    
+    CGFloat longitude = loc.coordinate.longitude;
+    CGFloat latitude = loc.coordinate.latitude;
+    
+    NSURL *mapImageUrl = [NSURL URLWithString:[NSString stringWithFormat:@"https://maps.googleapis.com/maps/api/staticmap?center=%f,%f&zoom=16&size=750x1334&markers=color:red%%7C%f,%f",latitude,longitude,latitude,longitude]];
+
+    DDLogVerbose(@"url %@",mapImageUrl);
+
+    NSTimeInterval locationAge = -[loc.timestamp timeIntervalSinceNow];
+    
+    BOOL locationIsGood = YES;
+    
+    if (locationAge > 15.0)
+    {
+        locationIsGood = NO;
+    }
+    
+    if (loc.horizontalAccuracy < 0)
+    {
+        locationIsGood = NO;
+    }
+    
+    if(locationIsGood)
+    {
+        [self sendLocationAsMessageWithUrl:mapImageUrl];
+        [locationManager stopUpdatingLocation];
+    }
+}
+
+- (void)sendLocationAsMessageWithUrl:(NSURL *)url
+{
+    SDWebImageManager *manager = [SDWebImageManager sharedManager];
+    
+    [manager downloadImageWithURL:url options:0 progress:^(NSInteger receivedSize, NSInteger expectedSize) {
+        
+    } completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
+        
+        [self.messageData addPhotoMediaMessageWithImage:image SenderId:user.user_id DisplayName:user.user_id];
+        
+        //save comment
+        NSDate *date = [NSDate date];
+        
+        NSDictionary *dict = @{@"client_post_id":[NSNumber numberWithInt:self.postId], @"text":[NSNull null],@"senderId":user.user_id,@"date":date,@"messageType":@"text",@"comment_type":[NSNumber numberWithInt:2],@"image":image};
+        
+        [self saveCommentForMessage:dict];
+        
+        [self finishReceivingMessageAnimated:YES];
+    }];
 }
 
 #pragma mark - ImagePicker

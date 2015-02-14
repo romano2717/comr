@@ -22,6 +22,9 @@
 		4D91D5C81A8DE54800A21DBA /* MPGTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5C71A8DE54800A21DBA /* MPGTextField.m */; };
 		4D91D5D01A8EF14D00A21DBA /* comress.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 4D91D5CF1A8EF14D00A21DBA /* comress.sqlite */; };
 		4D91D5D71A8F092E00A21DBA /* PostInfoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5D61A8F092E00A21DBA /* PostInfoViewController.m */; };
+		4D91D5E71A8F37AF00A21DBA /* FPPopoverController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5E21A8F37AF00A21DBA /* FPPopoverController.m */; };
+		4D91D5E81A8F37AF00A21DBA /* FPPopoverView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5E41A8F37AF00A21DBA /* FPPopoverView.m */; };
+		4D91D5E91A8F37AF00A21DBA /* FPTouchView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5E61A8F37AF00A21DBA /* FPTouchView.m */; };
 		4D99E7E51A80C430005EDDAE /* ImageOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D99E7E41A80C430005EDDAE /* ImageOptions.m */; };
 		4D99E7E81A80CA78005EDDAE /* ImagePreviewViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D99E7E71A80CA78005EDDAE /* ImagePreviewViewController.m */; };
 		4DA203C51A79CBA100C7E5C7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DA203C41A79CBA100C7E5C7 /* main.m */; };
@@ -176,6 +179,13 @@
 		4D91D5CF1A8EF14D00A21DBA /* comress.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = comress.sqlite; sourceTree = "<group>"; };
 		4D91D5D51A8F092E00A21DBA /* PostInfoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PostInfoViewController.h; sourceTree = "<group>"; };
 		4D91D5D61A8F092E00A21DBA /* PostInfoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PostInfoViewController.m; sourceTree = "<group>"; };
+		4D91D5E01A8F37AF00A21DBA /* ARCMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARCMacros.h; sourceTree = "<group>"; };
+		4D91D5E11A8F37AF00A21DBA /* FPPopoverController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FPPopoverController.h; sourceTree = "<group>"; };
+		4D91D5E21A8F37AF00A21DBA /* FPPopoverController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FPPopoverController.m; sourceTree = "<group>"; };
+		4D91D5E31A8F37AF00A21DBA /* FPPopoverView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FPPopoverView.h; sourceTree = "<group>"; };
+		4D91D5E41A8F37AF00A21DBA /* FPPopoverView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FPPopoverView.m; sourceTree = "<group>"; };
+		4D91D5E51A8F37AF00A21DBA /* FPTouchView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FPTouchView.h; sourceTree = "<group>"; };
+		4D91D5E61A8F37AF00A21DBA /* FPTouchView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FPTouchView.m; sourceTree = "<group>"; };
 		4D99E7E31A80C430005EDDAE /* ImageOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageOptions.h; sourceTree = "<group>"; };
 		4D99E7E41A80C430005EDDAE /* ImageOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageOptions.m; sourceTree = "<group>"; };
 		4D99E7E61A80CA78005EDDAE /* ImagePreviewViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImagePreviewViewController.h; sourceTree = "<group>"; };
@@ -514,6 +524,20 @@
 			name = autocomplete;
 			sourceTree = "<group>";
 		};
+		4D91D5DF1A8F379F00A21DBA /* popover */ = {
+			isa = PBXGroup;
+			children = (
+				4D91D5E01A8F37AF00A21DBA /* ARCMacros.h */,
+				4D91D5E11A8F37AF00A21DBA /* FPPopoverController.h */,
+				4D91D5E21A8F37AF00A21DBA /* FPPopoverController.m */,
+				4D91D5E31A8F37AF00A21DBA /* FPPopoverView.h */,
+				4D91D5E41A8F37AF00A21DBA /* FPPopoverView.m */,
+				4D91D5E51A8F37AF00A21DBA /* FPTouchView.h */,
+				4D91D5E61A8F37AF00A21DBA /* FPTouchView.m */,
+			);
+			name = popover;
+			sourceTree = "<group>";
+		};
 		4DA203B61A79CBA000C7E5C7 = {
 			isa = PBXGroup;
 			children = (
@@ -580,6 +604,7 @@
 		4DA203EA1A79CC2B00C7E5C7 /* Libs */ = {
 			isa = PBXGroup;
 			children = (
+				4D91D5DF1A8F379F00A21DBA /* popover */,
 				4D91D5C51A8DE53400A21DBA /* autocomplete */,
 				4DD6FE7C1A884CE200CBBE1D /* sdwebimage */,
 				4DE265F61A846F5F009C566F /* cutompicker */,
@@ -1133,6 +1158,7 @@
 				4DD6FEAC1A884CFF00CBBE1D /* UIImageView+WebCache.m in Sources */,
 				4DA204111A79CC5B00C7E5C7 /* AFHTTPRequestOperation.m in Sources */,
 				4DA2090D1A7A09A000C7E5C7 /* DDLog.m in Sources */,
+				4D91D5E81A8F37AF00A21DBA /* FPPopoverView.m in Sources */,
 				4DA207E91A79DA0A00C7E5C7 /* JSQMessagesToolbarButtonFactory.m in Sources */,
 				4DA207FE1A79DA0A00C7E5C7 /* JSQMessagesLoadEarlierHeaderView.m in Sources */,
 				4DA207F61A79DA0A00C7E5C7 /* JSQMessagesCollectionViewCell.m in Sources */,
@@ -1161,6 +1187,7 @@
 				4DA207F41A79DA0A00C7E5C7 /* JSQMessagesCellTextView.m in Sources */,
 				4DD6FEC41A88B68400CBBE1D /* AFNetworkActivityLogger.m in Sources */,
 				4D91D5C81A8DE54800A21DBA /* MPGTextField.m in Sources */,
+				4D91D5E71A8F37AF00A21DBA /* FPPopoverController.m in Sources */,
 				4D0C2F861A7B4C7C009E5E53 /* Comment.m in Sources */,
 				4DA2090B1A7A09A000C7E5C7 /* DDASLLogger.m in Sources */,
 				4DA22FB51A7F332D00A7AAEC /* SettingsViewController.m in Sources */,
@@ -1222,6 +1249,7 @@
 				4DA207EB1A79DA0A00C7E5C7 /* JSQMessagesCollectionViewFlowLayoutInvalidationContext.m in Sources */,
 				4DA207E51A79DA0A00C7E5C7 /* JSQMessagesAvatarImageFactory.m in Sources */,
 				4DACAF531A8C59C8005973E3 /* Blocks.m in Sources */,
+				4D91D5E91A8F37AF00A21DBA /* FPTouchView.m in Sources */,
 				4D0C2F921A7B4CAC009E5E53 /* Users.m in Sources */,
 				4DA203FA1A79CC5200C7E5C7 /* FMDatabaseAdditions.m in Sources */,
 				4DD6FEAB1A884CFF00CBBE1D /* UIImageView+HighlightedWebCache.m in Sources */,

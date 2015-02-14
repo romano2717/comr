@@ -7,6 +7,8 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "AppWideImports.h"
+#import "ImagePreviewViewController.h"
 
 @interface PostInfoViewController : UIViewController<UICollectionViewDataSource,UICollectionViewDelegate>
 

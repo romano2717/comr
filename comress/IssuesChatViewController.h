@@ -17,6 +17,8 @@
 #import "ImageOptions.h"
 #import "ImagePreviewViewController.h"
 #import "PostInfoViewController.h"
+#import "FPPopoverController.h"
+#import "UIImageView+WebCache.h"
 
 @class IssuesChatViewController;
 
@@ -28,12 +30,13 @@
 
 @end
 
-@interface IssuesChatViewController : JSQMessagesViewController<UIActionSheetDelegate,CLLocationManagerDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate>
+@interface IssuesChatViewController : JSQMessagesViewController<UIActionSheetDelegate,CLLocationManagerDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate,UIPopoverPresentationControllerDelegate>
 {
     Users *user;
     Comment *comment;
     Post *post;
     ImageOptions *imgOpts;
+    CLLocationManager *locationManager;
 }
 
 @property (nonatomic, weak) id<IssuesChatViewControllerDelegate> delegateModal;
