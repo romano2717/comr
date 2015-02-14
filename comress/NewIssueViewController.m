@@ -86,8 +86,9 @@
        
         [theBlocks enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
             NSString *postal_code = [NSString stringWithFormat:@"%@ - %@",[obj valueForKey:@"postal_code"],[obj valueForKey:@"street_name"]];
+            NSString *block_no = [obj valueForKey:@"block_no"];
             
-            [self.blocksArray addObject:[NSDictionary dictionaryWithObjectsAndKeys:postal_code,@"DisplayText",obj,@"CustomObject", nil]];
+            [self.blocksArray addObject:[NSDictionary dictionaryWithObjectsAndKeys:postal_code,@"DisplayText",obj,@"CustomObject",block_no,@"DisplaySubText", nil]];
         }];
         
     });
@@ -113,7 +114,8 @@
 - (void)textField:(MPGTextField *)textField didEndEditingWithSelection:(NSDictionary *)result
 {
     self.postalCodeTextField.text = [[result objectForKey:@"CustomObject"] valueForKey:@"postal_code"];
-    self.addressTextField.text = [[result objectForKey:@"CustomObject"] valueForKey:@"street_name"];
+    self.addressTextField.text = [NSString stringWithFormat:@"%@ %@",[[result objectForKey:@"CustomObject"] valueForKey:@"block_no"],[[result objectForKey:@"CustomObject"] valueForKey:@"street_name"]];
+
 }
 
 - (void)keyboardWillChange:(NSNotification *)notification {

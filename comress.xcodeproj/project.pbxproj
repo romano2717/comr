@@ -20,7 +20,8 @@
 		4D4CB52D1A89D7DA008AFD00 /* MessageData.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D4CB52C1A89D7DA008AFD00 /* MessageData.m */; };
 		4D91D5B71A8DC40900A21DBA /* Device_token.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5B61A8DC40900A21DBA /* Device_token.m */; };
 		4D91D5C81A8DE54800A21DBA /* MPGTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5C71A8DE54800A21DBA /* MPGTextField.m */; };
-		4D91D5CC1A8DFE7700A21DBA /* comress.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 4D91D5CB1A8DFE7700A21DBA /* comress.sqlite */; };
+		4D91D5D01A8EF14D00A21DBA /* comress.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 4D91D5CF1A8EF14D00A21DBA /* comress.sqlite */; };
+		4D91D5D71A8F092E00A21DBA /* PostInfoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5D61A8F092E00A21DBA /* PostInfoViewController.m */; };
 		4D99E7E51A80C430005EDDAE /* ImageOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D99E7E41A80C430005EDDAE /* ImageOptions.m */; };
 		4D99E7E81A80CA78005EDDAE /* ImagePreviewViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D99E7E71A80CA78005EDDAE /* ImagePreviewViewController.m */; };
 		4DA203C51A79CBA100C7E5C7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DA203C41A79CBA100C7E5C7 /* main.m */; };
@@ -172,7 +173,9 @@
 		4D91D5B61A8DC40900A21DBA /* Device_token.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Device_token.m; sourceTree = "<group>"; };
 		4D91D5C61A8DE54800A21DBA /* MPGTextField.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPGTextField.h; sourceTree = "<group>"; };
 		4D91D5C71A8DE54800A21DBA /* MPGTextField.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPGTextField.m; sourceTree = "<group>"; };
-		4D91D5CB1A8DFE7700A21DBA /* comress.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = comress.sqlite; sourceTree = "<group>"; };
+		4D91D5CF1A8EF14D00A21DBA /* comress.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = comress.sqlite; sourceTree = "<group>"; };
+		4D91D5D51A8F092E00A21DBA /* PostInfoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PostInfoViewController.h; sourceTree = "<group>"; };
+		4D91D5D61A8F092E00A21DBA /* PostInfoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PostInfoViewController.m; sourceTree = "<group>"; };
 		4D99E7E31A80C430005EDDAE /* ImageOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageOptions.h; sourceTree = "<group>"; };
 		4D99E7E41A80C430005EDDAE /* ImageOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageOptions.m; sourceTree = "<group>"; };
 		4D99E7E61A80CA78005EDDAE /* ImagePreviewViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImagePreviewViewController.h; sourceTree = "<group>"; };
@@ -496,6 +499,8 @@
 				4D4CB5291A89D76F008AFD00 /* IssuesChatViewController.m */,
 				4D4CB52B1A89D7DA008AFD00 /* MessageData.h */,
 				4D4CB52C1A89D7DA008AFD00 /* MessageData.m */,
+				4D91D5D51A8F092E00A21DBA /* PostInfoViewController.h */,
+				4D91D5D61A8F092E00A21DBA /* PostInfoViewController.m */,
 			);
 			name = Chat;
 			sourceTree = "<group>";
@@ -658,7 +663,7 @@
 		4DA204251A79CF8C00C7E5C7 /* db */ = {
 			isa = PBXGroup;
 			children = (
-				4D91D5CB1A8DFE7700A21DBA /* comress.sqlite */,
+				4D91D5CF1A8EF14D00A21DBA /* comress.sqlite */,
 			);
 			name = db;
 			sourceTree = "<group>";
@@ -1083,7 +1088,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4DA207E41A79DA0A00C7E5C7 /* JSQMessagesViewController.xib in Resources */,
-				4D91D5CC1A8DFE7700A21DBA /* comress.sqlite in Resources */,
 				4DA208041A79DA0A00C7E5C7 /* JSQMessagesTypingIndicatorFooterView.xib in Resources */,
 				4DA204221A79CF8800C7E5C7 /* btn_small.png in Resources */,
 				4DA208021A79DA0A00C7E5C7 /* JSQMessagesToolbarContentView.xib in Resources */,
@@ -1099,6 +1103,7 @@
 				4DA204241A79CF8800C7E5C7 /* bulb_on.png in Resources */,
 				4DA207FA1A79DA0A00C7E5C7 /* JSQMessagesCollectionViewCellOutgoing.xib in Resources */,
 				4DAEA6B81A83505E00A6EFBE /* Localizable_full.strings in Resources */,
+				4D91D5D01A8EF14D00A21DBA /* comress.sqlite in Resources */,
 				4DAEA6B71A83505E00A6EFBE /* Localizable.strings in Resources */,
 				4DA207DB1A79DA0A00C7E5C7 /* JSQMessages.strings in Resources */,
 				4DA207F81A79DA0A00C7E5C7 /* JSQMessagesCollectionViewCellIncoming.xib in Resources */,
@@ -1202,6 +1207,7 @@
 				4DA204171A79CC5B00C7E5C7 /* AFURLRequestSerialization.m in Sources */,
 				4DA2090A1A7A09A000C7E5C7 /* DDAbstractDatabaseLogger.m in Sources */,
 				4DE265FC1A8470D1009C566F /* AbstractActionSheetPicker.m in Sources */,
+				4D91D5D71A8F092E00A21DBA /* PostInfoViewController.m in Sources */,
 				4DD6FEA11A884CFF00CBBE1D /* SDWebImageCompat.m in Sources */,
 				4DA209501A7A379B00C7E5C7 /* ActivationViewController.m in Sources */,
 				4DA207EA1A79DA0A00C7E5C7 /* JSQMessagesCollectionViewFlowLayout.m in Sources */,

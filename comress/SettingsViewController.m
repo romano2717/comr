@@ -62,7 +62,6 @@
     {
         [segue destinationViewController];
     }
-    
 }
 
 
@@ -173,17 +172,7 @@
             return;
         }
         
-        BOOL qBlockCount = [theDb executeUpdate:@"delete from blocks_count"];
-        [theDb executeUpdate:@"insert into blocks_cout(total) values(?)",[NSNumber numberWithInt:0]];
-        
-        if(!qBlockCount)
-        {
-            *rollback = YES;
-            [myDatabase alertMessageWithMessage:[NSString stringWithFormat:@"Reset failed. %@",[theDb lastError]]];
-            return;
-        }
-        
-        BOOL qReqDate = [theDb executeUpdate:@"delete from request_date"];
+        BOOL qReqDate = [theDb executeUpdate:@"delete from blocks_last_request_date"];
         if(!qReqDate)
         {
             *rollback = YES;
@@ -191,7 +180,37 @@
             return;
         }
         
+        BOOL qReqDate2 = [theDb executeUpdate:@"delete from comment_last_request_date"];
+        if(!qReqDate2)
+        {
+            *rollback = YES;
+            [myDatabase alertMessageWithMessage:[NSString stringWithFormat:@"Reset failed. %@",[theDb lastError]]];
+            return;
+        }
         
+        BOOL qReqDate3 = [theDb executeUpdate:@"delete from comment_noti_last_request_date"];
+        if(!qReqDate3)
+        {
+            *rollback = YES;
+            [myDatabase alertMessageWithMessage:[NSString stringWithFormat:@"Reset failed. %@",[theDb lastError]]];
+            return;
+        }
+        
+        BOOL qReqDate4 = [theDb executeUpdate:@"delete from post_image_last_request_date"];
+        if(!qReqDate4)
+        {
+            *rollback = YES;
+            [myDatabase alertMessageWithMessage:[NSString stringWithFormat:@"Reset failed. %@",[theDb lastError]]];
+            return;
+        }
+        
+        BOOL qReqDate5 = [theDb executeUpdate:@"delete from post_last_request_date"];
+        if(!qReqDate5)
+        {
+            *rollback = YES;
+            [myDatabase alertMessageWithMessage:[NSString stringWithFormat:@"Reset failed. %@",[theDb lastError]]];
+            return;
+        }
     }];
     
     exit(1);

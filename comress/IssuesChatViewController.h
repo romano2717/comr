@@ -16,6 +16,7 @@
 #import "NSDate+HumanizedTime.h"
 #import "ImageOptions.h"
 #import "ImagePreviewViewController.h"
+#import "PostInfoViewController.h"
 
 @class IssuesChatViewController;
 
@@ -39,6 +40,7 @@
 @property (nonatomic, strong) MessageData *messageData;
 @property (nonatomic) int postId;
 @property (nonatomic,strong) NSDictionary *postDict;
+@property (nonatomic,strong) NSDictionary *postInfoDict;
 @property (nonatomic, strong) UIImagePickerController *imagePicker;
 
 @end

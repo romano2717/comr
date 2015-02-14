@@ -23,14 +23,13 @@ last_request_date;
         myDatabase = [Database sharedMyDbManager];
         databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
         
+        FMDatabase *db = [myDatabase prepareDatabaseFor:self];
         last_request_date = nil;
         
-        [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
-            FMResultSet *rs = [theDb executeQuery:@"select date from blocks_last_request_date"];
-            while ([rs next]) {
-                last_request_date = [rs dateForColumn:@"date"];
-            }
-        }];
+        FMResultSet *rs = [db executeQuery:@"select date from blocks_last_request_date"];
+        while ([rs next]) {
+            last_request_date = [rs dateForColumn:@"date"];
+        }
     }
     
     return self;
@@ -97,6 +96,13 @@ last_request_date;
     }];
     
     return NO;
+}
+
+- (NSArray *)fetchAllMyRelatedBlocks
+{
+    
+    
+    return nil;
 }
 
 @end

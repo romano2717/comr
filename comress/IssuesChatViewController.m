@@ -45,6 +45,11 @@
     NSDictionary *params = @{@"order":@"order by post_date desc"};
     postDict = [[post fetchIssuesWithParams:params forPostId:[NSNumber numberWithInt:self.postId]] objectAtIndex:0];
     
+    
+    //get the post information so we can do a pop-up view for post
+    self.postInfoDict = [NSDictionary dictionaryWithObjectsAndKeys:[[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"post"],@"post",[[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"postImages"],@"images", nil];
+    
+    
     NSArray *commentsArray = [[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"postComments"];
     
     for (int i = 0; i < commentsArray.count; i++) {
@@ -76,6 +81,35 @@
     if(commentsArray.count > 0)
         [self displayMessages];
 }
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    self.title = [[self.postInfoDict objectForKey:@"post"] valueForKey:@"post_topic"];
+    
+    NSMutableDictionary *dict = [[NSMutableDictionary alloc] initWithObjectsAndKeys:[self.postInfoDict objectForKey:@"post"],@"post",[self.postInfoDict objectForKey:@"images"],@"images", nil];
+    self.postInfoDict = dict;
+    
+    //add tap gestuer to the navbar for the pop-over post info
+    UITapGestureRecognizer *tapNavBar = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(popPostInformation)];
+    tapNavBar.numberOfTapsRequired = 1;
+    
+    [self.navigationController.navigationBar addGestureRecognizer:tapNavBar];
+}
+
+#pragma mark show post info
+- (void)popPostInformation
+{
+    DDLogVerbose(@"%@",self.postInfoDict);
+    
+    PostInfoViewController *postInfoVc = [self.storyboard instantiateViewControllerWithIdentifier:@"PostInfoViewController"];
+    postInfoVc.postInfoDict = self.postInfoDict;
+    
+    UIPopoverController *popVc = [[UIPopoverController alloc] initWithContentViewController:postInfoVc];
+    [popVc presentPopoverFromRect:self.navigationController.navigationBar.frame inView:self.view permittedArrowDirections:UIPopoverArrowDirectionUp animated:YES];
+}
+
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
