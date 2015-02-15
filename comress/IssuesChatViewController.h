@@ -46,11 +46,11 @@
 @property (nonatomic, weak) id<IssuesChatViewControllerDelegate> delegateModal;
 @property (nonatomic, strong) MessageData *messageData;
 @property (nonatomic) int postId;
-@property (nonatomic,strong) NSDictionary *postDict;
-@property (nonatomic,strong) NSDictionary *postInfoDict;
+@property (nonatomic, strong) NSDictionary *postDict;
+@property (nonatomic, strong) NSDictionary *postInfoDict;
 @property (nonatomic, strong) UIImagePickerController *imagePicker;
 @property (nonatomic, weak) IBOutlet UIBarButtonItem *actionButton;
-
+@property (nonatomic, strong) NSArray *commentsArray;
 -(void)selectedTableRow:(NSUInteger)rowNum;
 
 @end

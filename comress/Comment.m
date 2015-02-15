@@ -37,7 +37,7 @@ comment_type;
     if([[dict valueForKey:@"messageType"] isEqualToString:@"text"])
     {
         
-        if([[dict valueForKey:@"comment_type"] intValue] == 1)
+        if([[dict valueForKey:@"comment_type"] intValue] == 1 || [[dict valueForKey:@"comment_type"] intValue] == 2)
         {
             [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
                 

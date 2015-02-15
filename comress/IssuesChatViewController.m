@@ -14,7 +14,7 @@
 
 @implementation IssuesChatViewController
 
-@synthesize postId,postDict;
+@synthesize postId,postDict,commentsArray;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -56,7 +56,7 @@
     self.postInfoDict = [NSDictionary dictionaryWithObjectsAndKeys:[[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"post"],@"post",[[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"postImages"],@"images", nil];
     
     
-    NSArray *commentsArray = [[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"postComments"];
+    commentsArray = [[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"postComments"];
     
     for (int i = 0; i < commentsArray.count; i++) {
         NSDictionary *dict = [commentsArray objectAtIndex:i];
@@ -78,9 +78,12 @@
         }
         else
         {
-            JSQMessage *message = [[JSQMessage alloc] initWithSenderId:[dict valueForKey:@"comment_by"] senderDisplayName:[dict valueForKey:@"comment_by"] date:date text:commentString];
-            
-            [self.messageData.messages addObject:message];
+            if([[dict valueForKey:@"comment_type"] intValue] == 1 || [[dict valueForKey:@"comment_type"] intValue] == 2)
+            {
+                JSQMessage *message = [[JSQMessage alloc] initWithSenderId:[dict valueForKey:@"comment_by"] senderDisplayName:[dict valueForKey:@"comment_by"] date:date text:commentString];
+                
+                [self.messageData.messages addObject:message];
+            }
         }
     }
     
@@ -104,13 +107,27 @@
     [self.navigationController.navigationBar addGestureRecognizer:tapNavBar];
 }
 
+#pragma mark - Post Actions
 -(void)selectedTableRow:(NSUInteger)rowNum
 {
-    NSLog(@"SELECTED ROW %lu",(unsigned long)rowNum);
     [popover dismissPopoverAnimated:YES];
+    
+    NSArray *status = [NSArray arrayWithObjects:@"Start",@"Stop",@"Completed",@"Close", nil];
+    
+    NSDate *date = [NSDate date];
+    NSString *dateStringForm = [date stringWithHumanizedTimeDifference:0 withFullString:NO];
+    
+    NSString *statusString = [NSString stringWithFormat:@"%@\n%@ %@,",user.user_id,[status objectAtIndex:rowNum],dateStringForm];
+    
+    [JSQSystemSoundPlayer jsq_playMessageSentSound];
+    
+    NSDictionary *dict = @{@"client_post_id":[NSNumber numberWithInt:self.postId], @"text":statusString,@"senderId":user.user_id,@"date":date,@"messageType":@"text",@"comment_type":[NSNumber numberWithInt:2]};
+    
+    [self saveCommentForMessage:dict];
+    
+    [self finishSendingMessageAnimated:YES];
 }
 
-#pragma mark - Post Actions
 - (IBAction)postStatusActions:(id)sender
 {
     
@@ -553,6 +570,8 @@
         return [[JSQMessagesTimestampFormatter sharedFormatter] attributedTimestampForDate:message.date];
     }
     
+
+    
     return nil;
 }
 
@@ -626,6 +645,14 @@
         
         cell.textView.linkTextAttributes = @{ NSForegroundColorAttributeName : cell.textView.textColor,
                                               NSUnderlineStyleAttributeName : @(NSUnderlineStyleSingle | NSUnderlinePatternSolid) };
+    }
+    
+    //check if the message is action type. if so, change the font to bold and background to dark green
+    
+    NSDictionary *dict = [commentsArray objectAtIndex:indexPath.row];
+    if([[dict valueForKey:@"comment_type"] intValue] == 2)
+    {
+        //cell.backgroundColor = [UIColor colorWithRed:46.0f/255.0f green:115.0f/255.0f blue:58.0f/255.0f alpha:1.0];
     }
     
     return cell;

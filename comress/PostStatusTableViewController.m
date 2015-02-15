@@ -22,7 +22,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.status = [NSArray arrayWithObjects:@"Edit",@"Start",@"Stop",@"Completed",@"Close", nil];
+    self.status = [NSArray arrayWithObjects:@"Start",@"Stop",@"Completed",@"Close", nil];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -46,10 +46,13 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     static  NSString *cellIdentifier = @"cell";
     
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier forIndexPath:indexPath];
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier];
     
-    if()
-    
+    if(cell == nil)
+    {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
+    }
+
 
     // Configure the cell...
     cell.textLabel.text = [self.status objectAtIndex:indexPath.row];
