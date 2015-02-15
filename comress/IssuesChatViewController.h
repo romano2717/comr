@@ -18,9 +18,12 @@
 #import "ImagePreviewViewController.h"
 #import "PostInfoViewController.h"
 #import "FPPopoverController.h"
+#import "ARCMacros.h"
 #import "UIImageView+WebCache.h"
+#import "PostStatusTableViewController.h"
 
-@class IssuesChatViewController;
+#import "FPPopoverKeyboardResponsiveController.h"
+
 
 @class IssuesChatViewController;
 
@@ -30,13 +33,14 @@
 
 @end
 
-@interface IssuesChatViewController : JSQMessagesViewController<UIActionSheetDelegate,CLLocationManagerDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate,UIPopoverPresentationControllerDelegate>
+@interface IssuesChatViewController : JSQMessagesViewController<UIActionSheetDelegate,CLLocationManagerDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate,UIPopoverPresentationControllerDelegate,FPPopoverControllerDelegate>
 {
     Users *user;
     Comment *comment;
     Post *post;
     ImageOptions *imgOpts;
     CLLocationManager *locationManager;
+    FPPopoverKeyboardResponsiveController *popover;
 }
 
 @property (nonatomic, weak) id<IssuesChatViewControllerDelegate> delegateModal;
@@ -45,5 +49,8 @@
 @property (nonatomic,strong) NSDictionary *postDict;
 @property (nonatomic,strong) NSDictionary *postInfoDict;
 @property (nonatomic, strong) UIImagePickerController *imagePicker;
+@property (nonatomic, weak) IBOutlet UIBarButtonItem *actionButton;
+
+-(void)selectedTableRow:(NSUInteger)rowNum;
 
 @end

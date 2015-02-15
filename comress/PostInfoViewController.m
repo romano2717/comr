@@ -40,13 +40,18 @@
     for (int i = 0; i < imagesDictArr.count; i++) {
         NSDictionary *imagesDict = [imagesDictArr objectAtIndex:i];
         
-        NSString *imagePath = [imagesDict valueForKey:@"image_path"];
-        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-        NSString *documentsPath = [paths objectAtIndex:0];
-        NSString *filePath = [documentsPath stringByAppendingPathComponent:imagePath];
-        UIImage *image = [UIImage imageWithContentsOfFile:filePath];
+        DDLogVerbose(@"imagesDict %@",imagesDict);
         
-        [self.imagesArray addObject:image];
+        if([imagesDict valueForKey:@"post_id"] != [NSNull null]) //only allow post images
+        {
+            NSString *imagePath = [imagesDict valueForKey:@"image_path"];
+            NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+            NSString *documentsPath = [paths objectAtIndex:0];
+            NSString *filePath = [documentsPath stringByAppendingPathComponent:imagePath];
+            UIImage *image = [UIImage imageWithContentsOfFile:filePath];
+            
+            [self.imagesArray addObject:image];
+        }
     }
 }
 

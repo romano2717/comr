@@ -20,6 +20,8 @@
         
         self.outgoingBubbleImageData = [bubbleFactory outgoingMessagesBubbleImageWithColor:[UIColor jsq_messageBubbleLightGrayColor]];
         self.incomingBubbleImageData = [bubbleFactory incomingMessagesBubbleImageWithColor:[UIColor jsq_messageBubbleGreenColor]];
+        
+        users = [[Users alloc] init];
     }
     
     return self;
@@ -38,17 +40,24 @@
 
 - (void)addLocationMediaMessageCompletion:(JSQLocationMediaItemCompletionBlock)completion
 {
-    /*
+    
      CLLocation *ferryBuildingInSF = [[CLLocation alloc] initWithLatitude:37.795313 longitude:-122.393757];
      
      JSQLocationMediaItem *locationItem = [[JSQLocationMediaItem alloc] init];
      [locationItem setLocation:ferryBuildingInSF withCompletionHandler:completion];
      
-     JSQMessage *locationMessage = [JSQMessage messageWithSenderId:kJSQDemoAvatarIdSquires
-     displayName:kJSQDemoAvatarDisplayNameSquires
-     media:locationItem];
+     JSQMessage *locationMessage = [JSQMessage messageWithSenderId:users.user_id displayName:users.user_id media:locationItem];
      [self.messages addObject:locationMessage];
-     */
+    
+}
+
+- (void)addLocationMediaWithLocation:(CLLocation *)location withCompletion:(JSQLocationMediaItemCompletionBlock)completion
+{
+    JSQLocationMediaItem *locationItem = [[JSQLocationMediaItem alloc] init];
+    [locationItem setLocation:location withCompletionHandler:completion];
+    
+    JSQMessage *locationMessage = [JSQMessage messageWithSenderId:users.user_id displayName:users.user_id media:locationItem];
+    [self.messages addObject:locationMessage];
 }
 
 - (void)addVideoMediaMessage

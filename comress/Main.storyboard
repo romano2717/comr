@@ -400,10 +400,15 @@
                                 <action selector="back:" destination="hU5-Vl-PAR" id="PEP-vw-dvC"/>
                             </connections>
                         </barButtonItem>
-                        <barButtonItem key="rightBarButtonItem" systemItem="action" id="RdP-Vx-5sy"/>
+                        <barButtonItem key="rightBarButtonItem" systemItem="action" id="RdP-Vx-5sy">
+                            <connections>
+                                <action selector="postStatusActions:" destination="hU5-Vl-PAR" id="xVg-zr-NC3"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                     <nil key="simulatedBottomBarMetrics"/>
                     <connections>
+                        <outlet property="actionButton" destination="RdP-Vx-5sy" id="CYt-yR-cKz"/>
                         <segue destination="1tC-jd-mh6" kind="presentation" identifier="push_view_image" id="Olt-rM-pEr"/>
                     </connections>
                 </viewController>
@@ -567,6 +572,32 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="MA6-ev-gJq" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1555" y="-1096.5"/>
+        </scene>
+        <!--Post Status Table View Controller-->
+        <scene sceneID="eCk-XG-CMT">
+            <objects>
+                <tableViewController storyboardIdentifier="status_post" useStoryboardIdentifierAsRestorationIdentifier="YES" id="pQI-Uy-9cK" customClass="PostStatusTableViewController" sceneMemberID="viewController">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" id="4W6-uh-CpJ">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <prototypes>
+                            <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="cell" id="Cpw-SA-tgL">
+                                <autoresizingMask key="autoresizingMask"/>
+                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="Cpw-SA-tgL" id="n97-Ag-2wx">
+                                    <autoresizingMask key="autoresizingMask"/>
+                                </tableViewCellContentView>
+                            </tableViewCell>
+                        </prototypes>
+                        <connections>
+                            <outlet property="dataSource" destination="pQI-Uy-9cK" id="Jzj-l6-aGd"/>
+                            <outlet property="delegate" destination="pQI-Uy-9cK" id="MnP-Oh-ZBg"/>
+                        </connections>
+                    </tableView>
+                </tableViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="BvD-JG-mL6" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2213" y="-1102"/>
         </scene>
         <!--Routine-->
         <scene sceneID="wg7-f3-ORb">
@@ -1462,6 +1493,6 @@
     <inferredMetricsTieBreakers>
         <segue reference="j8d-1K-yvk"/>
         <segue reference="q2U-TG-uMs"/>
-        <segue reference="wel-of-2Aw"/>
+        <segue reference="Olt-rM-pEr"/>
     </inferredMetricsTieBreakers>
 </document>

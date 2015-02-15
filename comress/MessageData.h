@@ -8,8 +8,13 @@
 
 #import <Foundation/Foundation.h>
 #import "JSQMessages.h"
+#import "Users.h"
 
 @interface MessageData : NSObject
+
+{
+    Users *users;
+}
 
 @property (strong, nonatomic) NSMutableArray *messages;
 
@@ -22,6 +27,7 @@
 - (void)addPhotoMediaMessageWithImage:(UIImage *)image SenderId:(NSString *)senderId DisplayName:(NSString *)displayName;
 
 - (void)addLocationMediaMessageCompletion:(JSQLocationMediaItemCompletionBlock)completion;
+- (void)addLocationMediaWithLocation:(CLLocation *)location withCompletion:(JSQLocationMediaItemCompletionBlock)completion;
 
 - (void)addVideoMediaMessage;
 

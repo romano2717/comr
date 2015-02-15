@@ -51,7 +51,7 @@
     NSDictionary *params = @{@"order":@"order by post_date desc"};
     postDict = [[post fetchIssuesWithParams:params forPostId:[NSNumber numberWithInt:self.postId]] objectAtIndex:0];
     
-    
+    DDLogVerbose(@"postDict %@",postDict);
     //get the post information so we can do a pop-up view for post
     self.postInfoDict = [NSDictionary dictionaryWithObjectsAndKeys:[[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"post"],@"post",[[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"postImages"],@"images", nil];
     
@@ -104,13 +104,37 @@
     [self.navigationController.navigationBar addGestureRecognizer:tapNavBar];
 }
 
+-(void)selectedTableRow:(NSUInteger)rowNum
+{
+    NSLog(@"SELECTED ROW %lu",(unsigned long)rowNum);
+    [popover dismissPopoverAnimated:YES];
+}
+
+#pragma mark - Post Actions
+- (IBAction)postStatusActions:(id)sender
+{
+    
+    PostStatusTableViewController *postStatVc = [[PostStatusTableViewController alloc] initWithStyle:UITableViewStylePlain];
+    postStatVc.delegate = self;
+    popover = [[FPPopoverKeyboardResponsiveController alloc] initWithViewController:postStatVc];
+    popover.arrowDirection = FPPopoverArrowDirectionUp;
+    
+    popover.contentSize = CGSizeMake(CGRectGetWidth(self.view.frame) * 0.90, 280);
+    
+    UIView *view = [self.navigationItem.rightBarButtonItem valueForKey:@"view"];
+    
+    [popover presentPopoverFromView:view];
+}
+
 #pragma mark show post info
 - (void)popPostInformation
 {
+    DDLogVerbose(@"%@",self.postInfoDict);
+    
     PostInfoViewController *postInfoVc = [self.storyboard instantiateViewControllerWithIdentifier:@"PostInfoViewController"];
     postInfoVc.postInfoDict = self.postInfoDict;
     
-    FPPopoverController *popover = [[FPPopoverController alloc] initWithViewController:postInfoVc];
+    popover = [[FPPopoverKeyboardResponsiveController alloc] initWithViewController:postInfoVc];
     popover.arrowDirection = FPPopoverArrowDirectionUp;
     popover.contentSize = CGSizeMake(CGRectGetWidth(self.view.frame) * 0.90, CGRectGetHeight(self.view.frame) * 0.90);
     
@@ -131,15 +155,15 @@
     if([segue.identifier isEqualToString:@"push_view_image"])
     {
 
-        ImagePreviewViewController *imagPrev = [segue destinationViewController];
+        ImagePreviewViewController *imagePrev = [segue destinationViewController];
         JSQMessage *message = (JSQMessage *)sender;
         
         id<JSQMessageMediaData> mediaData = message.media;
         
         if ([mediaData isKindOfClass:[JSQPhotoMediaItem class]]) {
-            JSQPhotoMediaItem *photoItemCopy = [((JSQPhotoMediaItem *)mediaData) copy];
-            photoItemCopy.appliesMediaViewMaskAsOutgoing = NO;
-            imagPrev.image = [UIImage imageWithCGImage:photoItemCopy.image.CGImage];
+            JSQPhotoMediaItem *photoItem = [((JSQPhotoMediaItem *)mediaData) copy];
+            photoItem.appliesMediaViewMaskAsOutgoing = NO;
+            imagePrev.image = [UIImage imageWithCGImage:photoItem.image.CGImage];
         }
     }
     if([segue.identifier isEqualToString:@"modal_post_info"])
@@ -180,6 +204,7 @@
         case 2:
         {
             [self shareLocation];
+            
             break;
         }
             
