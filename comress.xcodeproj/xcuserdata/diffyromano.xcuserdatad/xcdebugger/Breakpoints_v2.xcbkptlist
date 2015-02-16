@@ -484,11 +484,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "comress/LoginViewController.m"
-            timestampString = "445498727.537858"
+            timestampString = "445746449.074673"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "78"
-            endingLineNumber = "78"
+            startingLineNumber = "76"
+            endingLineNumber = "76"
             landmarkName = "-doLogin:"
             landmarkType = "5">
          </BreakpointContent>
@@ -564,11 +564,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "comress/LoginViewController.m"
-            timestampString = "445498727.537858"
+            timestampString = "445746449.074673"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "82"
-            endingLineNumber = "82"
+            startingLineNumber = "80"
+            endingLineNumber = "80"
             landmarkName = "-doLogin:"
             landmarkType = "5">
          </BreakpointContent>
@@ -900,11 +900,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "comress/IssuesChatViewController.m"
-            timestampString = "445688979.350465"
+            timestampString = "445748684.012115"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "344"
-            endingLineNumber = "344"
+            startingLineNumber = "373"
+            endingLineNumber = "373"
             landmarkName = "-didPressSendButton:withMessageText:senderId:senderDisplayName:date:"
             landmarkType = "5">
          </BreakpointContent>
@@ -1412,11 +1412,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "comress/IssuesChatViewController.m"
-            timestampString = "445688979.350465"
+            timestampString = "445748684.012115"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "186"
-            endingLineNumber = "186"
+            startingLineNumber = "215"
+            endingLineNumber = "215"
             landmarkName = "-prepareForSegue:sender:"
             landmarkType = "5">
          </BreakpointContent>
@@ -1428,11 +1428,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "comress/IssuesChatViewController.m"
-            timestampString = "445688979.350465"
+            timestampString = "445748684.012115"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "249"
-            endingLineNumber = "249"
+            startingLineNumber = "278"
+            endingLineNumber = "278"
             landmarkName = "-locationManager:didUpdateLocations:"
             landmarkType = "5">
          </BreakpointContent>
@@ -1460,11 +1460,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "comress/IssuesChatViewController.m"
-            timestampString = "445690754.806939"
+            timestampString = "445748684.012115"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "731"
-            endingLineNumber = "731"
+            startingLineNumber = "760"
+            endingLineNumber = "760"
             landmarkName = "-collectionView:didTapMessageBubbleAtIndexPath:"
             landmarkType = "5">
          </BreakpointContent>
@@ -1524,11 +1524,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "comress/IssuesChatViewController.m"
-            timestampString = "445688979.350465"
+            timestampString = "445748684.012115"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "123"
-            endingLineNumber = "123"
+            startingLineNumber = "152"
+            endingLineNumber = "152"
             landmarkName = "-selectedTableRow:"
             landmarkType = "5">
          </BreakpointContent>
@@ -1540,11 +1540,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "comress/IssuesChatViewController.m"
-            timestampString = "445688979.350465"
+            timestampString = "445748684.012115"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "124"
-            endingLineNumber = "124"
+            startingLineNumber = "153"
+            endingLineNumber = "153"
             landmarkName = "-selectedTableRow:"
             landmarkType = "5">
          </BreakpointContent>

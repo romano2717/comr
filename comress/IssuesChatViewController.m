@@ -69,18 +69,31 @@
         if([commentString isEqualToString:@"<image>"])
         {
             NSString *imagePath = [dict valueForKey:@"image"];
-            NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-            NSString *documentsPath = [paths objectAtIndex:0];
-            NSString *filePath = [documentsPath stringByAppendingPathComponent:imagePath];
-            UIImage *image = [UIImage imageWithContentsOfFile:filePath];
-            
-            [self.messageData addPhotoMediaMessageWithImage:image SenderId:[dict valueForKey:@"comment_by"] DisplayName:[dict valueForKey:@"comment_by"]];
+            if(imagePath != nil)
+            {
+                NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+                NSString *documentsPath = [paths objectAtIndex:0];
+                NSString *filePath = [documentsPath stringByAppendingPathComponent:imagePath];
+                UIImage *image = [UIImage imageWithContentsOfFile:filePath];
+                
+                [self.messageData addPhotoMediaMessageWithImage:image SenderId:[dict valueForKey:@"comment_by"] DisplayName:[dict valueForKey:@"comment_by"]];
+            }
         }
         else
         {
-            if([[dict valueForKey:@"comment_type"] intValue] == 1 || [[dict valueForKey:@"comment_type"] intValue] == 2)
+            if([[dict valueForKey:@"comment_type"] intValue] == 1)
             {
                 JSQMessage *message = [[JSQMessage alloc] initWithSenderId:[dict valueForKey:@"comment_by"] senderDisplayName:[dict valueForKey:@"comment_by"] date:date text:commentString];
+                
+                [self.messageData.messages addObject:message];
+            }
+            else if ([[dict valueForKey:@"comment_type"] intValue] == 2) //issue status update
+            {
+                NSString *dateStringForm = [date stringWithHumanizedTimeDifference:0 withFullString:YES];
+                
+                NSString *statusComment = [NSString stringWithFormat:@"%@ (%@)",commentString,dateStringForm];
+                
+                JSQMessage *message = [[JSQMessage alloc] initWithSenderId:[dict valueForKey:@"comment_by"] senderDisplayName:[dict valueForKey:@"comment_by"] date:date text:statusComment];
                 
                 [self.messageData.messages addObject:message];
             }
@@ -112,12 +125,28 @@
 {
     [popover dismissPopoverAnimated:YES];
     
-    NSArray *status = [NSArray arrayWithObjects:@"Start",@"Stop",@"Completed",@"Close", nil];
-    
     NSDate *date = [NSDate date];
-    NSString *dateStringForm = [date stringWithHumanizedTimeDifference:0 withFullString:NO];
+
+    NSString *statusString;
     
-    NSString *statusString = [NSString stringWithFormat:@"%@\n%@ %@,",user.user_id,[status objectAtIndex:rowNum],dateStringForm];
+    switch (rowNum) {
+        case 2:
+            statusString = @"Issue set status Stop";
+            break;
+            
+        case 3:
+            statusString = @"Issue set status Completed";
+            break;
+            
+        case 4:
+            statusString = @"Issue set status Close";
+            break;
+            
+        default:
+            statusString = @"Issue set status In Progress";
+            break;
+    }
+    
     
     [JSQSystemSoundPlayer jsq_playMessageSentSound];
     
@@ -653,6 +682,7 @@
     if([[dict valueForKey:@"comment_type"] intValue] == 2)
     {
         //cell.backgroundColor = [UIColor colorWithRed:46.0f/255.0f green:115.0f/255.0f blue:58.0f/255.0f alpha:1.0];
+        cell.messageBubbleImageView.image = [UIImage imageNamed:@"status_bubble"];
     }
     
     return cell;

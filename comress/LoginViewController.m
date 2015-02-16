@@ -66,9 +66,7 @@
         AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
         NSDictionary *params = @{ @"loginUser" : @{@"UserId" : userId, @"CompanyId" : companyId, @"Password" : password, @"DeviceToken" : deviceToken, @"AppVersion" : appVersion, @"OsType" : @"2"},@"DeviceId":deviceId};
         
-        DDLogVerbose(@"%@",params);
-        
-        
+
         __block BOOL user_q = NO;
         __block BOOL client_q = NO;
         __block BOOL loginOk = YES;

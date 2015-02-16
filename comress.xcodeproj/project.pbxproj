@@ -20,13 +20,14 @@
 		4D4CB52D1A89D7DA008AFD00 /* MessageData.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D4CB52C1A89D7DA008AFD00 /* MessageData.m */; };
 		4D91D5B71A8DC40900A21DBA /* Device_token.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5B61A8DC40900A21DBA /* Device_token.m */; };
 		4D91D5C81A8DE54800A21DBA /* MPGTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5C71A8DE54800A21DBA /* MPGTextField.m */; };
-		4D91D5D01A8EF14D00A21DBA /* comress.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 4D91D5CF1A8EF14D00A21DBA /* comress.sqlite */; };
 		4D91D5D71A8F092E00A21DBA /* PostInfoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5D61A8F092E00A21DBA /* PostInfoViewController.m */; };
 		4D91D5E71A8F37AF00A21DBA /* FPPopoverController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5E21A8F37AF00A21DBA /* FPPopoverController.m */; };
 		4D91D5E81A8F37AF00A21DBA /* FPPopoverView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5E41A8F37AF00A21DBA /* FPPopoverView.m */; };
 		4D91D5E91A8F37AF00A21DBA /* FPTouchView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5E61A8F37AF00A21DBA /* FPTouchView.m */; };
 		4D91D5EF1A8FAA2500A21DBA /* PostStatusTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5EE1A8FAA2500A21DBA /* PostStatusTableViewController.m */; };
 		4D91D5F21A906F5200A21DBA /* FPPopoverKeyboardResponsiveController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D91D5F11A906F5200A21DBA /* FPPopoverKeyboardResponsiveController.m */; };
+		4D91D5F81A918E2500A21DBA /* comress.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 4D91D5F71A918E2500A21DBA /* comress.sqlite */; };
+		4D91D5FA1A91927D00A21DBA /* status_bubble.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D91D5F91A91927D00A21DBA /* status_bubble.png */; };
 		4D99E7E51A80C430005EDDAE /* ImageOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D99E7E41A80C430005EDDAE /* ImageOptions.m */; };
 		4D99E7E81A80CA78005EDDAE /* ImagePreviewViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D99E7E71A80CA78005EDDAE /* ImagePreviewViewController.m */; };
 		4DA203C51A79CBA100C7E5C7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DA203C41A79CBA100C7E5C7 /* main.m */; };
@@ -178,7 +179,6 @@
 		4D91D5B61A8DC40900A21DBA /* Device_token.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Device_token.m; sourceTree = "<group>"; };
 		4D91D5C61A8DE54800A21DBA /* MPGTextField.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPGTextField.h; sourceTree = "<group>"; };
 		4D91D5C71A8DE54800A21DBA /* MPGTextField.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPGTextField.m; sourceTree = "<group>"; };
-		4D91D5CF1A8EF14D00A21DBA /* comress.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = comress.sqlite; sourceTree = "<group>"; };
 		4D91D5D51A8F092E00A21DBA /* PostInfoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PostInfoViewController.h; sourceTree = "<group>"; };
 		4D91D5D61A8F092E00A21DBA /* PostInfoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PostInfoViewController.m; sourceTree = "<group>"; };
 		4D91D5E01A8F37AF00A21DBA /* ARCMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARCMacros.h; sourceTree = "<group>"; };
@@ -192,6 +192,8 @@
 		4D91D5EE1A8FAA2500A21DBA /* PostStatusTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PostStatusTableViewController.m; sourceTree = "<group>"; };
 		4D91D5F01A906F5200A21DBA /* FPPopoverKeyboardResponsiveController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FPPopoverKeyboardResponsiveController.h; sourceTree = "<group>"; };
 		4D91D5F11A906F5200A21DBA /* FPPopoverKeyboardResponsiveController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FPPopoverKeyboardResponsiveController.m; sourceTree = "<group>"; };
+		4D91D5F71A918E2500A21DBA /* comress.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = comress.sqlite; sourceTree = "<group>"; };
+		4D91D5F91A91927D00A21DBA /* status_bubble.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = status_bubble.png; sourceTree = "<group>"; };
 		4D99E7E31A80C430005EDDAE /* ImageOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageOptions.h; sourceTree = "<group>"; };
 		4D99E7E41A80C430005EDDAE /* ImageOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageOptions.m; sourceTree = "<group>"; };
 		4D99E7E61A80CA78005EDDAE /* ImagePreviewViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImagePreviewViewController.h; sourceTree = "<group>"; };
@@ -685,6 +687,7 @@
 		4DA2041A1A79CF7400C7E5C7 /* images */ = {
 			isa = PBXGroup;
 			children = (
+				4D91D5F91A91927D00A21DBA /* status_bubble.png */,
 				4DAEA6AF1A83423300A6EFBE /* noImage.png */,
 				4D0C2F751A7B3202009E5E53 /* bulb_off.png */,
 				4DA2041B1A79CF8800C7E5C7 /* arrow.png */,
@@ -698,7 +701,7 @@
 		4DA204251A79CF8C00C7E5C7 /* db */ = {
 			isa = PBXGroup;
 			children = (
-				4D91D5CF1A8EF14D00A21DBA /* comress.sqlite */,
+				4D91D5F71A918E2500A21DBA /* comress.sqlite */,
 			);
 			name = db;
 			sourceTree = "<group>";
@@ -1124,6 +1127,8 @@
 			files = (
 				4DA207E41A79DA0A00C7E5C7 /* JSQMessagesViewController.xib in Resources */,
 				4DA208041A79DA0A00C7E5C7 /* JSQMessagesTypingIndicatorFooterView.xib in Resources */,
+				4D91D5F81A918E2500A21DBA /* comress.sqlite in Resources */,
+				4D91D5FA1A91927D00A21DBA /* status_bubble.png in Resources */,
 				4DA204221A79CF8800C7E5C7 /* btn_small.png in Resources */,
 				4DA208021A79DA0A00C7E5C7 /* JSQMessagesToolbarContentView.xib in Resources */,
 				4DA203E91A79CBF900C7E5C7 /* Main.storyboard in Resources */,
@@ -1138,7 +1143,6 @@
 				4DA204241A79CF8800C7E5C7 /* bulb_on.png in Resources */,
 				4DA207FA1A79DA0A00C7E5C7 /* JSQMessagesCollectionViewCellOutgoing.xib in Resources */,
 				4DAEA6B81A83505E00A6EFBE /* Localizable_full.strings in Resources */,
-				4D91D5D01A8EF14D00A21DBA /* comress.sqlite in Resources */,
 				4DAEA6B71A83505E00A6EFBE /* Localizable.strings in Resources */,
 				4DA207DB1A79DA0A00C7E5C7 /* JSQMessages.strings in Resources */,
 				4DA207F81A79DA0A00C7E5C7 /* JSQMessagesCollectionViewCellIncoming.xib in Resources */,

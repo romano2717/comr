@@ -19,6 +19,6 @@
 
 static const int ddLogLevel = LOG_LEVEL_VERBOSE;
 
-static const int sync_interval = 10;
+static const int sync_interval = 5;
 static const int ping_interval = 600;
 
