@@ -29,6 +29,7 @@ postal_code
     if (self = [super init]) {
         myDatabase = [Database sharedMyDbManager];
         db = [myDatabase prepareDatabaseFor:self];
+        databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
     }
     return self;
 }
@@ -195,6 +196,21 @@ postal_code
     }
 
     return rsArray;
+}
+
+- (BOOL)updatePostStatusForClientPostId:(NSNumber *)clientPostId withStatus:(NSNumber *)theStatus
+{
+    [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+        BOOL upPost = [theDb executeUpdate:@"update post set status = ? where client_post_id = ?",theStatus,clientPostId];
+        
+        if(!upPost)
+        {
+            *rollback = YES;
+            return ;
+        }
+    }];
+    
+    return NO;
 }
 
 @end

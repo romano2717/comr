@@ -13,6 +13,7 @@
 {
     Database *myDatabase;
     FMDatabase *db;
+    FMDatabaseQueue *databaseQueue;
 }
 
 @property (nonatomic) int client_post_id;
@@ -32,4 +33,5 @@
 - (NSArray *)fetchIssuesWithParams:(NSDictionary *)params forPostId:(NSNumber *)postId;
 - (void)close;
 - (NSArray *)postsToSend;
+- (BOOL)updatePostStatusForClientPostId:(NSNumber *)clientPostId withStatus:(NSNumber *)theStatus;
 @end

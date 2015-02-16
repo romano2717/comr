@@ -10,7 +10,7 @@
 
 @implementation IssuesTableViewCell
 
-@synthesize mainImageView,statusLabel,statusProgressView,postTitleLabel,addressLabel,lastMessagByLabel,lastMessageLabel,dateLabel,messageCountLabel;
+@synthesize mainImageView,statusLabel,statusProgressView,postTitleLabel,addressLabel,lastMessagByLabel,lastMessageLabel,dateLabel,messageCountLabel,pinImageView;
 
 
 - (void)awakeFromNib {
@@ -49,6 +49,8 @@
     NSString *lastMsgBy = [postDict valueForKey:@"post_by"];
     NSString *lastMsg = @"";
     
+    NSString *severity = [postDict valueForKey:@"severity"];
+    
     NSDictionary *lastCommentDict = [postComments lastObject];
 
     if (postComments.count > 0) {
@@ -64,17 +66,10 @@
     
     switch (status) {
             
-        case 0:
-        {
-            progress = 0.2;
-            statusString = @"Pending";
-            break;
-        }
-            
         case 1:
         {
             progress = 0.5;
-            statusString = @"Start";
+            statusString = @"In Progress";
             break;
         }
 
@@ -92,9 +87,21 @@
             break;
         }
             
+        case 4:
+        {
+            progress = 0;
+            statusString = @"Close";
+            break;
+        }
+            
             
         default:
+        {
+            progress = 0.2;
+            statusString = @"Pending";
             break;
+        }
+
     }
 
     
@@ -109,7 +116,9 @@
     lastMessageLabel.text = lastMsg;
     dateLabel.text = dateStringForm ? dateStringForm : @"-";
     messageCountLabel.text = @"";
-
+    
+    if([severity isEqualToString:@"2"])//Routine
+        pinImageView.hidden = YES;
 }
 
 

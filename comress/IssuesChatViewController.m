@@ -51,10 +51,8 @@
     NSDictionary *params = @{@"order":@"order by post_date desc"};
     postDict = [[post fetchIssuesWithParams:params forPostId:[NSNumber numberWithInt:self.postId]] objectAtIndex:0];
     
-    DDLogVerbose(@"postDict %@",postDict);
     //get the post information so we can do a pop-up view for post
     self.postInfoDict = [NSDictionary dictionaryWithObjectsAndKeys:[[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"post"],@"post",[[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"postImages"],@"images", nil];
-    
     
     commentsArray = [[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"postComments"];
     
@@ -81,7 +79,7 @@
         }
         else
         {
-            if([[dict valueForKey:@"comment_type"] intValue] == 1)
+            if([[dict valueForKey:@"comment_type"] intValue] == 1) //normal text comment
             {
                 JSQMessage *message = [[JSQMessage alloc] initWithSenderId:[dict valueForKey:@"comment_by"] senderDisplayName:[dict valueForKey:@"comment_by"] date:date text:commentString];
                 
@@ -123,6 +121,8 @@
 #pragma mark - Post Actions
 -(void)selectedTableRow:(NSUInteger)rowNum
 {
+    DDLogVerbose(@"row %lu",(unsigned long)rowNum);
+    
     [popover dismissPopoverAnimated:YES];
     
     NSDate *date = [NSDate date];
@@ -130,6 +130,10 @@
     NSString *statusString;
     
     switch (rowNum) {
+        case 1:
+            statusString = @"Issue set status Start";
+            break;
+            
         case 2:
             statusString = @"Issue set status Stop";
             break;
@@ -141,9 +145,9 @@
         case 4:
             statusString = @"Issue set status Close";
             break;
-            
+        
         default:
-            statusString = @"Issue set status In Progress";
+            statusString = @"Issue set status Pending";
             break;
     }
     
@@ -153,6 +157,8 @@
     NSDictionary *dict = @{@"client_post_id":[NSNumber numberWithInt:self.postId], @"text":statusString,@"senderId":user.user_id,@"date":date,@"messageType":@"text",@"comment_type":[NSNumber numberWithInt:2]};
     
     [self saveCommentForMessage:dict];
+    
+    [post updatePostStatusForClientPostId:[NSNumber numberWithInt:self.postId] withStatus:[NSNumber numberWithInteger:rowNum]];
     
     [self finishSendingMessageAnimated:YES];
 }
@@ -175,8 +181,6 @@
 #pragma mark show post info
 - (void)popPostInformation
 {
-    DDLogVerbose(@"%@",self.postInfoDict);
-    
     PostInfoViewController *postInfoVc = [self.storyboard instantiateViewControllerWithIdentifier:@"PostInfoViewController"];
     postInfoVc.postInfoDict = self.postInfoDict;
     
@@ -277,8 +281,6 @@
     
     NSURL *mapImageUrl = [NSURL URLWithString:[NSString stringWithFormat:@"https://maps.googleapis.com/maps/api/staticmap?center=%f,%f&zoom=16&size=750x1334&markers=color:red%%7C%f,%f",latitude,longitude,latitude,longitude]];
 
-    DDLogVerbose(@"url %@",mapImageUrl);
-
     NSTimeInterval locationAge = -[loc.timestamp timeIntervalSinceNow];
     
     BOOL locationIsGood = YES;
@@ -313,7 +315,7 @@
         //save comment
         NSDate *date = [NSDate date];
         
-        NSDictionary *dict = @{@"client_post_id":[NSNumber numberWithInt:self.postId], @"text":[NSNull null],@"senderId":user.user_id,@"date":date,@"messageType":@"text",@"comment_type":[NSNumber numberWithInt:2],@"image":image};
+        NSDictionary *dict = @{@"client_post_id":[NSNumber numberWithInt:self.postId], @"text":[NSNull null],@"senderId":user.user_id,@"date":date,@"messageType":@"image",@"comment_type":[NSNumber numberWithInt:1],@"image":image};
         
         [self saveCommentForMessage:dict];
         
@@ -357,7 +359,7 @@
     //save comment
     NSDate *date = [NSDate date];
     
-    NSDictionary *dict = @{@"client_post_id":[NSNumber numberWithInt:self.postId], @"text":[NSNull null],@"senderId":user.user_id,@"date":date,@"messageType":@"text",@"comment_type":[NSNumber numberWithInt:2],@"image":img};
+    NSDictionary *dict = @{@"client_post_id":[NSNumber numberWithInt:self.postId], @"text":[NSNull null],@"senderId":user.user_id,@"date":date,@"messageType":@"image",@"comment_type":[NSNumber numberWithInt:1],@"image":img};
     
     [self saveCommentForMessage:dict];
     
@@ -681,8 +683,10 @@
     NSDictionary *dict = [commentsArray objectAtIndex:indexPath.row];
     if([[dict valueForKey:@"comment_type"] intValue] == 2)
     {
-        //cell.backgroundColor = [UIColor colorWithRed:46.0f/255.0f green:115.0f/255.0f blue:58.0f/255.0f alpha:1.0];
         cell.messageBubbleImageView.image = [UIImage imageNamed:@"status_bubble"];
+        UIFont* boldFont = [UIFont boldSystemFontOfSize:[UIFont systemFontSize]];
+        
+        cell.textView.font = boldFont; // !experimental and not recommended
     }
     
     return cell;

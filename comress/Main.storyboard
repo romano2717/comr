@@ -181,6 +181,33 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="vSn-Qh-Gcb">
+                                <rect key="frame" x="202" y="29" width="197" height="29"/>
+                                <segments>
+                                    <segment title="Me"/>
+                                    <segment title="Others"/>
+                                    <segment title="Overdue"/>
+                                </segments>
+                            </segmentedControl>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Fs7-1S-he7">
+                                <rect key="frame" x="553" y="28" width="31" height="30"/>
+                                <state key="normal" title="New">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <segue destination="6gh-XX-19Q" kind="showDetail" id="VLH-9b-e2i"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="GWK-Q5-5Fq">
+                                <rect key="frame" x="16" y="28" width="27" height="30"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="27" id="7tS-YA-KSe"/>
+                                    <constraint firstAttribute="height" constant="30" id="twx-sm-YEa"/>
+                                </constraints>
+                                <state key="normal" image="bulb_off.png">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                            </button>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="115" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="vQs-6T-WvI">
                                 <rect key="frame" x="0.0" y="66" width="600" height="482"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -229,13 +256,13 @@
                                                     </constraints>
                                                 </imageView>
                                                 <label opaque="NO" userInteractionEnabled="NO" tag="4" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="999" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rSS-T3-hDm">
-                                                    <rect key="frame" x="571" y="52" width="21" height="21.5"/>
+                                                    <rect key="frame" x="571" y="52" width="21" height="22"/>
                                                     <fontDescription key="fontDescription" type="boldSystem" pointSize="12"/>
                                                     <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <label opaque="NO" userInteractionEnabled="NO" tag="6" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Salleh:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QPf-Px-e54">
-                                                    <rect key="frame" x="106" y="59" width="425" height="21.5"/>
+                                                    <rect key="frame" x="106" y="59" width="425" height="22"/>
                                                     <fontDescription key="fontDescription" type="boldSystem" pointSize="12"/>
                                                     <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                                     <nil key="highlightedColor"/>
@@ -259,12 +286,17 @@
                                                 <progressView opaque="NO" tag="9" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="a9k-pE-rtO">
                                                     <rect key="frame" x="8" y="101" width="90" height="2"/>
                                                 </progressView>
+                                                <imageView userInteractionEnabled="NO" tag="11" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="pin2.png" translatesAutoresizingMaskIntoConstraints="NO" id="SYh-uD-1Tw">
+                                                    <rect key="frame" x="8" y="8" width="25" height="25"/>
+                                                </imageView>
                                             </subviews>
                                             <constraints>
                                                 <constraint firstItem="rSS-T3-hDm" firstAttribute="leading" secondItem="xkB-bL-bS9" secondAttribute="trailing" constant="40" id="1Jx-PY-cOU"/>
                                                 <constraint firstItem="Ah2-SA-x4L" firstAttribute="trailing" secondItem="mJO-bY-14V" secondAttribute="trailing" id="1ZA-W4-Kdr"/>
                                                 <constraint firstItem="QPf-Px-e54" firstAttribute="top" secondItem="mJO-bY-14V" secondAttribute="bottom" constant="-2" id="2BC-ZS-Rqt"/>
+                                                <constraint firstItem="w8M-Ff-YNm" firstAttribute="top" secondItem="SYh-uD-1Tw" secondAttribute="bottom" constant="50" id="3A0-NG-JcP"/>
                                                 <constraint firstItem="Vgv-sF-0wZ" firstAttribute="centerY" secondItem="mJO-bY-14V" secondAttribute="centerY" id="4G8-nH-jg6"/>
+                                                <constraint firstItem="SYh-uD-1Tw" firstAttribute="leading" secondItem="Q3Z-C5-mK3" secondAttribute="leadingMargin" id="84S-AH-hDx"/>
                                                 <constraint firstItem="rSS-T3-hDm" firstAttribute="trailing" secondItem="Q3Z-C5-mK3" secondAttribute="trailingMargin" id="8Jy-7o-lns">
                                                     <variation key="heightClass=compact" constant="0.0"/>
                                                     <variation key="widthClass=compact" constant="0.0"/>
@@ -279,6 +311,7 @@
                                                 <constraint firstItem="QPf-Px-e54" firstAttribute="trailing" secondItem="mJO-bY-14V" secondAttribute="trailing" id="MZn-Df-4Oe"/>
                                                 <constraint firstItem="QPf-Px-e54" firstAttribute="leading" secondItem="xkB-bL-bS9" secondAttribute="leading" id="O6q-1Q-qXJ"/>
                                                 <constraint firstItem="xkB-bL-bS9" firstAttribute="top" secondItem="mJO-bY-14V" secondAttribute="bottom" constant="15" id="QLP-bF-0YF"/>
+                                                <constraint firstItem="Ah2-SA-x4L" firstAttribute="leading" secondItem="SYh-uD-1Tw" secondAttribute="trailing" constant="73" id="Sic-9K-Nmp"/>
                                                 <constraint firstItem="w8M-Ff-YNm" firstAttribute="bottom" secondItem="Vgv-sF-0wZ" secondAttribute="bottom" id="SxB-OS-GgY"/>
                                                 <constraint firstItem="xkB-bL-bS9" firstAttribute="bottom" secondItem="a9k-pE-rtO" secondAttribute="bottom" id="Wd4-Q0-vDk"/>
                                                 <constraint firstItem="mJO-bY-14V" firstAttribute="leading" secondItem="QPf-Px-e54" secondAttribute="leading" id="WdT-KK-SpN"/>
@@ -298,8 +331,11 @@
                                                 <constraint firstItem="w8M-Ff-YNm" firstAttribute="leading" secondItem="Q3Z-C5-mK3" secondAttribute="leadingMargin" id="g7D-hj-eeJ"/>
                                                 <constraint firstItem="fcd-46-5wU" firstAttribute="top" secondItem="3VU-Rc-g1n" secondAttribute="bottom" constant="8" symbolic="YES" id="hBx-mK-umE"/>
                                                 <constraint firstItem="a9k-pE-rtO" firstAttribute="leading" secondItem="w8M-Ff-YNm" secondAttribute="leading" id="izH-Rs-MwG"/>
+                                                <constraint firstItem="SYh-uD-1Tw" firstAttribute="leading" secondItem="w8M-Ff-YNm" secondAttribute="leading" id="kIN-ev-yPn"/>
                                                 <constraint firstAttribute="bottomMargin" secondItem="QPf-Px-e54" secondAttribute="bottom" constant="26" id="ldw-WZ-gEB"/>
                                                 <constraint firstItem="mJO-bY-14V" firstAttribute="leading" secondItem="Ah2-SA-x4L" secondAttribute="leading" id="pbZ-Pp-xLI"/>
+                                                <constraint firstItem="SYh-uD-1Tw" firstAttribute="top" secondItem="Q3Z-C5-mK3" secondAttribute="topMargin" id="qWW-mE-e6d"/>
+                                                <constraint firstItem="SYh-uD-1Tw" firstAttribute="top" secondItem="Vgv-sF-0wZ" secondAttribute="top" id="r43-QU-bgb"/>
                                                 <constraint firstItem="Ah2-SA-x4L" firstAttribute="leading" secondItem="Vgv-sF-0wZ" secondAttribute="trailing" constant="8" symbolic="YES" id="s7E-dD-JkC"/>
                                                 <constraint firstItem="3VU-Rc-g1n" firstAttribute="leading" secondItem="Ah2-SA-x4L" secondAttribute="trailing" constant="8" symbolic="YES" id="wmn-fr-nm9"/>
                                                 <constraint firstItem="fcd-46-5wU" firstAttribute="leading" secondItem="mJO-bY-14V" secondAttribute="trailing" constant="46" id="xRE-bg-MTF"/>
@@ -315,6 +351,7 @@
                                             <outlet property="lastMessageLabel" destination="xkB-bL-bS9" id="hEa-25-2DX"/>
                                             <outlet property="mainImageView" destination="Vgv-sF-0wZ" id="JxJ-iB-JBs"/>
                                             <outlet property="messageCountLabel" destination="rSS-T3-hDm" id="Wij-Bo-4Fb"/>
+                                            <outlet property="pinImageView" destination="SYh-uD-1Tw" id="jcd-AU-QUV"/>
                                             <outlet property="postTitleLabel" destination="Ah2-SA-x4L" id="Y1f-ix-I6b"/>
                                             <outlet property="statusLabel" destination="w8M-Ff-YNm" id="Alq-Ha-YZf"/>
                                             <outlet property="statusProgressView" destination="a9k-pE-rtO" id="jYu-oI-3Sr"/>
@@ -326,33 +363,6 @@
                                     <outlet property="delegate" destination="9pv-A4-QxB" id="ASf-MS-NK8"/>
                                 </connections>
                             </tableView>
-                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="vSn-Qh-Gcb">
-                                <rect key="frame" x="202" y="29" width="197" height="29"/>
-                                <segments>
-                                    <segment title="Me"/>
-                                    <segment title="Others"/>
-                                    <segment title="Overdue"/>
-                                </segments>
-                            </segmentedControl>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Fs7-1S-he7">
-                                <rect key="frame" x="553" y="28" width="31" height="30"/>
-                                <state key="normal" title="New">
-                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                </state>
-                                <connections>
-                                    <segue destination="6gh-XX-19Q" kind="showDetail" id="VLH-9b-e2i"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="GWK-Q5-5Fq">
-                                <rect key="frame" x="16" y="28" width="27" height="30"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="27" id="7tS-YA-KSe"/>
-                                    <constraint firstAttribute="height" constant="30" id="twx-sm-YEa"/>
-                                </constraints>
-                                <state key="normal" image="bulb_off.png">
-                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                </state>
-                            </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
@@ -1489,6 +1499,7 @@
     <resources>
         <image name="arrow.png" width="32" height="32"/>
         <image name="bulb_off.png" width="29" height="36"/>
+        <image name="pin2.png" width="75" height="75"/>
     </resources>
     <inferredMetricsTieBreakers>
         <segue reference="j8d-1K-yvk"/>

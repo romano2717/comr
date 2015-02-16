@@ -22,7 +22,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.status = [NSArray arrayWithObjects:@"Start",@"Stop",@"Completed",@"Close", nil];
+    self.status = [NSArray arrayWithObjects:@"Pending",@"Start",@"Stop",@"Completed",@"Close", nil];
 }
 
 - (void)didReceiveMemoryWarning {

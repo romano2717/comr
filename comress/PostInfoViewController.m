@@ -19,7 +19,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    DDLogVerbose(@"%@",postInfoDict);
     self.issueLabel.text = [[postInfoDict objectForKey:@"post"] valueForKey:@"post_topic"];
     
     self.issueByLabel.text = [NSString stringWithFormat:@"Issue by: %@",[[postInfoDict objectForKey:@"post"] valueForKey:@"post_by"]];
