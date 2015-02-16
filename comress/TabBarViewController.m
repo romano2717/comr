@@ -28,6 +28,8 @@
     db = [myDatabase prepareDatabaseFor:self];
     myAfManager = [AFManager sharedMyAfManager];
     databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
+    
+    
 }
 
 - (void)viewDidAppear:(BOOL)animated

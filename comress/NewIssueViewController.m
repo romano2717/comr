@@ -496,6 +496,11 @@
         }
         
         [postImage close];
+        
+        [self dismissViewControllerAnimated:YES completion:^{
+            NSDictionary *useInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithLongLong:lastClientPostId] forKey:@"lastClientPostId"];
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"autoOpenChatViewForPost" object:nil userInfo:useInfo];
+        }];
     }
 }
 

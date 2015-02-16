@@ -26,12 +26,20 @@
     [refreshControl addTarget:self action:@selector(refresh:) forControlEvents:UIControlEventValueChanged];
     
     [self.issuesTable addSubview:refreshControl];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(autoOpenChatViewForPost:) name:@"autoOpenChatViewForPost" object:nil];
 }
+
+- (void)autoOpenChatViewForPost:(NSNotification *)notif
+{
+    NSNumber *clientPostId = [NSNumber numberWithLongLong:[[[notif userInfo] valueForKey:@"lastClientPostId"] longLongValue]];
+    
+    [self performSegueWithIdentifier:@"push_chat_issues" sender:clientPostId];
+}
+
 
 - (void)refresh:(id)sender
 {
-    DDLogVerbose(@"refresh");
-    
     [self fetchPosts];
     
     [(UIRefreshControl *)sender endRefreshing];
@@ -75,9 +83,16 @@
         self.hidesBottomBarWhenPushed = YES;
         self.navigationController.navigationBar.hidden = NO;
         
-        NSIndexPath *indexPath = (NSIndexPath *)sender;
-        NSDictionary *dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
-        NSNumber *postId = [NSNumber numberWithInt:[[[dict allKeys] objectAtIndex:0] intValue]];
+        NSNumber *postId;
+        
+        if([sender isKindOfClass:[NSIndexPath class]])
+        {
+            NSIndexPath *indexPath = (NSIndexPath *)sender;
+            NSDictionary *dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
+            postId = [NSNumber numberWithInt:[[[dict allKeys] objectAtIndex:0] intValue]];
+        }
+        else
+            postId = sender;
         
         IssuesChatViewController *issuesVc = [segue destinationViewController];
         issuesVc.postId = [postId intValue];

@@ -121,8 +121,6 @@
 #pragma mark - Post Actions
 -(void)selectedTableRow:(NSUInteger)rowNum
 {
-    DDLogVerbose(@"row %lu",(unsigned long)rowNum);
-    
     [popover dismissPopoverAnimated:YES];
     
     NSDate *date = [NSDate date];

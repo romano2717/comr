@@ -39,9 +39,7 @@
     for (int i = 0; i < imagesDictArr.count; i++) {
         NSDictionary *imagesDict = [imagesDictArr objectAtIndex:i];
         
-        DDLogVerbose(@"imagesDict %@",imagesDict);
-        
-        if([imagesDict valueForKey:@"post_id"] != [NSNull null]) //only allow post images
+        if([imagesDict valueForKey:@"client_post_id"] != [NSNull null]) //only allow post images
         {
             NSString *imagePath = [imagesDict valueForKey:@"image_path"];
             NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
