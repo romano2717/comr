@@ -10,11 +10,15 @@
 #import "Post.h"
 #import "IssuesTableViewCell.h"
 #import "IssuesChatViewController.h"
+#import "Comment.h"
+#import "Users.h"
 
 @interface IssuesViewController : UIViewController<UITableViewDataSource,UITableViewDelegate,IssuesChatViewControllerDelegate>
 {
     Post *post;
     IssuesTableViewCell *issuesCell;
+    Comment *comment;
+    Users *user;
 }
 
 @property (nonatomic, weak) IBOutlet UITableView *issuesTable;

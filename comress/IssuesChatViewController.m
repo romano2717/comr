@@ -163,9 +163,13 @@
 
 - (IBAction)postStatusActions:(id)sender
 {
-    
     PostStatusTableViewController *postStatVc = [[PostStatusTableViewController alloc] initWithStyle:UITableViewStylePlain];
     postStatVc.delegate = self;
+    
+    DDLogVerbose(@"%@",postDict);
+    NSString *postStatus = [[[postDict objectForKey:[[postDict allKeys] objectAtIndex:0]] objectForKey:@"post"] valueForKey:@"status"] ;
+    
+    postStatVc.selectedStatus = postStatus;
     popover = [[FPPopoverKeyboardResponsiveController alloc] initWithViewController:postStatVc];
     popover.arrowDirection = FPPopoverArrowDirectionUp;
     

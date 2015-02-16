@@ -12,4 +12,5 @@
 
 @interface PostStatusTableViewController : UITableViewController
 @property(nonatomic,assign) IssuesChatViewController *delegate;
+@property(nonatomic,assign) NSString *selectedStatus;
 @end

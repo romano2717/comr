@@ -17,7 +17,7 @@
 
 @implementation PostStatusTableViewController
 
-@synthesize delegate=_delegate;
+@synthesize delegate=_delegate,selectedStatus;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -52,6 +52,11 @@
     {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
     }
+    
+    NSString *statusString = [NSString stringWithFormat:@"%ld",(long)indexPath.row];
+    
+    if([statusString isEqualToString:selectedStatus])
+        cell.contentView.backgroundColor = [UIColor blueColor];
 
 
     // Configure the cell...

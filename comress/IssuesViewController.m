@@ -22,10 +22,14 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
+    comment = [[Comment alloc] init];
+    user = [[Users alloc] init];
+    
     UIRefreshControl *refreshControl = [[UIRefreshControl alloc] init];
     [refreshControl addTarget:self action:@selector(refresh:) forControlEvents:UIControlEventValueChanged];
     
     [self.issuesTable addSubview:refreshControl];
+
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(autoOpenChatViewForPost:) name:@"autoOpenChatViewForPost" object:nil];
 }
@@ -149,17 +153,82 @@
  }
  */
 
-/*
+- (NSArray *)tableView:(UITableView *)tableView editActionsForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    UITableViewRowAction *close = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDefault title:@"Close" handler:^(UITableViewRowAction *action, NSIndexPath *indexPath) {
+        [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:4]];
+        [self fetchPosts];
+    }];
+    close.backgroundColor = [UIColor darkGrayColor];
+    
+    UITableViewRowAction *completed = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDefault title:@"Completed" handler:^(UITableViewRowAction *action, NSIndexPath *indexPath) {
+        [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:3]];
+        [self fetchPosts];
+    }];
+    completed.backgroundColor = [UIColor greenColor];
+    
+    UITableViewRowAction *start = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDefault title:@"Start" handler:^(UITableViewRowAction *action, NSIndexPath *indexPath) {
+        [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:1]];
+        [self fetchPosts];
+    }];
+    start.backgroundColor = [UIColor orangeColor];
+    
+    UITableViewRowAction *stop = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDefault title:@"Stop" handler:^(UITableViewRowAction *action, NSIndexPath *indexPath) {
+        [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:2]];
+        [self fetchPosts];
+    }];
+    stop.backgroundColor = [UIColor redColor];
+    
+
+    return  @[stop, start, completed, close];
+}
+
+- (void)setPostStatusAtIndexPath:(NSIndexPath *)indexPath withStatus:(NSNumber *)clickedStatus
+{
+    NSDictionary *dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
+    NSNumber *clickedPostId = [NSNumber numberWithInt:[[[dict allKeys] objectAtIndex:0] intValue]];
+
+    //update status of this post
+    [post updatePostStatusForClientPostId:clickedPostId withStatus:clickedStatus];
+    
+    NSString *statusString;
+    
+    switch ([clickedStatus intValue]) {
+        case 1:
+            statusString = @"Issue set status Start";
+            break;
+            
+        case 2:
+            statusString = @"Issue set status Stop";
+            break;
+            
+        case 3:
+            statusString = @"Issue set status Completed";
+            break;
+            
+        case 4:
+            statusString = @"Issue set status Close";
+            break;
+            
+        default:
+            statusString = @"Issue set status Pending";
+            break;
+    }
+    
+    
+    //create a comment about this post update
+    NSDate *date = [NSDate date];
+    
+    NSDictionary *dictCommentStatus = @{@"client_post_id":clickedPostId, @"text":statusString,@"senderId":user.user_id,@"date":date,@"messageType":@"text",@"comment_type":[NSNumber numberWithInt:2]};
+    
+    [comment saveCommentWithDict:dictCommentStatus];
+}
+
  // Override to support editing the table view.
- - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
- if (editingStyle == UITableViewCellEditingStyleDelete) {
- // Delete the row from the data source
- [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
- } else if (editingStyle == UITableViewCellEditingStyleInsert) {
- // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
- }
- }
- */
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
+
+}
+
 
 /*
  // Override to support rearranging the table view.
