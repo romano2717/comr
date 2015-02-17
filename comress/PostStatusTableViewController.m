@@ -56,9 +56,11 @@
     NSString *statusString = [NSString stringWithFormat:@"%ld",(long)indexPath.row];
     
     if([statusString isEqualToString:selectedStatus])
+    {
         cell.contentView.backgroundColor = [UIColor blueColor];
-
-
+        cell.textLabel.textColor = [UIColor whiteColor];
+    }
+    
     // Configure the cell...
     cell.textLabel.text = [self.status objectAtIndex:indexPath.row];
     

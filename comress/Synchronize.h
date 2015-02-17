@@ -35,4 +35,5 @@
 
 - (void)uploadImage;
 
+- (void)downloadPost;
 @end

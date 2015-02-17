@@ -22,7 +22,8 @@ address,
 status,
 level,
 block_id,
-postal_code
+postal_code,
+last_request_date
 ;
 
 -(id)init {
@@ -30,6 +31,14 @@ postal_code
         myDatabase = [Database sharedMyDbManager];
         db = [myDatabase prepareDatabaseFor:self];
         databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
+        
+        last_request_date = nil;
+        
+        FMResultSet *rs = [db executeQuery:@"select date from post_image_last_request_date"];
+        while ([rs next]) {
+            last_request_date = [rs dateForColumn:@"date"];
+        }
+        
     }
     return self;
 }
@@ -123,7 +132,7 @@ postal_code
         
 
         //add all images of this post
-        FMResultSet *rsPostImage = [db executeQuery:@"select * from post_image where client_post_id = ? order by client_post_image_id",postId];
+        FMResultSet *rsPostImage = [db executeQuery:@"select * from post_image where client_post_id = ? and client_comment_id is null order by client_post_image_id ",postId];
         NSMutableArray *imagesArray = [[NSMutableArray alloc] init];
         
         while ([rsPostImage next]) {

@@ -97,7 +97,7 @@ image_type
         NSString *filePath = [documentsPath stringByAppendingPathComponent:[rs stringForColumn:@"image_path"]];
         
         UIImage *image = [UIImage imageWithContentsOfFile:filePath];
-        NSData *imageData = UIImageJPEGRepresentation(image, 0);
+        NSData *imageData = UIImageJPEGRepresentation(image, 1);
         NSData *imageBase64 = [imageData base64EncodedDataWithOptions:NSDataBase64Encoding64CharacterLineLength];
         NSString *imageString = [NSString stringWithUTF8String:[imageBase64 bytes]];
         

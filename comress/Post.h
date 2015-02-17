@@ -28,6 +28,7 @@
 @property (nonatomic, strong) NSString *level;
 @property (nonatomic, strong) NSString *block_id;
 @property (nonatomic, strong) NSString *postal_code;
+@property (nonatomic, strong) NSDate *last_request_date;
 
 - (long long)savePostWithDictionary:(NSDictionary *)dict;
 - (NSArray *)fetchIssuesWithParams:(NSDictionary *)params forPostId:(NSNumber *)postId;

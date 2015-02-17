@@ -211,6 +211,22 @@
             [myDatabase alertMessageWithMessage:[NSString stringWithFormat:@"Reset failed. %@",[theDb lastError]]];
             return;
         }
+        
+        NSArray *directoryContents =  [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES)lastObject] error:NULL];
+        
+        if([directoryContents count] > 0)
+        {
+            for (NSString *path in directoryContents)
+            {
+                NSString *fullPath = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES)lastObject] stringByAppendingPathComponent:path];
+                
+                NSRange r =[fullPath rangeOfString:@".jpg"];
+                if (r.location != NSNotFound || r.length == [@".jpg" length])
+                {
+                    [[NSFileManager defaultManager] removeItemAtPath:fullPath error:nil];
+                }
+            }
+        }
     }];
     
     exit(1);

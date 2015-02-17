@@ -27,6 +27,18 @@ static NSString *api_send_images = @"Messaging/PostImage.svc/UploadImageWithBase
 static NSString *api_download_blocks = @"Job/Block.svc/GetBlocks";
 
 static NSString *api_update_device_token = @"User.svc/UpdateDeviceToken?";
+
+static NSString *api_download_posts = @"Messaging/Post.svc/GetPosts";
+
+static NSString *api_download_comments = @"Messaging/Comment.svc/GetComments";
+
+static NSString *api_download_images = @"Messaging/PostImage.svc/GetImages";
+
+static NSString *api_download_comment_noti = @"Messaging/CommentNoti.svc/GetCommentNotis";
+
+static NSString *api_update_status_after_read = @"Messaging/CommentNoti.svc/UpdateStatusAfterRead";
+
+
 #endif
 
 

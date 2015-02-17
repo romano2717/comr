@@ -54,10 +54,9 @@
 {
     [super viewWillAppear:animated];
     
-    
     self.tabBarController.tabBar.hidden = NO;
-    
     self.navigationController.navigationBar.hidden = YES;
+    self.hidesBottomBarWhenPushed = NO;
     
     [self fetchPosts];
 }
@@ -156,25 +155,36 @@
 - (NSArray *)tableView:(UITableView *)tableView editActionsForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     UITableViewRowAction *close = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDefault title:@"Close" handler:^(UITableViewRowAction *action, NSIndexPath *indexPath) {
-        [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:4]];
+        
+        NSDictionary *dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
+        [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:4] withPostDict:dict];
         [self fetchPosts];
     }];
     close.backgroundColor = [UIColor darkGrayColor];
     
     UITableViewRowAction *completed = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDefault title:@"Completed" handler:^(UITableViewRowAction *action, NSIndexPath *indexPath) {
-        [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:3]];
+        
+        NSDictionary *dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
+        
+        [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:3] withPostDict:dict];
         [self fetchPosts];
     }];
     completed.backgroundColor = [UIColor greenColor];
     
     UITableViewRowAction *start = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDefault title:@"Start" handler:^(UITableViewRowAction *action, NSIndexPath *indexPath) {
-        [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:1]];
+        
+        NSDictionary *dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
+        
+        [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:1] withPostDict:dict];
         [self fetchPosts];
     }];
     start.backgroundColor = [UIColor orangeColor];
     
     UITableViewRowAction *stop = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDefault title:@"Stop" handler:^(UITableViewRowAction *action, NSIndexPath *indexPath) {
-        [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:2]];
+        
+        NSDictionary *dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
+        
+        [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:2] withPostDict:dict];
         [self fetchPosts];
     }];
     stop.backgroundColor = [UIColor redColor];
@@ -183,9 +193,9 @@
     return  @[stop, start, completed, close];
 }
 
-- (void)setPostStatusAtIndexPath:(NSIndexPath *)indexPath withStatus:(NSNumber *)clickedStatus
+- (void)setPostStatusAtIndexPath:(NSIndexPath *)indexPath withStatus:(NSNumber *)clickedStatus withPostDict:(NSDictionary *)dict
 {
-    NSDictionary *dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
+    dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
     NSNumber *clickedPostId = [NSNumber numberWithInt:[[[dict allKeys] objectAtIndex:0] intValue]];
 
     //update status of this post

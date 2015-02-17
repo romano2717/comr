@@ -34,10 +34,13 @@
 @property (nonatomic, strong) UIImagePickerController *imagePicker;
 
 @property (nonatomic, weak) IBOutlet MPGTextField *postalCodeTextField;
+@property (nonatomic, weak) IBOutlet UILabel *postalCodeLabel;
 @property (nonatomic, weak) IBOutlet UIButton *postalCodesNearYouButton;
-@property (nonatomic, weak) IBOutlet UITextField *addressTextField;
+@property (nonatomic, weak) IBOutlet MPGTextField *addressTextField;
+@property (nonatomic, weak) IBOutlet UILabel *addressLabel;
 @property (nonatomic, weak) IBOutlet UITextField *levelTextField;
 @property (nonatomic, weak) IBOutlet UITextView *descriptionTextView;
+@property (nonatomic, weak) IBOutlet UILabel *descriptionLabel;
 @property (nonatomic, weak) IBOutlet UITextField *severityTextField;
 @property (nonatomic, weak) IBOutlet UIButton *addPhotosButton;
 

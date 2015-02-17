@@ -20,6 +20,7 @@
 @property (nonatomic, strong) NSMutableArray *addressResultsArray;
 @property (nonatomic, strong) NSMutableArray *placeMarksArray;
 @property (nonatomic, strong) NSMutableArray *blocksArray;
+@property (nonatomic, strong) NSMutableArray *addressArray;
 
 @end
 
@@ -74,21 +75,27 @@
     
     //for autocomplete
     [self.postalCodeTextField setDelegate:self];
+    [self.addressTextField setDelegate:self];
 }
 
 - (void)generateData
 {
     self.blocksArray = [[NSMutableArray alloc] init];
+    self.addressArray = [[NSMutableArray alloc] init];
     
     NSArray *theBlocks = [blocks fetchBlocksWithBlockId:nil];
+    
     
     dispatch_async(dispatch_get_main_queue(), ^{
        
         [theBlocks enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
             NSString *postal_code = [NSString stringWithFormat:@"%@ - %@",[obj valueForKey:@"postal_code"],[obj valueForKey:@"street_name"]];
             NSString *block_no = [obj valueForKey:@"block_no"];
+            NSString *street_name = [NSString stringWithFormat:@"%@ - %@",[obj valueForKey:@"street_name"],[obj valueForKey:@"postal_code"]];
             
             [self.blocksArray addObject:[NSDictionary dictionaryWithObjectsAndKeys:postal_code,@"DisplayText",obj,@"CustomObject",block_no,@"DisplaySubText", nil]];
+            
+            [self.addressArray addObject:[NSDictionary dictionaryWithObjectsAndKeys:street_name,@"DisplayText",obj,@"CustomObject",block_no,@"DisplaySubText", nil]];
         }];
         
     });
@@ -100,6 +107,10 @@
 {
     if ([textField isEqual:self.postalCodeTextField]) {
         return self.blocksArray;
+    }
+    else if ([textField isEqual:self.addressTextField])
+    {
+        return self.addressArray;
     }
     
     return nil;
@@ -451,6 +462,25 @@
     NSString *post_topic = [self.descriptionTextView.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     NSString *severity = [self.severityTextField.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     
+    if(postal_code.length == 0)
+    {
+        self.postalCodeLabel.backgroundColor = [UIColor redColor];
+        return;
+    }
+    
+    if(location.length == 0)
+    {
+        self.addressLabel.backgroundColor = [UIColor redColor];
+        return;
+    }
+    
+    if(post_topic.length == 0)
+    {
+        self.descriptionLabel.backgroundColor = [UIColor redColor];
+        return;
+    }
+
+    
     if([severity isEqualToString:@"Routine"])
         severity = @"2";
     else
@@ -471,7 +501,7 @@
         for (int i = 0; i < self.photoArrayFull.count; i++) {
             UIImage *image = [self.photoArrayFull objectAtIndex:i];
             
-            NSData *jpegImageData = UIImageJPEGRepresentation(image, 0);
+            NSData *jpegImageData = UIImageJPEGRepresentation(image, 1);
             
             //save the image to app documents dir
             NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);

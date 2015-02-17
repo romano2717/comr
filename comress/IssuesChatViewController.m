@@ -14,7 +14,7 @@
 
 @implementation IssuesChatViewController
 
-@synthesize postId,postDict,commentsArray;
+@synthesize postId,postDict,commentsArray,theNewSelectedStatus;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -41,6 +41,8 @@
     locationManager.distanceFilter = 100;
     locationManager.desiredAccuracy = kCLLocationAccuracyBest;
     locationManager.delegate = self;
+    
+    theNewSelectedStatus = nil;
 }
 
 - (void)fetchComments
@@ -87,7 +89,7 @@
             }
             else if ([[dict valueForKey:@"comment_type"] intValue] == 2) //issue status update
             {
-                NSString *dateStringForm = [date stringWithHumanizedTimeDifference:0 withFullString:YES];
+                NSString *dateStringForm = [date stringWithHumanizedTimeDifference:0 withFullString:NO];
                 
                 NSString *statusComment = [NSString stringWithFormat:@"%@ (%@)",commentString,dateStringForm];
                 
@@ -130,22 +132,27 @@
     switch (rowNum) {
         case 1:
             statusString = @"Issue set status Start";
+            theNewSelectedStatus = @"1";
             break;
             
         case 2:
             statusString = @"Issue set status Stop";
+            theNewSelectedStatus = @"2";
             break;
             
         case 3:
             statusString = @"Issue set status Completed";
+            theNewSelectedStatus = @"3";
             break;
             
         case 4:
             statusString = @"Issue set status Close";
+            theNewSelectedStatus = @"4";
             break;
         
         default:
             statusString = @"Issue set status Pending";
+            theNewSelectedStatus = @"0";
             break;
     }
     
@@ -166,8 +173,12 @@
     PostStatusTableViewController *postStatVc = [[PostStatusTableViewController alloc] initWithStyle:UITableViewStylePlain];
     postStatVc.delegate = self;
     
-    DDLogVerbose(@"%@",postDict);
-    NSString *postStatus = [[[postDict objectForKey:[[postDict allKeys] objectAtIndex:0]] objectForKey:@"post"] valueForKey:@"status"] ;
+    NSString *postStatus;
+    
+    if(theNewSelectedStatus == nil)
+        postStatus = [[[postDict objectForKey:[[postDict allKeys] objectAtIndex:0]] objectForKey:@"post"] valueForKey:@"status"];
+    else
+        postStatus = theNewSelectedStatus;
     
     postStatVc.selectedStatus = postStatus;
     popover = [[FPPopoverKeyboardResponsiveController alloc] initWithViewController:postStatVc];
@@ -256,7 +267,6 @@
         case 2:
         {
             [self shareLocation];
-            
             break;
         }
             
@@ -282,6 +292,8 @@
     CGFloat latitude = loc.coordinate.latitude;
     
     NSURL *mapImageUrl = [NSURL URLWithString:[NSString stringWithFormat:@"https://maps.googleapis.com/maps/api/staticmap?center=%f,%f&zoom=16&size=750x1334&markers=color:red%%7C%f,%f",latitude,longitude,latitude,longitude]];
+    
+    DDLogVerbose(@"%@",mapImageUrl);
 
     NSTimeInterval locationAge = -[loc.timestamp timeIntervalSinceNow];
     

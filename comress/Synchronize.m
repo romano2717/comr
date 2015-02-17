@@ -186,7 +186,55 @@
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error,THIS_FILE,THIS_METHOD);
     }];
-
 }
+
+- (void)downloadPost
+{
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"Z"]; //for getting the timezone part of the date only.
+    
+    NSString *jsonDate = @"/Date(1388505600000+0800)/";
+    
+    if(post.last_request_date != nil)
+    {
+        jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [post.last_request_date timeIntervalSince1970],[formatter stringFromDate:post.last_request_date]];
+    }
+    
+    NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
+    DDLogVerbose(@"%@",params);
+    
+    AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
+    
+    [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_download_posts] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
+       
+        DDLogVerbose(@"posts %@",responseObject);
+        
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        DDLogVerbose(@"%@ [%@-%@]",error,THIS_FILE,THIS_METHOD);
+    }];
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 @end

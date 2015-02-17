@@ -41,7 +41,7 @@
 {
     UIImage *img;
     
-    NSData *imageData = UIImageJPEGRepresentation(image, 0);
+    NSData *imageData = UIImageJPEGRepresentation(image, 1);
     
     CGImageSourceRef src = CGImageSourceCreateWithData((__bridge CFDataRef)imageData, NULL);
     

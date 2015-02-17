@@ -74,13 +74,13 @@ comment_type;
                 
                 UIImage *image = [dict valueForKey:@"image"];
                 
-                NSData *jpegImageData = UIImageJPEGRepresentation(image, 0);
+                NSData *jpegImageData = UIImageJPEGRepresentation(image, 1);
                 
                 //save the image to app documents dir
                 NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
                 NSString *documentsPath = [paths objectAtIndex:0];
                 NSString *imageFileName = [NSString stringWithFormat:@"%@.jpg",[[NSUUID UUID] UUIDString]];
-                
+                DDLogVerbose(@"imageFileName %@",imageFileName);
                 NSString *filePath = [documentsPath stringByAppendingPathComponent:imageFileName]; //Add the file name
                 [jpegImageData writeToFile:filePath atomically:YES];
                 
