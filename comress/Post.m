@@ -34,7 +34,7 @@ last_request_date
         
         last_request_date = nil;
         
-        FMResultSet *rs = [db executeQuery:@"select date from post_image_last_request_date"];
+        FMResultSet *rs = [db executeQuery:@"select date from post_last_request_date"];
         while ([rs next]) {
             last_request_date = [rs dateForColumn:@"date"];
         }

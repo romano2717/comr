@@ -13,6 +13,7 @@
 @synthesize
 post_id,
 comment_id,
-status;
+status,
+last_request_date;
 
 @end

@@ -14,6 +14,7 @@
 #import "Comment.h"
 #import "PostImage.h"
 #import "Users.h"
+#import "Comment_noti.h"
 
 @interface Synchronize : NSObject
 {
@@ -23,6 +24,7 @@
     FMDatabase *db;
     Comment *comment;
     PostImage *postImage;
+    Comment_noti *comment_noti;
     
     FMDatabaseQueue *databaseQueue;
 }
@@ -36,4 +38,12 @@
 - (void)uploadImage;
 
 - (void)downloadPost;
+
+- (void)downloadComments;
+
+- (void)downloadPostImages;
+
+- (void)downloadCommentNoti;
+
+- (void)updateReadStatus;
 @end

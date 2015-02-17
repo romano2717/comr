@@ -199,7 +199,7 @@
     
     popover = [[FPPopoverKeyboardResponsiveController alloc] initWithViewController:postInfoVc];
     popover.arrowDirection = FPPopoverArrowDirectionUp;
-    popover.contentSize = CGSizeMake(CGRectGetWidth(self.view.frame) * 0.90, CGRectGetHeight(self.view.frame) * 0.90);
+    popover.contentSize = CGSizeMake(CGRectGetWidth(self.view.frame) * 0.90, CGRectGetHeight(self.view.frame) * 0.60);
     
     [popover presentPopoverFromView:self.navigationController.navigationBar];
 }

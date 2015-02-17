@@ -17,7 +17,7 @@
 @property (nonatomic, weak) IBOutlet UILabel *locationLabel;
 @property (nonatomic, weak) IBOutlet UILabel *levelLabel;
 @property (nonatomic, weak) IBOutlet UILabel *severityLabel;
-@property (nonatomic, weak) IBOutlet UICollectionView *collection;
+@property (nonatomic, weak) IBOutlet UICollectionView *theCollectionView;
 
 @property (nonatomic, strong) NSDictionary *postInfoDict;
 

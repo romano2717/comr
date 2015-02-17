@@ -18,7 +18,9 @@ post_id,
 comment,
 comment_on,
 comment_by,
-comment_type;
+comment_type,
+last_request_date
+;
 
 -(id)init {
     if (self = [super init]) {
@@ -26,6 +28,13 @@ comment_type;
         db = [myDatabase prepareDatabaseFor:self];
         
         databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
+        
+        last_request_date = nil;
+        
+        FMResultSet *rs = [db executeQuery:@"select date from comment_last_request_date"];
+        while ([rs next]) {
+            last_request_date = [rs dateForColumn:@"date"];
+        }
     }
     return self;
 }

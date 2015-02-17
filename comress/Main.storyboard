@@ -570,12 +570,12 @@
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="collection" destination="Bn6-ox-kDz" id="hy8-QQ-FPh"/>
                         <outlet property="issueByLabel" destination="bO6-SF-ay0" id="wDf-tC-zuF"/>
                         <outlet property="issueLabel" destination="fMd-KW-KEi" id="Kqa-2S-xKA"/>
                         <outlet property="levelLabel" destination="b26-RJ-NfG" id="fjD-xG-nuO"/>
                         <outlet property="locationLabel" destination="OLN-t5-lhL" id="5ve-M3-N2S"/>
                         <outlet property="severityLabel" destination="AmI-o4-xsm" id="dam-yJ-tFS"/>
+                        <outlet property="theCollectionView" destination="Bn6-ox-kDz" id="aKz-k9-ohQ"/>
                         <segue destination="1tC-jd-mh6" kind="presentation" identifier="push_view_image" id="ZhQ-si-3R4"/>
                     </connections>
                 </viewController>
@@ -1207,7 +1207,7 @@
                         <outlet property="addPhotosButton" destination="aLG-0f-pIE" id="3hS-Vy-ipE"/>
                         <outlet property="addressLabel" destination="SxR-7i-Wg4" id="Fic-gn-kuy"/>
                         <outlet property="addressTextField" destination="8vm-bg-VRB" id="ElT-sl-HY2"/>
-                        <outlet property="collectionView" destination="Gku-Iv-ego" id="zj3-X4-aa0"/>
+                        <outlet property="collectionView" destination="Gku-Iv-ego" id="CtQ-Yx-ogv"/>
                         <outlet property="descriptionLabel" destination="ot1-2W-hiF" id="lnV-fV-Hao"/>
                         <outlet property="descriptionTextView" destination="PWv-7c-hKn" id="gk2-ic-scB"/>
                         <outlet property="levelTextField" destination="gLx-bh-e0O" id="JV7-eI-8g6"/>
@@ -1507,6 +1507,6 @@
     <inferredMetricsTieBreakers>
         <segue reference="j8d-1K-yvk"/>
         <segue reference="q2U-TG-uMs"/>
-        <segue reference="wel-of-2Aw"/>
+        <segue reference="ZhQ-si-3R4"/>
     </inferredMetricsTieBreakers>
 </document>

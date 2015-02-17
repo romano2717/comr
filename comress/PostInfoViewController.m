@@ -14,7 +14,7 @@
 
 @implementation PostInfoViewController
 
-@synthesize postInfoDict;
+@synthesize postInfoDict,theCollectionView;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -50,6 +50,13 @@
             [self.imagesArray addObject:image];
         }
     }
+}
+
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    
+    [theCollectionView flashScrollIndicators];
 }
 
 - (void)didReceiveMemoryWarning {
