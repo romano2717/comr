@@ -78,7 +78,8 @@ static const int newDatabaseVersion = 2; //this database version is incremented 
     BOOL success;
     
     FMDatabase *db = [self prepareDatabaseFor:self];
-    db.traceExecution = YES;
+    if(allowLogging)
+        db.traceExecution = NO;
     [db open];
     
     FMResultSet *rs = [db executeQuery:@"select max(version) as version from db_version"];

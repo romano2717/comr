@@ -98,7 +98,7 @@
         }
 
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        DDLogVerbose(@"%@ [%@-%@]",error,THIS_FILE,THIS_METHOD);
+        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
     }];
 }
 
@@ -148,7 +148,7 @@
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         
-        DDLogVerbose(@"%@ [%@-%@]",error,THIS_FILE,THIS_METHOD);
+        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
     }];
 }
 
@@ -185,7 +185,7 @@
         }
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        DDLogVerbose(@"%@ [%@-%@]",error,THIS_FILE,THIS_METHOD);
+        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
     }];
 }
 
@@ -202,7 +202,6 @@
     }
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
-    DDLogVerbose(@"%@",params);
     
     AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
     
@@ -211,7 +210,7 @@
         DDLogVerbose(@"downloadPost %@",responseObject);
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        DDLogVerbose(@"%@ [%@-%@]",error,THIS_FILE,THIS_METHOD);
+        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
     }];
 }
 
@@ -225,20 +224,21 @@
     
     if(comment.last_request_date != nil)
     {
-        jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [post.last_request_date timeIntervalSince1970],[formatter stringFromDate:post.last_request_date]];
+        jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [comment.last_request_date timeIntervalSince1970],[formatter stringFromDate:post.last_request_date]];
     }
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
-    DDLogVerbose(@"downloadComments %@",params);
     
     AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
     
     [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_download_comments] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
         
         DDLogVerbose(@"downloadComments %@",responseObject);
+        [comment saveDownloadedComments:(NSDictionary *)responseObject];
+        
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        DDLogVerbose(@"%@ [%@-%@]",error,THIS_FILE,THIS_METHOD);
+        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
     }];
 }
 
@@ -265,7 +265,7 @@
         DDLogVerbose(@"downloadPostImages %@",responseObject);
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        DDLogVerbose(@"%@ [%@-%@]",error,THIS_FILE,THIS_METHOD);
+        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
     }];
 }
 
@@ -292,7 +292,7 @@
         DDLogVerbose(@"downloadCommentNoti %@",responseObject);
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        DDLogVerbose(@"%@ [%@-%@]",error,THIS_FILE,THIS_METHOD);
+        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
     }];
 }
 

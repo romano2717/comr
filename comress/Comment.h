@@ -30,4 +30,5 @@
 
 - (BOOL)saveCommentWithDict:(NSDictionary *)dict;
 - (NSDictionary *)commentsToSend;
+- (BOOL)saveDownloadedComments:(NSDictionary *)dict;
 @end

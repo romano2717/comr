@@ -8,11 +8,12 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ImagePreviewViewController : UIViewController
+@interface ImagePreviewViewController : UIViewController<UIScrollViewDelegate>
 {
 
 }
 
 @property (nonatomic, weak) IBOutlet UIImageView *imageView;
 @property (nonatomic, strong) UIImage *image;
+@property (nonatomic, weak) IBOutlet UIScrollView *scrollView;
 @end

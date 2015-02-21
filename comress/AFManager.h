@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "ApiCallUrl.h"
 #import "AFHTTPRequestOperationManager.h"
+#import "AFHTTPSessionManager.h"
 #import "Client.h"
 
 @interface AFManager : NSObject

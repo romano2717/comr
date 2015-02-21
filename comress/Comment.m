@@ -172,5 +172,76 @@ last_request_date
     return commentListDict;
 }
 
+- (BOOL)saveDownloadedComments:(NSDictionary *)dict
+{
+    __block BOOL ok = YES;
+    
+    NSArray *top = (NSArray *)[[dict objectForKey:@"CommentContainer"] objectForKey:@"CommentList"];
+    NSDate *lastRequestDate = [[dict objectForKey:@"CommentContainer"] valueForKey:@"LastRequestDate"];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        
+        for (NSDictionary *obj in top) {
+            NSString *CommentBy     = [obj valueForKey:@"CommentBy"];
+            NSString *CommentDate   = [obj valueForKey:@"CommentDate"];
+            NSNumber *CommentId     = [obj valueForKey:@"CommentId"];
+            NSString *CommentString = [obj valueForKey:@"CommentString"];
+            NSNumber *CommentType   = [obj valueForKey:@"CommentType"];
+            NSNumber *PostId        = [obj valueForKey:@"PostId"];
+            
+            NSDate *commentDateDate = [self deserializeJsonDateString:CommentDate];
+            
+            
+            [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+                BOOL save = [theDb executeUpdate:@"insert into comment(comment_by,comment_on,comment_id,comment,comment_type,post_id) values (?,?,?,?,?,?)",CommentBy,commentDateDate,CommentId,CommentString,CommentType,PostId];
+                
+                if(!save)
+                {
+                    ok = NO;
+                    *rollback = YES;
+                }
+                
+                else
+                {
+                    BOOL lrd = NO;
+                    
+                    FMResultSet *rslrd = [theDb executeQuery:@"select date from comment_last_request_date"];
+                    if([rslrd next])
+                    {
+                        lrd = [theDb executeUpdate:@"update date from comment_last_request_date set date = ?",lastRequestDate];
+                        
+                        if(!lrd)
+                        {
+                            *rollback = YES;
+                            return;
+                        }
+                    }
+                    else //add as new
+                    {
+                        lrd  = [theDb executeUpdate:@"insert into comment_last_request_date(date) values(?)",lastRequestDate];
+                    }
+                }
+            }];
+        }
+    });
+    
+    return NO;
+}
+
+- (NSDate *)deserializeJsonDateString: (NSString *)jsonDateString
+{
+    NSInteger offset = [[NSTimeZone defaultTimeZone] secondsFromGMT]; //get number of seconds to add or subtract according to the client default time zone
+    
+    //NSInteger startPosition = [jsonDateString rangeOfString:@"("].location + 1; //start of the date value
+    NSInteger startPosition = [jsonDateString rangeOfString:@"("].location ;
+    
+    NSTimeInterval unixTime = [[jsonDateString substringWithRange:NSMakeRange(startPosition, 13)] doubleValue] / 1000; //WCF will send 13 digit-long value for the time interval since 1970 (millisecond precision) whereas iOS works with 10 digit-long values (second precision), hence the divide by 1000
+    
+    NSDate *date =  [[NSDate dateWithTimeIntervalSince1970:unixTime] dateByAddingTimeInterval:offset];
+    
+    return date;
+}
+
+
 
 @end

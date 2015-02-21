@@ -39,6 +39,7 @@
     manager.requestSerializer = [AFJSONRequestSerializer serializer];
     manager.responseSerializer = [AFJSONResponseSerializer serializer];
     [manager.requestSerializer setValue:client.user_guid forHTTPHeaderField:@"ComSessionId"];
+
     
     DDLogVerbose(@"session: %@",client.user_guid);
     

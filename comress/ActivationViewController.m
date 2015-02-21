@@ -78,7 +78,7 @@
             }
             
         } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-            DDLogVerbose(@"%@ [%@-%@]",error, THIS_FILE,THIS_METHOD);
+            DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription, THIS_FILE,THIS_METHOD);
             
         }];
     }

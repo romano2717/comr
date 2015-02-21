@@ -20,7 +20,8 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     
-    [[AFNetworkActivityLogger sharedLogger] startLogging];
+    if(allowLogging)
+        [[AFNetworkActivityLogger sharedLogger] startLogging];
     
     myDatabase = [Database sharedMyDbManager];
     
@@ -67,21 +68,21 @@
         [sync uploadImage];
     });
     
-//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-//        [sync downloadPost];
-//    });
-//    
-//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-//        [sync downloadComments];
-//    });
-//    
-//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-//        [sync downloadPostImages];
-//    });
-//    
-//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-//        [sync downloadCommentNoti];
-//    });
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        [sync downloadPost];
+    });
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        [sync downloadComments];
+    });
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        [sync downloadPostImages];
+    });
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        [sync downloadCommentNoti];
+    });
 }
 
 - (void)pingServer
@@ -198,7 +199,7 @@
             DDLogVerbose(@"update device token %@",responseObject);
             
         } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-            DDLogVerbose(@"%@ [%@-%@]",error,THIS_FILE,THIS_METHOD);
+            DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         }];
     }
 }
