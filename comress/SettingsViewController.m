@@ -212,6 +212,7 @@
             return;
         }
         
+        //delete images
         NSArray *directoryContents =  [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES)lastObject] error:NULL];
         
         if([directoryContents count] > 0)

@@ -12,14 +12,10 @@
 
 -(id)init {
     if (self = [super init]) {
-        post = [[Post alloc] init];
+        
         myAfManager = [AFManager sharedMyAfManager];
         myDatabase = [Database sharedMyDbManager];
         db = [myDatabase prepareDatabaseFor:self];
-        comment = [[Comment alloc] init];
-        postImage = [[PostImage alloc] init];
-        comment_noti = [[Comment_noti alloc] init];
-        
         databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
     }
     return self;
@@ -36,6 +32,8 @@
 
 - (void)uploadPost
 {
+    __block Post *post = [[Post alloc] init];
+ 
     NSArray *array = [post postsToSend];
     
     if(array.count == 0)
@@ -96,6 +94,8 @@
                 }
             }];
         }
+        
+        post = nil;
 
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
@@ -105,6 +105,8 @@
 
 - (void)uploadComment
 {
+    __block Comment *comment = [[Comment alloc] init];
+    
     NSDictionary *dict = [comment commentsToSend];
 
     if(dict == nil)
@@ -146,6 +148,8 @@
             }];
         }
         
+        comment = nil;
+        
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
@@ -154,6 +158,8 @@
 
 - (void)uploadImage
 {
+    __block PostImage *postImage = [[PostImage alloc] init];
+    
     NSDictionary *dict = [postImage imagesTosend];
     
     if(dict == nil)
@@ -184,6 +190,8 @@
             }];
         }
         
+        postImage = nil;
+        
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
     }];
@@ -195,11 +203,6 @@
     [formatter setDateFormat:@"Z"]; //for getting the timezone part of the date only.
     
     NSString *jsonDate = @"/Date(1388505600000+0800)/";
-    
-    if(post.last_request_date != nil)
-    {
-        jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [post.last_request_date timeIntervalSince1970],[formatter stringFromDate:post.last_request_date]];
-    }
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
     
@@ -220,12 +223,21 @@
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     [formatter setDateFormat:@"Z"]; //for getting the timezone part of the date only.
     
-    NSString *jsonDate = @"/Date(1388505600000+0800)/";
+    __block NSString *jsonDate = @"/Date(1388505600000+0800)/";
     
-    if(comment.last_request_date != nil)
-    {
-        jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [comment.last_request_date timeIntervalSince1970],[formatter stringFromDate:post.last_request_date]];
-    }
+    //get comment last request date
+    [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+        FMResultSet *rs = [theDb executeQuery:@"select date from comment_last_request_date"];
+        while([rs next])
+        {
+            NSDate *lastCommentDate = [rs dateForColumn:@"date"];
+            
+            jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [lastCommentDate timeIntervalSince1970],[formatter stringFromDate:lastCommentDate]];
+        }
+        
+    }];
+    
+    DDLogVerbose(@"%@",jsonDate);
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
     
@@ -234,7 +246,56 @@
     [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_download_comments] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
         
         DDLogVerbose(@"downloadComments %@",responseObject);
-        [comment saveDownloadedComments:(NSDictionary *)responseObject];
+        __block BOOL ok = YES;
+        NSDictionary *dict = (NSDictionary *)responseObject;
+        
+        NSArray *top = (NSArray *)[[dict objectForKey:@"CommentContainer"] objectForKey:@"CommentList"];
+        NSDate *lastRequestDate = [[dict objectForKey:@"CommentContainer"] valueForKey:@"LastRequestDate"];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
+            for (NSDictionary *obj in top) {
+                NSString *CommentBy     = [obj valueForKey:@"CommentBy"];
+                NSString *CommentDate   = [obj valueForKey:@"CommentDate"];
+                NSNumber *CommentId     = [obj valueForKey:@"CommentId"];
+                NSString *CommentString = [obj valueForKey:@"CommentString"];
+                NSNumber *CommentType   = [obj valueForKey:@"CommentType"];
+                NSNumber *PostId        = [obj valueForKey:@"PostId"];
+                
+                NSDate *commentDateDate = [self deserializeJsonDateString:CommentDate];
+                
+                [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+                    BOOL save = [theDb executeUpdate:@"insert into comment(comment_by,comment_on,comment_id,comment,comment_type,post_id) values (?,?,?,?,?,?)",CommentBy,commentDateDate,CommentId,CommentString,CommentType,PostId];
+                    
+                    if(!save)
+                    {
+                        ok = NO;
+                        *rollback = YES;
+                    }
+                    
+                    else
+                    {
+                        BOOL lrd = NO;
+                        
+                        FMResultSet *rslrd = [theDb executeQuery:@"select date from comment_last_request_date"];
+                        if([rslrd next])
+                        {
+                            lrd = [theDb executeUpdate:@"update comment_last_request_date set date = ?",lastRequestDate];
+                            
+                            if(!lrd)
+                            {
+                                *rollback = YES;
+                                return;
+                            }
+                        }
+                        else //add as new
+                        {
+                            lrd  = [theDb executeUpdate:@"insert into comment_last_request_date(date) values(?)",lastRequestDate];
+                        }
+                    }
+                }];
+            }
+        });
         
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
@@ -249,11 +310,6 @@
     [formatter setDateFormat:@"Z"]; //for getting the timezone part of the date only.
     
     NSString *jsonDate = @"/Date(1388505600000+0800)/";
-    
-    if(postImage.last_request_date != nil)
-    {
-        jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [post.last_request_date timeIntervalSince1970],[formatter stringFromDate:post.last_request_date]];
-    }
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
     DDLogVerbose(@" %@",params);
@@ -276,11 +332,6 @@
     [formatter setDateFormat:@"Z"]; //for getting the timezone part of the date only.
     
     NSString *jsonDate = @"/Date(1388505600000+0800)/";
-    
-    if(comment_noti.last_request_date != nil)
-    {
-        jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [post.last_request_date timeIntervalSince1970],[formatter stringFromDate:post.last_request_date]];
-    }
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
     DDLogVerbose(@"%@",params);
@@ -315,5 +366,17 @@
 
 
 
-
+- (NSDate *)deserializeJsonDateString: (NSString *)jsonDateString
+{
+    NSInteger offset = [[NSTimeZone defaultTimeZone] secondsFromGMT]; //get number of seconds to add or subtract according to the client default time zone
+    
+    NSInteger startPosition = [jsonDateString rangeOfString:@"("].location + 1; //start of the date value
+    //NSInteger startPosition = [jsonDateString rangeOfString:@"("].location ;
+    
+    NSTimeInterval unixTime = [[jsonDateString substringWithRange:NSMakeRange(startPosition, 13)] doubleValue] / 1000; //WCF will send 13 digit-long value for the time interval since 1970 (millisecond precision) whereas iOS works with 10 digit-long values (second precision), hence the divide by 1000
+    
+    NSDate *date =  [[NSDate dateWithTimeIntervalSince1970:unixTime] dateByAddingTimeInterval:offset];
+    
+    return date;
+}
 @end

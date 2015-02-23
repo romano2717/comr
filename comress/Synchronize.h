@@ -19,13 +19,8 @@
 @interface Synchronize : NSObject
 {
     AFManager *myAfManager;
-    Post *post;
     Database *myDatabase;
     FMDatabase *db;
-    Comment *comment;
-    PostImage *postImage;
-    Comment_noti *comment_noti;
-    
     FMDatabaseQueue *databaseQueue;
 }
 

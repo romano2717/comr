@@ -15,21 +15,12 @@ block_id,
 block_no,
 is_own_block,
 postal_code,
-street_name,
-last_request_date;
+street_name;
 
 - (id)init {
     if (self = [super init]) {
         myDatabase = [Database sharedMyDbManager];
         databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
-        
-        FMDatabase *db = [myDatabase prepareDatabaseFor:self];
-        last_request_date = nil;
-        
-        FMResultSet *rs = [db executeQuery:@"select date from blocks_last_request_date"];
-        while ([rs next]) {
-            last_request_date = [rs dateForColumn:@"date"];
-        }
     }
     
     return self;
@@ -98,11 +89,5 @@ last_request_date;
     return NO;
 }
 
-- (NSArray *)fetchAllMyRelatedBlocks
-{
-    
-    
-    return nil;
-}
 
 @end

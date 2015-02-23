@@ -22,8 +22,6 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
-    NSLog(@"tab");
-    
     myDatabase = [Database sharedMyDbManager];
     db = [myDatabase prepareDatabaseFor:self];
     myAfManager = [AFManager sharedMyAfManager];
@@ -62,74 +60,11 @@
     
     else if(!needToActivate && !needToLogin) //init
     {
-
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-            [self checkBlockCount];
-        });
-        
-    }
-}
-
-- (void)checkBlockCount
-{
-    blocks = nil;
-    
-    blocks = [[Blocks alloc] init];
-    
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"Z"]; //for getting the timezone part of the date only.
-    
-    NSString *jsonDate = @"/Date(1388505600000+0800)/";
-    
-    if(blocks.last_request_date != nil)
-    {
-        jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [blocks.last_request_date timeIntervalSince1970],[formatter stringFromDate:blocks.last_request_date]];
-    }
-
-    
-    NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
-    
-    AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
-    
-    [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_download_blocks] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
-        
-        NSDictionary *dict = [responseObject objectForKey:@"BlockContainer"];
-        
-        int totalRows = [[dict valueForKey:@"TotalRows"] intValue];
-        __block BOOL needToDownloadBlocks = NO;
-        
-        //save block count
-        [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
-            FMResultSet *rsBlockCount = [theDb executeQuery:@"select count(*) as total from blocks"];
-            
-            while ([rsBlockCount next]) {
-                int total = [rsBlockCount intForColumn:@"total"];
-                
-                if(total < totalRows)
-                {
-                    //clear the blocks to sync with new block count
-                    BOOL qDelBlocks = [theDb executeUpdate:@"delete from blocks"];
-                    
-                    if(!qDelBlocks)
-                    {
-                        *rollback = YES;
-                        return;
-                    }
-                    else
-                    {
-                        needToDownloadBlocks = YES;
-                    }
-                }
-            }
-        }];
-        
-        if(needToDownloadBlocks)
+        if(myDatabase.initializingComplete == 0)
             [self performSegueWithIdentifier:@"modal_initializer" sender:self];
-        
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
-    }];
+    }
 }
+
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

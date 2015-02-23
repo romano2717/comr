@@ -46,7 +46,7 @@
     }];
     
     sync = [Synchronize  sharedManager];
-    
+
     self.syncTimer = [NSTimer scheduledTimerWithTimeInterval:sync_interval target:self selector:@selector(synchronize) userInfo:nil repeats:YES];
     
     return YES;
@@ -54,8 +54,10 @@
 
 - (void)synchronize
 {
-    //add mechanism to stop sync
+    if(myDatabase.initializingComplete == 0)
+        return;
     
+    //upload
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         [sync uploadPost];
     });
@@ -68,21 +70,23 @@
         [sync uploadImage];
     });
     
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        [sync downloadPost];
-    });
     
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        [sync downloadComments];
-    });
+    //download
+//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+//        [sync downloadPost];
+//    });
     
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        [sync downloadPostImages];
-    });
+//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+//        [sync downloadComments];
+//    });
     
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        [sync downloadCommentNoti];
-    });
+//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+//        [sync downloadPostImages];
+//    });
+//    
+//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+//        [sync downloadCommentNoti];
+//    });
 }
 
 - (void)pingServer

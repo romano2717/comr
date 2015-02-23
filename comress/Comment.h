@@ -26,9 +26,8 @@
 @property (nonatomic, weak) NSDate *comment_on;
 @property (nonatomic, weak) NSString *comment_by;
 @property (nonatomic, weak) NSString *comment_type;
-@property (nonatomic, weak) NSDate *last_request_date;
 
 - (BOOL)saveCommentWithDict:(NSDictionary *)dict;
 - (NSDictionary *)commentsToSend;
-- (BOOL)saveDownloadedComments:(NSDictionary *)dict;
+- (BOOL)updateLastRequestDateWithDate:(NSString *)dateString;
 @end

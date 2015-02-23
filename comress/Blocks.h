@@ -20,7 +20,6 @@
 @property (nonatomic, strong) NSNumber *is_own_block;
 @property (nonatomic, strong) NSString *postal_code;
 @property (nonatomic, strong) NSString *street_name;
-@property (nonatomic, strong) NSDate *last_request_date;
 
 - (NSArray *)fetchBlocksWithBlockId:(NSNumber *)the_block_id;
 - (BOOL)updateLastRequestDateWithDate:(NSString *)dateString;

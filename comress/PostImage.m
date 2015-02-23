@@ -21,21 +21,13 @@ image_path,
 status,
 downloaded,
 uploaded,
-image_type,
-last_request_date
+image_type
 ;
 
 -(id)init {
     if (self = [super init]) {
         myDatabase = [Database sharedMyDbManager];
         db = [myDatabase prepareDatabaseFor:self];
-        
-        last_request_date = nil;
-        
-        FMResultSet *rs = [db executeQuery:@"select date from post_image_last_request_date"];
-        while ([rs next]) {
-            last_request_date = [rs dateForColumn:@"date"];
-        }
     }
     return self;
 }

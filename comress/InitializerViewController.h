@@ -10,6 +10,8 @@
 #import "Database.h"
 #import "AFManager.h"
 #import "Blocks.h"
+#import "Post.h"
+#import "Comment.h"
 
 @interface InitializerViewController : UIViewController
 {
@@ -19,6 +21,9 @@
     FMDatabase *db;
     
     Blocks *blocks;
+    Post *posts;
+    Comment *comments;
+    
 }
 @property (nonatomic, weak) IBOutlet UILabel *processLabel;
 

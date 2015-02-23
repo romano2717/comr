@@ -13,6 +13,5 @@
 @property (nonatomic) int post_id;
 @property (nonatomic) int comment_id;
 @property (nonatomic, strong) NSString *status;
-@property (nonatomic, strong) NSDate *last_request_date;
 
 @end

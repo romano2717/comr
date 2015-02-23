@@ -28,7 +28,6 @@
 @property (nonatomic, strong) NSString *downloaded;
 @property (nonatomic, strong) NSString *uploaded;
 @property (nonatomic, strong) NSNumber *image_type;
-@property (nonatomic, strong) NSDate *last_request_date;
 
 -(long long)savePostImageWithDictionary:(NSDictionary *)dict;
 - (void)close;

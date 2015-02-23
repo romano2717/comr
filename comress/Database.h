@@ -16,6 +16,8 @@
 
 }
 
+@property (nonatomic) int initializingComplete;
+
 + (id)sharedMyDbManager;
 
 - (FMDatabase *) prepareDatabaseFor:(id) obj;
@@ -23,4 +25,5 @@
 - (BOOL) migrateDatabase;
 - (void) alertMessageWithMessage:(NSString *)message;
 - (NSString *)dbPath;
+- (NSDate *)createNSDateWithWcfDateString:(NSString *)dateString;
 @end
