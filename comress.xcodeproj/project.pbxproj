@@ -14,8 +14,9 @@
 		4D0C2F8C1A7B4C98009E5E53 /* Post.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D0C2F8B1A7B4C98009E5E53 /* Post.m */; };
 		4D0C2F8F1A7B4CA2009E5E53 /* PostImage.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D0C2F8E1A7B4CA2009E5E53 /* PostImage.m */; };
 		4D0C2F921A7B4CAC009E5E53 /* Users.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D0C2F911A7B4CAC009E5E53 /* Users.m */; };
-		4D1F16521A9B198F0065A8DB /* comress.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 4D1F16511A9B198F0065A8DB /* comress.sqlite */; };
 		4D35D7BB1A7F6850007E7B0A /* AFManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D35D7BA1A7F6850007E7B0A /* AFManager.m */; };
+		4D37BDB81A9C2271006B414A /* back.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D37BDB71A9C2271006B414A /* back.png */; };
+		4D37BDBC1A9C4EA0006B414A /* comress.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 4D37BDBB1A9C4EA0006B414A /* comress.sqlite */; };
 		4D4B30EB1A933DDC00A5B8A2 /* bulb_off.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D4B30E91A933DDC00A5B8A2 /* bulb_off.png */; };
 		4D4B30EE1A933ED700A5B8A2 /* bulb_on.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D4B30ED1A933ED700A5B8A2 /* bulb_on.png */; };
 		4D4CB52A1A89D76F008AFD00 /* IssuesChatViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D4CB5291A89D76F008AFD00 /* IssuesChatViewController.m */; };
@@ -170,9 +171,10 @@
 		4D0C2F8E1A7B4CA2009E5E53 /* PostImage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PostImage.m; sourceTree = "<group>"; };
 		4D0C2F901A7B4CAC009E5E53 /* Users.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Users.h; sourceTree = "<group>"; };
 		4D0C2F911A7B4CAC009E5E53 /* Users.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Users.m; sourceTree = "<group>"; };
-		4D1F16511A9B198F0065A8DB /* comress.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = comress.sqlite; sourceTree = "<group>"; };
 		4D35D7B91A7F6850007E7B0A /* AFManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AFManager.h; sourceTree = "<group>"; };
 		4D35D7BA1A7F6850007E7B0A /* AFManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AFManager.m; sourceTree = "<group>"; };
+		4D37BDB71A9C2271006B414A /* back.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = back.png; sourceTree = "<group>"; };
+		4D37BDBB1A9C4EA0006B414A /* comress.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = comress.sqlite; sourceTree = "<group>"; };
 		4D4B30E91A933DDC00A5B8A2 /* bulb_off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bulb_off.png; sourceTree = "<group>"; };
 		4D4B30ED1A933ED700A5B8A2 /* bulb_on.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bulb_on.png; sourceTree = "<group>"; };
 		4D4CB5281A89D76F008AFD00 /* IssuesChatViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IssuesChatViewController.h; sourceTree = "<group>"; };
@@ -691,6 +693,7 @@
 		4DA2041A1A79CF7400C7E5C7 /* images */ = {
 			isa = PBXGroup;
 			children = (
+				4D37BDB71A9C2271006B414A /* back.png */,
 				4D4B30ED1A933ED700A5B8A2 /* bulb_on.png */,
 				4D4B30E91A933DDC00A5B8A2 /* bulb_off.png */,
 				4D91D6051A91CAA900A21DBA /* pin2.png */,
@@ -707,7 +710,7 @@
 		4DA204251A79CF8C00C7E5C7 /* db */ = {
 			isa = PBXGroup;
 			children = (
-				4D1F16511A9B198F0065A8DB /* comress.sqlite */,
+				4D37BDBB1A9C4EA0006B414A /* comress.sqlite */,
 			);
 			name = db;
 			sourceTree = "<group>";
@@ -1131,7 +1134,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4D1F16521A9B198F0065A8DB /* comress.sqlite in Resources */,
 				4DA207E41A79DA0A00C7E5C7 /* JSQMessagesViewController.xib in Resources */,
 				4DA208041A79DA0A00C7E5C7 /* JSQMessagesTypingIndicatorFooterView.xib in Resources */,
 				4D4B30EB1A933DDC00A5B8A2 /* bulb_off.png in Resources */,
@@ -1144,6 +1146,7 @@
 				4DAEA6B01A83423300A6EFBE /* noImage.png in Resources */,
 				4DA207DA1A79DA0A00C7E5C7 /* JSQMessagesAssets.bundle in Resources */,
 				4DA203D31A79CBA100C7E5C7 /* LaunchScreen.xib in Resources */,
+				4D37BDBC1A9C4EA0006B414A /* comress.sqlite in Resources */,
 				4DA204211A79CF8800C7E5C7 /* btn_large.png in Resources */,
 				4DA203D01A79CBA100C7E5C7 /* Images.xcassets in Resources */,
 				4DA204201A79CF8800C7E5C7 /* arrow.png in Resources */,
@@ -1151,6 +1154,7 @@
 				4DA207FA1A79DA0A00C7E5C7 /* JSQMessagesCollectionViewCellOutgoing.xib in Resources */,
 				4DAEA6B81A83505E00A6EFBE /* Localizable_full.strings in Resources */,
 				4DAEA6B71A83505E00A6EFBE /* Localizable.strings in Resources */,
+				4D37BDB81A9C2271006B414A /* back.png in Resources */,
 				4DA207DB1A79DA0A00C7E5C7 /* JSQMessages.strings in Resources */,
 				4D4B30EE1A933ED700A5B8A2 /* bulb_on.png in Resources */,
 				4DA207F81A79DA0A00C7E5C7 /* JSQMessagesCollectionViewCellIncoming.xib in Resources */,

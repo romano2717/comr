@@ -15,6 +15,7 @@
     Database *myDatabase;
     FMDatabase *db;
     Users *users;
+    FMDatabaseQueue *databaseQueue;    
 }
 
 @property (nonatomic, strong) NSNumber *client_post_image_id;
@@ -32,4 +33,5 @@
 -(long long)savePostImageWithDictionary:(NSDictionary *)dict;
 - (void)close;
 - (NSDictionary *)imagesTosend;
+- (BOOL)updateLastRequestDateWithDate:(NSString *)dateString;
 @end

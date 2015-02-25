@@ -26,7 +26,6 @@
 - (void)initCellWithResultSet:(NSDictionary *)dict
 {
     NSDictionary *topDict = (NSDictionary *)[[dict allValues] firstObject];
-
     NSDictionary *postDict = [topDict valueForKey:@"post"];
     NSArray *postComments = [topDict valueForKey:@"postComments"];
     NSArray *postImages = [topDict valueForKey:@"postImages"];

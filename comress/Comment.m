@@ -82,7 +82,7 @@ comment_type
                 NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
                 NSString *documentsPath = [paths objectAtIndex:0];
                 NSString *imageFileName = [NSString stringWithFormat:@"%@.jpg",[[NSUUID UUID] UUIDString]];
-                DDLogVerbose(@"imageFileName %@",imageFileName);
+
                 NSString *filePath = [documentsPath stringByAppendingPathComponent:imageFileName]; //Add the file name
                 [jpegImageData writeToFile:filePath atomically:YES];
                 

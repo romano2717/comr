@@ -23,6 +23,15 @@
     
     self.issueByLabel.text = [NSString stringWithFormat:@"Issue by: %@",[[postInfoDict objectForKey:@"post"] valueForKey:@"post_by"]];
     
+    double timeStamp = [[[postInfoDict objectForKey:@"post"] valueForKey:@"post_date"] doubleValue];
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:timeStamp];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    formatter.dateFormat = @"dd-MMM-YYYY HH:mm:ss";
+    [formatter setTimeZone:[NSTimeZone timeZoneWithName:@"GMT"]];
+    NSString *dateString = [formatter stringFromDate:date];
+    
+    self.dateLabel.text = dateString;
+    
     self.locationLabel.text = [NSString stringWithFormat:@"%@ %@",[[postInfoDict objectForKey:@"post"] valueForKey:@"postal_code"],[[postInfoDict objectForKey:@"post"] valueForKey:@"address"]];
 
     

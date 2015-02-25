@@ -28,6 +28,10 @@ postal_code;
     if (self = [super init]) {
         myDatabase = [Database sharedMyDbManager];
         db = [myDatabase prepareDatabaseFor:self];
+        
+        if(allowLogging)
+            db.traceExecution = YES;
+        
         databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
     }
     return self;
@@ -90,9 +94,6 @@ postal_code;
     status              = [params valueForKey:@"status"];
     level               = [params valueForKey:@"level"];
 
-    NSString *orderBy   = [params valueForKey:@"orderBy"];
-    NSString *limit     = [params valueForKey:@"limit"];
-    
     /*
      change query to also get all the images for the post
      */
@@ -112,17 +113,19 @@ postal_code;
     
     while ([rsPost next]) {
         
-        NSNumber *postId = [NSNumber numberWithInt:[rsPost intForColumn:@"client_post_id"]];
+        NSNumber *clientPostId = [NSNumber numberWithInt:[rsPost intForColumn:@"client_post_id"]];
+        NSNumber *serverPostId = [NSNumber numberWithInt:[rsPost intForColumn:@"post_id"]];
         
         NSMutableDictionary *postDict = [[NSMutableDictionary alloc] init];
         NSMutableDictionary *postChild = [[NSMutableDictionary alloc] init];
         
-        //add post info to our dict. this will be the top most level of our dictionary entry
+        //add post info to our dict. this will be the top most level of our dictionary entry 
         [postChild setObject:[rsPost resultDictionary] forKey:@"post"];
         
 
         //add all images of this post
-        FMResultSet *rsPostImage = [db executeQuery:@"select * from post_image where client_post_id = ? and client_comment_id is null order by client_post_image_id ",postId];
+        FMResultSet *rsPostImage = [db executeQuery:@"select * from post_image where client_comment_id is null and (client_post_id = ? or post_id = ?) order by client_post_image_id ",clientPostId,serverPostId];
+        
         NSMutableArray *imagesArray = [[NSMutableArray alloc] init];
         
         while ([rsPostImage next]) {
@@ -133,7 +136,7 @@ postal_code;
         
         
         //get all comments for this post including comment image if there's any
-        FMResultSet *rsPostComment = [db executeQuery:@"select * from comment where client_post_id = ? order by comment_on asc",postId];
+        FMResultSet *rsPostComment = [db executeQuery:@"select * from comment where (client_post_id = ? or post_id = ?)  order by comment_on asc",clientPostId,serverPostId];
         NSMutableArray *commentsArray = [[NSMutableArray alloc] init];
 
         while ([rsPostComment next]) {
@@ -156,9 +159,7 @@ postal_code;
         
         [postChild setObject:commentsArray forKey:@"postComments"];
         
-        
-        [postDict setObject:postChild forKey:postId];
-        
+        [postDict setObject:postChild forKey:postId ? postId : clientPostId];
         
         [arr addObject:postDict];
     }

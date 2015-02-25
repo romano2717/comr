@@ -54,6 +54,27 @@
 
 - (void)synchronize
 {
+    /*
+     only upload data to server if db file was modified to avoid un-necessary queries on the db
+     */
+    
+    NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:myDatabase.dbPath error:nil];
+    NSDate *modDate = [attributes fileModificationDate];
+    
+    NSUserDefaults *userDef = [NSUserDefaults standardUserDefaults];
+    
+    NSDate *storedModDate = [userDef objectForKey:@"modDate"];
+    
+    if (storedModDate != modDate)
+    {
+        DDLogVerbose(@"Db file was modified!");
+        [userDef setObject:modDate forKey:@"modDate"];
+    }
+    else
+    {
+        return; // db was not modified, don't do sync
+    }
+
     if(myDatabase.initializingComplete == 0)
         return;
     

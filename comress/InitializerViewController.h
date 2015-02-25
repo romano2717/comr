@@ -12,6 +12,10 @@
 #import "Blocks.h"
 #import "Post.h"
 #import "Comment.h"
+#import "PostImage.h"
+#import "Comment_noti.h"
+#import "ImageOptions.h"
+#import "UIImageView+WebCache.h"
 
 @interface InitializerViewController : UIViewController
 {
@@ -19,10 +23,13 @@
     AFManager *myAfManager;
     FMDatabaseQueue *databaseQueue;
     FMDatabase *db;
+    ImageOptions *imgOpts;
     
     Blocks *blocks;
     Post *posts;
     Comment *comments;
+    PostImage *postImage;
+    Comment_noti *comment_noti;
     
 }
 @property (nonatomic, weak) IBOutlet UILabel *processLabel;
