@@ -12,7 +12,6 @@
 @interface Post : NSObject
 {
     Database *myDatabase;
-    FMDatabase *db;
     FMDatabaseQueue *databaseQueue;
 }
 
@@ -26,13 +25,18 @@
 @property (nonatomic, strong) NSString *address;
 @property (nonatomic, strong) NSString *status;
 @property (nonatomic, strong) NSString *level;
-@property (nonatomic, strong) NSString *block_id;
+@property (nonatomic, strong) NSNumber *block_id;
 @property (nonatomic, strong) NSString *postal_code;
 
 - (long long)savePostWithDictionary:(NSDictionary *)dict;
-- (NSArray *)fetchIssuesWithParams:(NSDictionary *)params forPostId:(NSNumber *)postId;
+
+- (NSArray *)fetchIssuesWithParams:(NSDictionary *)params forPostId:(NSNumber *)postId filterByBlock:(BOOL)filter;
+
 - (void)close;
+
 - (NSArray *)postsToSend;
+
 - (BOOL)updatePostStatusForClientPostId:(NSNumber *)clientPostId withStatus:(NSNumber *)theStatus;
+
 - (BOOL)updateLastRequestDateWithDate:(NSString *)dateString;
 @end

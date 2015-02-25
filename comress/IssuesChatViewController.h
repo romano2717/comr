@@ -52,6 +52,7 @@
 @property (nonatomic, weak) IBOutlet UIBarButtonItem *actionButton;
 @property (nonatomic, strong) NSArray *commentsArray;
 @property (nonatomic, strong) NSString *theNewSelectedStatus;
+@property (nonatomic) BOOL isFiltered;
 
 -(void)selectedTableRow:(NSUInteger)rowNum;
 

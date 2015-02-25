@@ -182,12 +182,14 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="vSn-Qh-Gcb">
-                                <rect key="frame" x="202" y="29" width="197" height="29"/>
+                                <rect key="frame" x="245" y="29" width="111" height="29"/>
                                 <segments>
                                     <segment title="Me"/>
                                     <segment title="Others"/>
-                                    <segment title="Overdue"/>
                                 </segments>
+                                <connections>
+                                    <action selector="segmentControlChange:" destination="9pv-A4-QxB" eventType="valueChanged" id="qjI-qx-KAh"/>
+                                </connections>
                             </segmentedControl>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Fs7-1S-he7">
                                 <rect key="frame" x="553" y="28" width="31" height="30"/>
@@ -384,6 +386,7 @@
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
                         <outlet property="issuesTable" destination="vQs-6T-WvI" id="4ov-i5-q6w"/>
+                        <outlet property="segment" destination="vSn-Qh-Gcb" id="Ua6-KR-xYn"/>
                         <segue destination="hU5-Vl-PAR" kind="show" identifier="push_chat_issues" id="q2U-TG-uMs"/>
                     </connections>
                 </viewController>
@@ -1117,10 +1120,10 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                                                            <rect key="frame" x="0.0" y="0.0" width="80" height="80"/>
+                                                            <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                                             <autoresizingMask key="autoresizingMask"/>
                                                             <subviews>
-                                                                <imageView userInteractionEnabled="NO" tag="1" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" image="bulb_off.png" translatesAutoresizingMaskIntoConstraints="NO" id="UyS-n6-qnE">
+                                                                <imageView userInteractionEnabled="NO" tag="1" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="bulb_off.png" translatesAutoresizingMaskIntoConstraints="NO" id="UyS-n6-qnE">
                                                                     <rect key="frame" x="0.0" y="0.0" width="20" height="20"/>
                                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                                 </imageView>

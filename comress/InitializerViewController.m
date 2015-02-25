@@ -16,6 +16,8 @@
 
 @implementation InitializerViewController
 
+@synthesize imagesDict;
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
@@ -434,109 +436,10 @@
     [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_download_images] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
         
         NSDictionary *dict = [responseObject objectForKey:@"ImageContainer"];
+        imagesDict = dict;
         
         int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
         NSDate *LastRequestDate = [dict valueForKey:@"LastRequestDate"];
-        DDLogVerbose(@"%@",LastRequestDate);
-
-        NSArray *dictArray = [dict objectForKey:@"ImageList"];
-        
-        dispatch_group_t group = dispatch_group_create();
-        
-        for (int i = 0; i < dictArray.count; i++) {
-            NSDictionary *dictImages = [dictArray objectAtIndex:i];
-
-            NSNumber *CommentId = [NSNumber numberWithInt:[[dictImages valueForKey:@"CommentId"] intValue]];
-            NSNumber *ImageType = [NSNumber numberWithInt:[[dictImages valueForKey:@"ImageType"] intValue]];
-            NSNumber *PostId = [NSNumber numberWithInt:[[dictImages valueForKey:@"PostId"] intValue]];
-            NSNumber *PostImageId = [NSNumber numberWithInt:[[dictImages valueForKey:@"PostImageId"] intValue]];
-            NSString *ImagePath = [dictImages valueForKey:@"ImagePath"];
-            ImagePath = @"http://rs590.pbsrc.com/albums/ss345/sun_of_the_patriots/Tanks/1-6th-king-tiger2029b.jpg~c200";
-
-//            //synchronous
-//            UIImage *downloadedImage = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:ImagePath]]];
-//            
-//            //create the image here
-//            NSData *jpegImageData = UIImageJPEGRepresentation(downloadedImage, 1);
-//            
-//            //save the image to app documents dir
-//            NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-//            NSString *documentsPath = [paths objectAtIndex:0];
-//            NSString *imageFileName = [NSString stringWithFormat:@"%@.jpg",[[NSUUID UUID] UUIDString]];
-//            
-//            NSString *filePath = [documentsPath stringByAppendingPathComponent:imageFileName]; //Add the file name
-//            [jpegImageData writeToFile:filePath atomically:YES];
-//            
-//            //resize the saved image
-//            [imgOpts resizeImageAtPath:filePath];
-//            //end create image
-//            
-//            [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
-//                BOOL qIns = [theDb executeUpdate:@"insert into post_image(comment_id, image_type, post_id, post_image_id, image_path) values(?,?,?,?,?)",CommentId,ImageType,PostId,PostImageId,imageFileName];
-//                
-//                if(!qIns)
-//                {
-//                    *rollback = YES;
-//                    return;
-//                }
-//                
-//                [postImage updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
-//                
-//                self.processLabel.text = @"Download complete";
-//            }];
-//            //synchronous
-            
-            
-            
-            //async
-            if(ImagePath == nil)
-                return;
-            
-            SDWebImageManager *sd_manager = [SDWebImageManager sharedManager];
-            
-            dispatch_group_enter(group);
-            [sd_manager downloadImageWithURL:[NSURL URLWithString:ImagePath] options:0 progress:^(NSInteger receivedSize, NSInteger expectedSize) {
-                
-            } completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
-
-//                //create the image here
-                NSData *jpegImageData = UIImageJPEGRepresentation(image, 1);
-                
-//                //save the image to app documents dir
-                NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-                NSString *documentsPath = [paths objectAtIndex:0];
-                NSString *imageFileName = [NSString stringWithFormat:@"%@.jpg",[[NSUUID UUID] UUIDString]];
-                
-                NSString *filePath = [documentsPath stringByAppendingPathComponent:imageFileName]; //Add the file name
-                [jpegImageData writeToFile:filePath atomically:YES];
-                
-//                //resize the saved image
-                [imgOpts resizeImageAtPath:filePath];
-//                //end create image
-                
-                [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
-                    BOOL qIns = [theDb executeUpdate:@"insert into post_image(comment_id, image_type, post_id, post_image_id, image_path) values(?,?,?,?,?)",CommentId,ImageType,PostId,PostImageId,imageFileName];
-                    
-                    if(!qIns)
-                    {
-                        *rollback = YES;
-                        return;
-                    }
-                    
-                    [postImage updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
-                    
-                    self.processLabel.text = @"Download complete";
-                    
-                    dispatch_group_leave(group);
-                }];
-            }];
-            
-        }
-        
-        dispatch_group_notify(group, dispatch_get_main_queue(), ^{
-            DDLogVerbose(@"Downloading images is complete!");
-        });
-//        async
         
         if(currentPage < totalPage)
         {
@@ -544,13 +447,86 @@
             [self startDownloadPostImagesForPage:currentPage totalPage:totalPage requestDate:LastRequestDate];
         }
         else
-            [self checkCommentNotiCount];
+        {
+            [self SavePostImagesToDb];
+        }
+        
 
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
         [self initializingComplete];
     }];
+}
+
+
+- (void)SavePostImagesToDb
+{
+    NSArray *imagesArray = [imagesDict objectForKey:@"ImageList"];
+    
+    if (imagesArray.count > 0) {
+        for (int i = 0; i < imagesArray.count; i++) {
+            
+            NSDictionary *dict = (NSDictionary *)[imagesArray objectAtIndex:i];
+            
+            NSNumber *CommentId = [NSNumber numberWithInt:[[dict valueForKey:@"CommentId"] intValue]];
+            NSNumber *ImageType = [NSNumber numberWithInt:[[dict valueForKey:@"ImageType"] intValue]];
+            NSNumber *PostId = [NSNumber numberWithInt:[[dict valueForKey:@"PostId"] intValue]];
+            NSNumber *PostImageId = [NSNumber numberWithInt:[[dict valueForKey:@"PostImageId"] intValue]];
+            NSString *ImagePath = [dict valueForKey:@"ImagePath"];
+            ImagePath = @"http://rs590.pbsrc.com/albums/ss345/sun_of_the_patriots/Tanks/1-6th-king-tiger2029b.jpg~c200";
+            
+            SDWebImageManager *sd_manager = [SDWebImageManager sharedManager];
+            
+            [sd_manager downloadImageWithURL:[NSURL URLWithString:ImagePath] options:0 progress:^(NSInteger receivedSize, NSInteger expectedSize) {
+                
+            } completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
+                
+                //create the image here
+                NSData *jpegImageData = UIImageJPEGRepresentation(image, 1);
+                
+                //save the image to app documents dir
+                NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+                NSString *documentsPath = [paths objectAtIndex:0];
+                NSString *imageFileName = [NSString stringWithFormat:@"%@.jpg",[[NSUUID UUID] UUIDString]];
+                
+                NSString *filePath = [documentsPath stringByAppendingPathComponent:imageFileName]; //Add the file name
+                [jpegImageData writeToFile:filePath atomically:YES];
+                
+                //resize the saved image
+                [imgOpts resizeImageAtPath:filePath];
+                
+                [db beginTransaction];
+                
+                BOOL qIns = [db executeUpdate:@"insert into post_image(comment_id, image_type, post_id, post_image_id, image_path) values(?,?,?,?,?)",CommentId,ImageType,PostId,PostImageId,imageFileName];
+                
+                if(!qIns)
+                    [db rollback];
+                else
+                {
+                    [db commit];
+                    DDLogVerbose(@"commit!");
+                    
+                }
+                
+                if(imagesArray.count-1 == i)
+                {
+                    DDLogVerbose(@"image count %lu, current index %d",(unsigned long)imagesArray.count,i);
+                    
+                    [postImage updateLastRequestDateWithDate:[imagesDict valueForKey:@"LastRequestDate"]];
+                    
+                    self.processLabel.text = @"Download complete";
+                    
+                    [self checkCommentNotiCount];
+                }
+                
+            }];
+        }
+    }
+    else
+    {
+        [self checkCommentNotiCount];
+    }
 }
 
 - (void)startDownloadCommentsForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate

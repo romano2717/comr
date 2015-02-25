@@ -96,6 +96,10 @@ image_type
         NSString *documentsPath = [paths objectAtIndex:0];
         NSString *filePath = [documentsPath stringByAppendingPathComponent:[rs stringForColumn:@"image_path"]];
         
+        NSFileManager *fileManager = [[NSFileManager alloc] init];
+        if([fileManager fileExistsAtPath:filePath] == NO) //file does not exist
+            continue ;
+        
         UIImage *image = [UIImage imageWithContentsOfFile:filePath];
         NSData *imageData = UIImageJPEGRepresentation(image, 1);
         NSData *imageBase64 = [imageData base64EncodedDataWithOptions:NSDataBase64Encoding64CharacterLineLength];

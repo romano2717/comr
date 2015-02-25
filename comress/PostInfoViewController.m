@@ -43,12 +43,15 @@
     self.levelLabel.text = [NSString stringWithFormat:@"Level: %@",[[postInfoDict objectForKey:@"post"] valueForKey:@"level"]];
     
     NSArray *imagesDictArr = [postInfoDict objectForKey:@"images"];
+    
+    DDLogVerbose(@"imagesDictArr %@",imagesDictArr);
+    
     self.imagesArray = [[NSMutableArray alloc] init];
     
     for (int i = 0; i < imagesDictArr.count; i++) {
         NSDictionary *imagesDict = [imagesDictArr objectAtIndex:i];
         
-        if([imagesDict valueForKey:@"client_post_id"] != [NSNull null]) //only allow post images
+        if([imagesDict valueForKey:@"client_post_id"] != [NSNull null] || [imagesDict valueForKey:@"post_id"] != [NSNull null]) //only allow post images
         {
             NSString *imagePath = [imagesDict valueForKey:@"image_path"];
             NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);

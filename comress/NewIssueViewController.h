@@ -43,5 +43,6 @@
 @property (nonatomic, weak) IBOutlet UILabel *descriptionLabel;
 @property (nonatomic, weak) IBOutlet UITextField *severityTextField;
 @property (nonatomic, weak) IBOutlet UIButton *addPhotosButton;
+@property (nonatomic, strong) NSNumber *blockId;
 
 @end

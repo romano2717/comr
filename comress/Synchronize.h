@@ -20,7 +20,6 @@
 {
     AFManager *myAfManager;
     Database *myDatabase;
-    FMDatabase *db;
     FMDatabaseQueue *databaseQueue;
 }
 
@@ -32,13 +31,5 @@
 
 - (void)uploadImage;
 
-- (void)downloadPost;
-
-- (void)downloadComments;
-
-- (void)downloadPostImages;
-
-- (void)downloadCommentNoti;
-
-- (void)updateReadStatus;
+- (void)uploadPostStatusChange;
 @end

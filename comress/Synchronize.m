@@ -15,7 +15,6 @@
         
         myAfManager = [AFManager sharedMyAfManager];
         myDatabase = [Database sharedMyDbManager];
-        db = [myDatabase prepareDatabaseFor:self];
         databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
     }
     return self;
@@ -28,6 +27,20 @@
         sharedMyManager = [[self alloc] init];
     });
     return sharedMyManager;
+}
+
+- (void)uploadPostStatusChange
+{
+    [databaseQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+       
+        FMResultSet *rs = [db executeQuery:@"select * from post where statusWasUpdate = ?",[NSNumber numberWithBool:YES]];
+        
+        if([rs next])
+        {
+            DDLogVerbose(@"upload post status for post_id %d, client_post_id %d",[rs intForColumn:@"post_id"],[rs intForColumn:@"client_post_id"]);
+        }
+        
+    }];
 }
 
 - (void)uploadPost
@@ -196,157 +209,6 @@
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
     }];
 }
-
-- (void)downloadPost
-{
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"Z"]; //for getting the timezone part of the date only.
-    
-    NSString *jsonDate = @"/Date(1388505600000+0800)/";
-    
-    NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
-    
-    AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
-    
-    [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_download_posts] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
-       
-        DDLogVerbose(@"downloadPost %@",responseObject);
-        
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
-    }];
-}
-
-
-- (void)downloadComments
-{
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"Z"]; //for getting the timezone part of the date only.
-    
-    __block NSString *jsonDate = @"/Date(1388505600000+0800)/";
-    
-    //get comment last request date
-    [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
-        FMResultSet *rs = [theDb executeQuery:@"select date from comment_last_request_date"];
-        while([rs next])
-        {
-            NSDate *lastCommentDate = [rs dateForColumn:@"date"];
-            
-            jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [lastCommentDate timeIntervalSince1970],[formatter stringFromDate:lastCommentDate]];
-        }
-        
-    }];
-    
-    DDLogVerbose(@"%@",jsonDate);
-    
-    NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
-    
-    AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
-    
-    [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_download_comments] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
-        
-        DDLogVerbose(@"downloadComments %@",responseObject);
-        __block BOOL ok = YES;
-        NSDictionary *dict = (NSDictionary *)responseObject;
-        
-        NSArray *top = (NSArray *)[[dict objectForKey:@"CommentContainer"] objectForKey:@"CommentList"];
-        NSDate *lastRequestDate = [[dict objectForKey:@"CommentContainer"] valueForKey:@"LastRequestDate"];
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
-            
-            for (NSDictionary *obj in top) {
-                NSString *CommentBy     = [obj valueForKey:@"CommentBy"];
-                NSString *CommentDate   = [obj valueForKey:@"CommentDate"];
-                NSNumber *CommentId     = [obj valueForKey:@"CommentId"];
-                NSString *CommentString = [obj valueForKey:@"CommentString"];
-                NSNumber *CommentType   = [obj valueForKey:@"CommentType"];
-                NSNumber *PostId        = [obj valueForKey:@"PostId"];
-                
-                NSDate *commentDateDate = [self deserializeJsonDateString:CommentDate];
-                
-                [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
-                    BOOL save = [theDb executeUpdate:@"insert into comment(comment_by,comment_on,comment_id,comment,comment_type,post_id) values (?,?,?,?,?,?)",CommentBy,commentDateDate,CommentId,CommentString,CommentType,PostId];
-                    
-                    if(!save)
-                    {
-                        ok = NO;
-                        *rollback = YES;
-                    }
-                    
-                    else
-                    {
-                        BOOL lrd = NO;
-                        
-                        FMResultSet *rslrd = [theDb executeQuery:@"select date from comment_last_request_date"];
-                        if([rslrd next])
-                        {
-                            lrd = [theDb executeUpdate:@"update comment_last_request_date set date = ?",lastRequestDate];
-                            
-                            if(!lrd)
-                            {
-                                *rollback = YES;
-                                return;
-                            }
-                        }
-                        else //add as new
-                        {
-                            lrd  = [theDb executeUpdate:@"insert into comment_last_request_date(date) values(?)",lastRequestDate];
-                        }
-                    }
-                }];
-            }
-        });
-        
-        
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
-    }];
-}
-
-
-- (void)downloadPostImages
-{
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"Z"]; //for getting the timezone part of the date only.
-    
-    NSString *jsonDate = @"/Date(1388505600000+0800)/";
-    
-    NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
-    DDLogVerbose(@" %@",params);
-    
-    AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
-    
-    [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_download_images] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
-        
-        DDLogVerbose(@"downloadPostImages %@",responseObject);
-        
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
-    }];
-}
-
-
-- (void)downloadCommentNoti
-{
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"Z"]; //for getting the timezone part of the date only.
-    
-    NSString *jsonDate = @"/Date(1388505600000+0800)/";
-    
-    NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
-    DDLogVerbose(@"%@",params);
-    
-    AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
-    
-    [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_download_comment_noti] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
-        
-        DDLogVerbose(@"downloadCommentNoti %@",responseObject);
-        
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
-    }];
-}
-
 
 
 

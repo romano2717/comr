@@ -11,7 +11,8 @@
 @interface IssuesViewController ()
 
 
-@property (nonatomic, strong)NSArray *postsArray;
+@property (nonatomic, strong) NSArray *postsArray;
+@property (nonatomic, strong) NSArray *sectionHeaders;
 
 @end
 
@@ -39,6 +40,14 @@
     NSNumber *clientPostId = [NSNumber numberWithLongLong:[[[notif userInfo] valueForKey:@"lastClientPostId"] longLongValue]];
     
     [self performSegueWithIdentifier:@"push_chat_issues" sender:clientPostId];
+}
+
+- (IBAction)segmentControlChange:(id)sender
+{
+    UISegmentedControl *segment = (UISegmentedControl *)sender;
+    self.segment = segment;
+    
+    [self fetchPosts];
 }
 
 
@@ -91,14 +100,33 @@
         if([sender isKindOfClass:[NSIndexPath class]])
         {
             NSIndexPath *indexPath = (NSIndexPath *)sender;
-            NSDictionary *dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
+            
+            NSDictionary *dict;
+            
+            if (self.segment.selectedSegmentIndex == 0)
+            {
+                dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
+            }
+
+            else
+            {
+                dict = (NSDictionary *)[[self.postsArray objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
+            }
+            
             postId = [NSNumber numberWithInt:[[[dict allKeys] objectAtIndex:0] intValue]];
         }
         else
             postId = sender;
         
+        
+        BOOL isFiltered = NO;
+        
+        if(self.segment.selectedSegmentIndex == 0)
+            isFiltered = YES;
+        
         IssuesChatViewController *issuesVc = [segue destinationViewController];
         issuesVc.postId = [postId intValue];
+        issuesVc.isFiltered = isFiltered;
         issuesVc.delegateModal = self;
     }
 }
@@ -106,10 +134,63 @@
 #pragma mark - fetch posts
 - (void)fetchPosts
 {
+    post = nil;
+    
+    self.postsArray = nil;
+    
     post = [[Post alloc] init];
     
     NSDictionary *params = @{@"order":@"order by post_date desc"};
-    self.postsArray = [post fetchIssuesWithParams:params forPostId:nil];
+    
+    if(self.segment.selectedSegmentIndex == 0)
+        self.postsArray = [post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES];
+    else
+    {
+        self.postsArray = [post fetchIssuesWithParams:params forPostId:nil filterByBlock:NO];
+        
+        NSMutableArray *sectionHeaders = [[NSMutableArray alloc] init];
+        
+        //reconstruct array to create headers
+        for (int i = 0; i < self.postsArray.count; i++) {
+            NSDictionary *top = (NSDictionary *)[self.postsArray objectAtIndex:i];
+            NSString *topKey = [[top allKeys] objectAtIndex:0];
+            
+            NSString *post_by = [[[top objectForKey:topKey] objectForKey:@"post"] valueForKey:@"post_by"];
+            
+            [sectionHeaders addObject:post_by];
+        }
+        
+        //remove dupes of sections
+        NSArray *cleanSectionHeadersArray = [[NSOrderedSet orderedSetWithArray:sectionHeaders] array];
+        self.sectionHeaders = cleanSectionHeadersArray;
+        
+        NSMutableArray *groupedPost = [[NSMutableArray alloc] init];
+        
+        for (int i = 0; i < cleanSectionHeadersArray.count; i++) {
+            
+            NSString *section = [cleanSectionHeadersArray objectAtIndex:i];
+            
+            NSMutableArray *row = [[NSMutableArray alloc] init];
+            
+            for (int j = 0; j < self.postsArray.count; j++) {
+
+                NSDictionary *top = (NSDictionary *)[self.postsArray objectAtIndex:j];
+                NSString *topKey = [[top allKeys] objectAtIndex:0];
+                NSString *post_by = [[[top objectForKey:topKey] objectForKey:@"post"] valueForKey:@"post_by"];
+                
+                if([post_by isEqualToString:section])
+                {
+                    [row addObject:top];
+                }
+            }
+            
+
+            [groupedPost addObject:row];
+        }
+        
+        self.postsArray = groupedPost;
+    }
+    
     
     [self.issuesTable reloadData];
 }
@@ -119,23 +200,58 @@
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     // Return the number of sections.
-    return 1;
+    
+    long count;
+    
+    if(self.segment.selectedSegmentIndex == 0)
+        count = 1;
+    else
+        count = self.sectionHeaders.count;
+    
+    return count;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     // Return the number of rows in the section.
-    return self.postsArray.count;
+    
+    long count;
+    
+    if(self.segment.selectedSegmentIndex == 0)
+        count = self.postsArray.count;
+    else
+        count = [[self.postsArray objectAtIndex:section] count];
+
+    return count;
 }
 
 
  - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
      IssuesTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
-     NSDictionary *dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
-
+     
+     NSDictionary *dict;
+     
+     if(self.segment.selectedSegmentIndex == 0)
+         dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
+     else
+         dict = (NSDictionary *)[[self.postsArray objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
+     
      [cell initCellWithResultSet:dict];
      
      return cell;
+}
+
+- (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView
+{
+    return nil;
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
+{
+    if(self.segment.selectedSegmentIndex == 1)
+        return [self.sectionHeaders objectAtIndex:section];
+    
+    return nil;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath

@@ -14,7 +14,7 @@
 
 @implementation IssuesChatViewController
 
-@synthesize postId,postDict,commentsArray,theNewSelectedStatus;
+@synthesize postId,postDict,commentsArray,theNewSelectedStatus,isFiltered;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -51,7 +51,10 @@
     [self.messageData.messages removeAllObjects];
     
     NSDictionary *params = @{@"order":@"order by post_date desc"};
-    postDict = [[post fetchIssuesWithParams:params forPostId:[NSNumber numberWithInt:self.postId]] objectAtIndex:0];
+    if(isFiltered)
+        postDict = [[post fetchIssuesWithParams:params forPostId:[NSNumber numberWithInt:self.postId] filterByBlock:YES] objectAtIndex:0];
+    else
+        postDict = [[post fetchIssuesWithParams:params forPostId:[NSNumber numberWithInt:self.postId] filterByBlock:NO] objectAtIndex:0];
     
     //get the post information so we can do a pop-up view for post
     self.postInfoDict = [NSDictionary dictionaryWithObjectsAndKeys:[[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"post"],@"post",[[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"postImages"],@"images", nil];
@@ -120,7 +123,7 @@
     [self.navigationController.navigationBar addGestureRecognizer:tapNavBar];
 }
 
-#pragma mark - Post Actions
+#pragma mark - status post update
 -(void)selectedTableRow:(NSUInteger)rowNum
 {
     [popover dismissPopoverAnimated:YES];
@@ -292,8 +295,6 @@
     CGFloat latitude = loc.coordinate.latitude;
     
     NSURL *mapImageUrl = [NSURL URLWithString:[NSString stringWithFormat:@"https://maps.googleapis.com/maps/api/staticmap?center=%f,%f&zoom=16&size=750x1334&markers=color:red%%7C%f,%f",latitude,longitude,latitude,longitude]];
-    
-    DDLogVerbose(@"%@",mapImageUrl);
 
     NSTimeInterval locationAge = -[loc.timestamp timeIntervalSinceNow];
     

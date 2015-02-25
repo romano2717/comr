@@ -27,11 +27,6 @@ postal_code;
 -(id)init {
     if (self = [super init]) {
         myDatabase = [Database sharedMyDbManager];
-        db = [myDatabase prepareDatabaseFor:self];
-        
-        if(allowLogging)
-            db.traceExecution = YES;
-        
         databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
     }
     return self;
@@ -55,9 +50,12 @@ postal_code;
     block_id        = [dict valueForKey:@"block_id"];
     postal_code     = [dict valueForKey:@"postal_code"];
     
+    
+    FMDatabase *db = [myDatabase prepareDatabaseFor:self];
+    
     [db beginTransaction];
     
-    postSaved = [db executeUpdate:@"insert into post (post_topic,post_by,post_date,post_type,severity,address,status,level,block_id,isUpdated,postal_code) values (?,?,?,?,?,?,?,?,?,?,?)",post_topic,post_by,post_date,post_type,severity,address,status,level,[NSNumber numberWithInt:1],[NSNumber numberWithBool:YES],postal_code];
+    postSaved = [db executeUpdate:@"insert into post (post_topic,post_by,post_date,post_type,severity,address,status,level,block_id,isUpdated,postal_code) values (?,?,?,?,?,?,?,?,?,?,?)",post_topic,post_by,post_date,post_type,severity,address,status,level,block_id,[NSNumber numberWithBool:YES],postal_code];
     
     if(!postSaved)
     {
@@ -71,15 +69,12 @@ postal_code;
         posClienttId = [db lastInsertRowId];
     }
     
+    [db close];
+    
     return posClienttId;
 }
 
-- (void)close
-{
-    [db close];
-}
-
-- (NSArray *)fetchIssuesWithParams:(NSDictionary *)params forPostId:(NSNumber *)postId
+- (NSArray *)fetchIssuesWithParams:(NSDictionary *)params forPostId:(NSNumber *)postId filterByBlock:(BOOL)filter
 {
     NSMutableArray *arr = [[NSMutableArray alloc] init];
     
@@ -109,6 +104,9 @@ postal_code;
         [q appendString:[params valueForKey:@"order"]];
     }
     
+    FMDatabase *db = [myDatabase prepareDatabaseFor:self];
+    
+    
     FMResultSet *rsPost = [db executeQuery:q];
     
     while ([rsPost next]) {
@@ -119,12 +117,31 @@ postal_code;
         NSMutableDictionary *postDict = [[NSMutableDictionary alloc] init];
         NSMutableDictionary *postChild = [[NSMutableDictionary alloc] init];
         
-        //add post info to our dict. this will be the top most level of our dictionary entry 
+        /*
+         add post info to our dict. this will be the top most level of our dictionary entry.
+         but first check if this post under this block belongs to current user or others
+         */
+
+        FMResultSet *rsBlock = [db executeQuery:@"select is_own_block from blocks where block_id = ? and is_own_block = ?", [rsPost stringForColumn:@"block_id"],[NSNumber numberWithBool:filter]];
+            
+        if([rsBlock next] == NO)
+            continue;
+
+        
+        
         [postChild setObject:[rsPost resultDictionary] forKey:@"post"];
         
-
         //add all images of this post
-        FMResultSet *rsPostImage = [db executeQuery:@"select * from post_image where client_comment_id is null and (client_post_id = ? or post_id = ?) order by client_post_image_id ",clientPostId,serverPostId];
+        FMResultSet *rsPostImage;
+        
+        if([serverPostId intValue] != 0)
+        {
+            rsPostImage = [db executeQuery:@"select * from post_image where post_id = ? order by client_post_image_id ",serverPostId];
+        }
+        else if([clientPostId intValue] != 0)
+        {
+            rsPostImage = [db executeQuery:@"select * from post_image where client_post_id = ? order by client_post_image_id ",clientPostId];
+        }
         
         NSMutableArray *imagesArray = [[NSMutableArray alloc] init];
         
@@ -164,11 +181,15 @@ postal_code;
         [arr addObject:postDict];
     }
     
+    [db close];
+    
     return arr;
 }
 
 - (NSArray *)postsToSend
 {
+    FMDatabase *db = [myDatabase prepareDatabaseFor:self];
+    
     FMResultSet *rs = [db executeQuery:@"select * from post where post_id IS NULL or post_id = ?",[NSNumber numberWithInt:0]];
 
     NSMutableArray *rsArray = [[NSMutableArray alloc] init];
@@ -194,6 +215,8 @@ postal_code;
         
         dict = nil;
     }
+    
+    [db close];
 
     return rsArray;
 }

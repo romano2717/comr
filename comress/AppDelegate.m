@@ -91,23 +91,12 @@
         [sync uploadImage];
     });
     
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        [sync uploadPostStatusChange];
+    });
+    
     
     //download
-//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-//        [sync downloadPost];
-//    });
-    
-//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-//        [sync downloadComments];
-//    });
-    
-//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-//        [sync downloadPostImages];
-//    });
-//    
-//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-//        [sync downloadCommentNoti];
-//    });
 }
 
 - (void)pingServer
@@ -130,7 +119,10 @@
     
     if(bgTask == UIBackgroundTaskInvalid)
     {
-        DDLogVerbose(@"create bg task");
+        DDLogVerbose(@"create bg task and sync!");
+        
+        [self synchronize];
+        
         bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
             DDLogVerbose(@"end bg task");
             [application endBackgroundTask:bgTask];

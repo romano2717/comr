@@ -33,5 +33,5 @@
     
 }
 @property (nonatomic, weak) IBOutlet UILabel *processLabel;
-
+@property (nonatomic, strong) NSDictionary *imagesDict;
 @end

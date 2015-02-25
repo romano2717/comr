@@ -22,5 +22,6 @@
 }
 
 @property (nonatomic, weak) IBOutlet UITableView *issuesTable;
+@property (nonatomic, weak) IBOutlet UISegmentedControl *segment;
 
 @end

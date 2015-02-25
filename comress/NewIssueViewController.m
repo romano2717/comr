@@ -26,7 +26,7 @@
 
 @implementation NewIssueViewController
 
-@synthesize scrollView,imagePicker;
+@synthesize scrollView,imagePicker,blockId;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -126,6 +126,8 @@
 {
     self.postalCodeTextField.text = [[result objectForKey:@"CustomObject"] valueForKey:@"postal_code"];
     self.addressTextField.text = [NSString stringWithFormat:@"%@ %@",[[result objectForKey:@"CustomObject"] valueForKey:@"block_no"],[[result objectForKey:@"CustomObject"] valueForKey:@"street_name"]];
+    
+    blockId = [[result objectForKey:@"CustomObject"] valueForKey:@"block_id"];
 
 }
 
@@ -490,7 +492,7 @@
     NSString *post_by = user.user_id;
     NSDate *post_date = [NSDate date];
     
-    NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:post_topic,@"post_topic",post_by,@"post_by",post_date,@"post_date",post_type,@"post_type",severity,@"severity",@"0",@"status",location,@"address",level,@"level",postal_code,@"postal_code", nil];
+    NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:post_topic,@"post_topic",post_by,@"post_by",post_date,@"post_date",post_type,@"post_type",severity,@"severity",@"0",@"status",location,@"address",level,@"level",postal_code,@"postal_code",blockId,@"block_id", nil];
     
     long long lastClientPostId =  [post savePostWithDictionary:dict];
     [post close];
