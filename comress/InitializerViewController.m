@@ -37,13 +37,19 @@
     [self checkBlockCount];
 }
 
-- (void)initializingComplete
+- (void)initializingCompleteWithUi:(BOOL)withUi
 {
-    DDLogVerbose(@"initializingComplete");
-    
     myDatabase.initializingComplete = 1;
-
-    [self dismissViewControllerAnimated:YES completion:nil];
+    
+    //start interval download of new posts
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"postDownloadFinish" object:nil];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"postImageDownloadFinish" object:nil];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"commentDownloadFinish" object:nil];
+    
+    if(withUi)
+        [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark - check if we need to sync blocks
@@ -92,14 +98,14 @@
         }];
         
         if(needToDownloadBlocks)
-            [self startDownloadBlocksForPage:1 totalPage:0 requestDate:nil];
+            [self startDownloadBlocksForPage:1 totalPage:0 requestDate:nil withUi:YES];
         else
             [self checkPostCount];
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        [self initializingComplete];
+        [self initializingCompleteWithUi:YES];
     }];
 }
 
@@ -154,14 +160,14 @@
         }];
         
         if(needToDownload)
-            [self startDownloadPostForPage:1 totalPage:0 requestDate:nil];
+            [self startDownloadPostForPage:1 totalPage:0 requestDate:nil withUi:YES];
         else
             [self checkCommentCount];
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        [self initializingComplete];
+        [self initializingCompleteWithUi:YES];
     }];
 }
 
@@ -211,14 +217,14 @@
         }];
         
         if(needToDownload)
-            [self startDownloadCommentsForPage:1 totalPage:0 requestDate:nil];
+            [self startDownloadCommentsForPage:1 totalPage:0 requestDate:nil withUi:YES];
         else
             [self checkPostImagesCount];
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        [self initializingComplete];
+        [self initializingCompleteWithUi:YES];
     }];
 }
 
@@ -270,14 +276,14 @@
         }];
         
         if(needToDownload)
-            [self startDownloadPostImagesForPage:1 totalPage:0 requestDate:nil];
+            [self startDownloadPostImagesForPage:1 totalPage:0 requestDate:nil withUi:YES];
         else
             [self checkCommentNotiCount];
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        [self initializingComplete];
+        [self initializingCompleteWithUi:YES];
     }];
 }
 
@@ -327,14 +333,14 @@
         }];
         
         if(needToDownload)
-            [self startDownloadCommentNotiForPage:1 totalPage:0 requestDate:nil];
+            [self startDownloadCommentNotiForPage:1 totalPage:0 requestDate:nil withUi:YES];
         else
-            [self initializingComplete];
+            [self initializingCompleteWithUi:YES];
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        [self initializingComplete];
+        [self initializingCompleteWithUi:YES];
     }];
 }
 
@@ -349,7 +355,7 @@
 */
 
 
-- (void)startDownloadCommentNotiForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate
+- (void)startDownloadCommentNotiForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate withUi:(BOOL)withUi
 {
     __block int currentPage = page;
     __block NSDate *requestDate = reqDate;
@@ -399,11 +405,12 @@
         if(currentPage < totalPage)
         {
             currentPage++;
-            [self startDownloadCommentNotiForPage:currentPage totalPage:totalPage requestDate:LastRequestDate];
+            [self startDownloadCommentNotiForPage:currentPage totalPage:totalPage requestDate:LastRequestDate withUi:withUi];
         }
         else
         {
-            [comment_noti updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
+            if(dictArray.count > 0)
+                [comment_noti updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
             
             self.processLabel.text = @"Download complete";
         }
@@ -412,11 +419,11 @@
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        [self initializingComplete];
+        [self initializingCompleteWithUi:withUi];
     }];
 }
 
-- (void)startDownloadPostImagesForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate
+- (void)startDownloadPostImagesForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate withUi:(BOOL)withUi
 {
     __block int currentPage = page;
     __block NSDate *requestDate = reqDate;
@@ -444,7 +451,7 @@
         if(currentPage < totalPage)
         {
             currentPage++;
-            [self startDownloadPostImagesForPage:currentPage totalPage:totalPage requestDate:LastRequestDate];
+            [self startDownloadPostImagesForPage:currentPage totalPage:totalPage requestDate:LastRequestDate withUi:withUi];
         }
         else
         {
@@ -455,7 +462,7 @@
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        [self initializingComplete];
+        [self initializingCompleteWithUi:withUi];
     }];
 }
 
@@ -474,11 +481,14 @@
             NSNumber *PostId = [NSNumber numberWithInt:[[dict valueForKey:@"PostId"] intValue]];
             NSNumber *PostImageId = [NSNumber numberWithInt:[[dict valueForKey:@"PostImageId"] intValue]];
             NSString *ImagePath = [dict valueForKey:@"ImagePath"];
-            ImagePath = @"http://rs590.pbsrc.com/albums/ss345/sun_of_the_patriots/Tanks/1-6th-king-tiger2029b.jpg~c200";
-            
+//            ImagePath = @"https://harveyblackauthor.files.wordpress.com/2012/06/tiger-tank-017.jpg";
             SDWebImageManager *sd_manager = [SDWebImageManager sharedManager];
             
             [sd_manager downloadImageWithURL:[NSURL URLWithString:ImagePath] options:0 progress:^(NSInteger receivedSize, NSInteger expectedSize) {
+
+                NSInteger percentage = 100 / (expectedSize / receivedSize);
+                
+                self.processLabel.text = [NSString stringWithFormat:@"Downloading image. %ld%%",(long)percentage];
                 
             } completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
                 
@@ -509,7 +519,7 @@
                     
                 }
                 
-                if(imagesArray.count-1 == i)
+                if(imagesArray.count-1 == i) //last object
                 {
                     DDLogVerbose(@"image count %lu, current index %d",(unsigned long)imagesArray.count,i);
                     
@@ -529,7 +539,7 @@
     }
 }
 
-- (void)startDownloadCommentsForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate
+- (void)startDownloadCommentsForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate withUi:(BOOL)withUi
 {
     __block int currentPage = page;
     __block NSDate *requestDate = reqDate;
@@ -580,11 +590,12 @@
         if(currentPage < totalPage)
         {
             currentPage++;
-            [self startDownloadCommentsForPage:currentPage totalPage:totalPage requestDate:LastRequestDate];
+            [self startDownloadCommentsForPage:currentPage totalPage:totalPage requestDate:LastRequestDate withUi:withUi];
         }
         else
         {
-            [comments updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
+            if(dictArray.count > 0)
+                [comments updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
             
             self.processLabel.text = @"Download complete";
             
@@ -595,11 +606,11 @@
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        [self initializingComplete];
+        [self initializingCompleteWithUi:withUi];
     }];
 }
 
-- (void)startDownloadPostForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate
+- (void)startDownloadPostForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate withUi:(BOOL)withUi
 {
     __block int currentPage = page;
     __block NSDate *requestDate = reqDate;
@@ -637,9 +648,9 @@
             NSString *PostTopic = [dictPost valueForKey:@"PostTopic"];
             NSString *PostType = [NSString stringWithFormat:@"%d",[[dictPost valueForKey:@"PostType"] intValue]];
             NSString *PostalCode = [dictPost valueForKey:@"PostalCode"];
-            NSString *Severity = [NSString stringWithFormat:@"%d",[[dictPost valueForKey:@"Severity"] intValue]];
+            NSNumber *Severity = [NSNumber numberWithInt:[[dictPost valueForKey:@"Severity"] intValue]];
             NSDate *PostDate = [myDatabase createNSDateWithWcfDateString:[dictPost valueForKey:@"PostDate"]];
-            
+
             [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
                 BOOL qIns = [theDb executeUpdate:@"insert into post (status, block_id, level, address, post_by, post_id, post_topic, post_type, postal_code, severity, post_date) values (?,?,?,?,?,?,?,?,?,?,?)",ActionStatus, BlkId, Level, Location, PostBy, PostId, PostTopic, PostType, PostalCode, Severity, PostDate];
                 
@@ -654,11 +665,12 @@
         if(currentPage < totalPage)
         {
             currentPage++;
-            [self startDownloadPostForPage:currentPage totalPage:totalPage requestDate:LastRequestDate];
+            [self startDownloadPostForPage:currentPage totalPage:totalPage requestDate:LastRequestDate withUi:withUi];
         }
         else
         {
-            [posts updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
+            if(dictArray.count > 0)
+                [posts updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
             
             self.processLabel.text = @"Download complete";
             
@@ -669,11 +681,11 @@
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        [self initializingComplete];
+        [self initializingCompleteWithUi:withUi];
     }];
 }
 
-- (void)startDownloadBlocksForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate
+- (void)startDownloadBlocksForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate withUi:(BOOL)withUi
 {
     __block int currentPage = page;
     __block NSDate *requestDate = reqDate;
@@ -722,11 +734,12 @@
         if(currentPage < totalPage)
         {
             currentPage++;
-            [self startDownloadBlocksForPage:currentPage totalPage:totalPage requestDate:LastRequestDate];
+            [self startDownloadBlocksForPage:currentPage totalPage:totalPage requestDate:LastRequestDate withUi:withUi];
         }
         else
         {
-            [blocks updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
+            if(dictArray.count > 0)
+                [blocks updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
             
             self.processLabel.text = @"Download complete";
             
@@ -738,7 +751,7 @@
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        [self initializingComplete];
+        [self initializingCompleteWithUi:withUi];
     }];
 }
 

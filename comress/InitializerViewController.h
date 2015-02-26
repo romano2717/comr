@@ -34,4 +34,26 @@
 }
 @property (nonatomic, weak) IBOutlet UILabel *processLabel;
 @property (nonatomic, strong) NSDictionary *imagesDict;
+
+- (void)checkBlockCount;
+
+- (void)checkPostCount;
+
+- (void)checkCommentCount;
+
+-(void)checkPostImagesCount;
+
+-(void)checkCommentNotiCount;
+
+- (void)startDownloadCommentNotiForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate withUi:(BOOL)withUi;
+
+- (void)startDownloadPostImagesForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate withUi:(BOOL)withUi;
+
+- (void)SavePostImagesToDb;
+
+- (void)startDownloadCommentsForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate withUi:(BOOL)withUi;
+
+- (void)startDownloadPostForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate withUi:(BOOL)withUi;
+
+- (void)startDownloadBlocksForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate withUi:(BOOL)withUi;
 @end

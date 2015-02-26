@@ -31,7 +31,6 @@
 @property (nonatomic, strong) NSNumber *image_type;
 
 -(long long)savePostImageWithDictionary:(NSDictionary *)dict;
-- (void)close;
 - (NSDictionary *)imagesTosend;
 - (BOOL)updateLastRequestDateWithDate:(NSString *)dateString;
 @end

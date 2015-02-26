@@ -51,7 +51,7 @@
 @property (nonatomic, strong) UIImagePickerController *imagePicker;
 @property (nonatomic, weak) IBOutlet UIBarButtonItem *actionButton;
 @property (nonatomic, strong) NSArray *commentsArray;
-@property (nonatomic, strong) NSString *theNewSelectedStatus;
+@property (nonatomic, strong) NSNumber *theNewSelectedStatus;
 @property (nonatomic) BOOL isFiltered;
 
 -(void)selectedTableRow:(NSUInteger)rowNum;

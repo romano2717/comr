@@ -53,9 +53,7 @@
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
     }
     
-    NSString *statusString = [NSString stringWithFormat:@"%ld",(long)indexPath.row];
-    
-    if([statusString isEqualToString:selectedStatus])
+    if([selectedStatus intValue] == indexPath.row)
     {
         cell.contentView.backgroundColor = [UIColor blueColor];
         cell.textLabel.textColor = [UIColor whiteColor];

@@ -105,8 +105,7 @@ postal_code;
     }
     
     FMDatabase *db = [myDatabase prepareDatabaseFor:self];
-    
-    
+
     FMResultSet *rsPost = [db executeQuery:q];
     
     while ([rsPost next]) {
@@ -200,7 +199,7 @@ postal_code;
                                @"PostTopic":[rs stringForColumn:@"post_topic"],
                                @"PostBy":[rs stringForColumn:@"post_by"],
                                @"PostType":[rs stringForColumn:@"post_type"],
-                               @"Severity":[rs stringForColumn:@"severity"],
+                               @"Severity":[NSNumber numberWithInt:[rs intForColumn:@"severity"]],
                                @"ActionStatus":[rs stringForColumn:@"status"],
                                @"ClientPostId":[NSNumber numberWithInt:[rs intForColumn:@"client_post_id"]],
                                @"BlkId":[NSNumber numberWithInt:[rs intForColumn:@"block_id"]],
@@ -238,10 +237,9 @@ postal_code;
 
 - (BOOL)updateLastRequestDateWithDate:(NSString *)dateString
 {
-    NSInteger offset = [[NSTimeZone defaultTimeZone] secondsFromGMT]; //get number of seconds to add or subtract according to the client default time zone
-    NSInteger startPosition = [dateString rangeOfString:@"("].location + 1; //start of the date value
-    NSTimeInterval unixTime = [[dateString substringWithRange:NSMakeRange(startPosition, 13)] doubleValue] / 1000; //WCF will send 13 digit-long value for the time interval since 1970 (millisecond precision) whereas iOS works with 10 digit-long values (second precision), hence the divide by 1000
-    NSDate *date = [[NSDate dateWithTimeIntervalSince1970:unixTime] dateByAddingTimeInterval:offset];
+    NSInteger startPosition = [dateString rangeOfString:@"("].location + 1;
+    NSTimeInterval unixTime = [[dateString substringWithRange:NSMakeRange(startPosition, 13)] doubleValue] / 1000;
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:unixTime];
     
     [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
         FMResultSet *rs = [theDb executeQuery:@"select * from post_last_request_date"];

@@ -36,7 +36,6 @@
         AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
         
         [manager GET:[NSString stringWithFormat:@"%@%@",api_activationUrl,activateCode] parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
-            DDLogVerbose(@"%@",responseObject);
             NSDictionary *dict = (NSDictionary *)responseObject;
             
             if([[dict valueForKey:@"isValid"] intValue] == 1)

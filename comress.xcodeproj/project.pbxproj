@@ -31,7 +31,6 @@
 		4D91D5FA1A91927D00A21DBA /* status_bubble.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D91D5F91A91927D00A21DBA /* status_bubble.png */; };
 		4D91D6041A91CA3C00A21DBA /* pin.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D91D6031A91CA3C00A21DBA /* pin.png */; };
 		4D91D6061A91CAA900A21DBA /* pin2.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D91D6051A91CAA900A21DBA /* pin2.png */; };
-		4D97FE1D1A9DD71C001A803A /* comress.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 4D97FE1C1A9DD71C001A803A /* comress.sqlite */; };
 		4D99E7E51A80C430005EDDAE /* ImageOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D99E7E41A80C430005EDDAE /* ImageOptions.m */; };
 		4D99E7E81A80CA78005EDDAE /* ImagePreviewViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D99E7E71A80CA78005EDDAE /* ImagePreviewViewController.m */; };
 		4DA203C51A79CBA100C7E5C7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DA203C41A79CBA100C7E5C7 /* main.m */; };
@@ -200,7 +199,6 @@
 		4D91D5F91A91927D00A21DBA /* status_bubble.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = status_bubble.png; sourceTree = "<group>"; };
 		4D91D6031A91CA3C00A21DBA /* pin.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pin.png; sourceTree = "<group>"; };
 		4D91D6051A91CAA900A21DBA /* pin2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pin2.png; sourceTree = "<group>"; };
-		4D97FE1C1A9DD71C001A803A /* comress.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = comress.sqlite; sourceTree = "<group>"; };
 		4D99E7E31A80C430005EDDAE /* ImageOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageOptions.h; sourceTree = "<group>"; };
 		4D99E7E41A80C430005EDDAE /* ImageOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageOptions.m; sourceTree = "<group>"; };
 		4D99E7E61A80CA78005EDDAE /* ImagePreviewViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImagePreviewViewController.h; sourceTree = "<group>"; };
@@ -710,7 +708,6 @@
 		4DA204251A79CF8C00C7E5C7 /* db */ = {
 			isa = PBXGroup;
 			children = (
-				4D97FE1C1A9DD71C001A803A /* comress.sqlite */,
 			);
 			name = db;
 			sourceTree = "<group>";
@@ -1152,7 +1149,6 @@
 				4DA207FF1A79DA0A00C7E5C7 /* JSQMessagesLoadEarlierHeaderView.xib in Resources */,
 				4DA207FA1A79DA0A00C7E5C7 /* JSQMessagesCollectionViewCellOutgoing.xib in Resources */,
 				4DAEA6B81A83505E00A6EFBE /* Localizable_full.strings in Resources */,
-				4D97FE1D1A9DD71C001A803A /* comress.sqlite in Resources */,
 				4DAEA6B71A83505E00A6EFBE /* Localizable.strings in Resources */,
 				4D37BDB81A9C2271006B414A /* back.png in Resources */,
 				4DA207DB1A79DA0A00C7E5C7 /* JSQMessages.strings in Resources */,

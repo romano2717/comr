@@ -48,7 +48,7 @@
     NSString *lastMsgBy = [postDict valueForKey:@"post_by"];
     NSString *lastMsg = @"";
     
-    NSString *severity = [postDict valueForKey:@"severity"];
+    int severity = [[postDict valueForKey:@"severity"] intValue];
     
     NSDictionary *lastCommentDict = [postComments lastObject];
 
@@ -116,7 +116,7 @@
     dateLabel.text = dateStringForm ? dateStringForm : @"-";
     messageCountLabel.text = @"";
     
-    if([severity isEqualToString:@"2"])//Routine
+    if(severity == 2)//Routine
         pinImageView.hidden = YES;
 }
 

@@ -31,12 +31,33 @@
     
     [self.issuesTable addSubview:refreshControl];
 
-
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(autoOpenChatViewForPost:) name:@"autoOpenChatViewForPost" object:nil];
+    //notification for pushing chat view after creating a new issue
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(autoOpenChatViewForPostMe:) name:@"autoOpenChatViewForPostMe" object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(autoOpenChatViewForPostOthers:) name:@"autoOpenChatViewForPostOthers" object:nil];
+    
+    
+    //notification for reloading issues list when a new issue was downloaded from the server
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadIssuesList) name:@"reloadIssuesList" object:nil];
 }
 
-- (void)autoOpenChatViewForPost:(NSNotification *)notif
+- (void)reloadIssuesList
 {
+    [self fetchPosts];
+}
+
+- (void)autoOpenChatViewForPostMe:(NSNotification *)notif
+{
+    [self.segment setSelectedSegmentIndex:0];
+    
+    NSNumber *clientPostId = [NSNumber numberWithLongLong:[[[notif userInfo] valueForKey:@"lastClientPostId"] longLongValue]];
+    
+    [self performSegueWithIdentifier:@"push_chat_issues" sender:clientPostId];
+}
+
+- (void)autoOpenChatViewForPostOthers:(NSNotification *)notif
+{
+    [self.segment setSelectedSegmentIndex:1];
+    
     NSNumber *clientPostId = [NSNumber numberWithLongLong:[[[notif userInfo] valueForKey:@"lastClientPostId"] longLongValue]];
     
     [self performSegueWithIdentifier:@"push_chat_issues" sender:clientPostId];
@@ -191,7 +212,6 @@
         self.postsArray = groupedPost;
     }
     
-    
     [self.issuesTable reloadData];
 }
 
@@ -235,7 +255,7 @@
          dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
      else
          dict = (NSDictionary *)[[self.postsArray objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
-     
+
      [cell initCellWithResultSet:dict];
      
      return cell;
@@ -311,8 +331,19 @@
 
 - (void)setPostStatusAtIndexPath:(NSIndexPath *)indexPath withStatus:(NSNumber *)clickedStatus withPostDict:(NSDictionary *)dict
 {
-    dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
-    NSNumber *clickedPostId = [NSNumber numberWithInt:[[[dict allKeys] objectAtIndex:0] intValue]];
+    NSNumber *clickedPostId;
+    
+    if(self.segment.selectedSegmentIndex == 0)
+    {
+        dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
+        clickedPostId = [NSNumber numberWithInt:[[[dict allKeys] objectAtIndex:0] intValue]];
+    }
+    else
+    {
+        dict = (NSDictionary *)[[self.postsArray objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
+        clickedPostId = [NSNumber numberWithInt:[[[dict allKeys] objectAtIndex:0] intValue]];
+    }
+    
 
     //update status of this post
     [post updatePostStatusForClientPostId:clickedPostId withStatus:clickedStatus];

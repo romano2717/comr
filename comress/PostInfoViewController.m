@@ -38,13 +38,16 @@
     if([[[postInfoDict objectForKey:@"post"] valueForKey:@"severity"] intValue] == 2)
         self.severityLabel.text = @"Routine";
     else
+    {
         self.severityLabel.text = @"Severe";
+        self.severityLabel.textColor = [UIColor redColor];
+        self.severityLabel.font = [UIFont boldSystemFontOfSize:12.0f];
+    }
+    
 
     self.levelLabel.text = [NSString stringWithFormat:@"Level: %@",[[postInfoDict objectForKey:@"post"] valueForKey:@"level"]];
     
     NSArray *imagesDictArr = [postInfoDict objectForKey:@"images"];
-    
-    DDLogVerbose(@"imagesDictArr %@",imagesDictArr);
     
     self.imagesArray = [[NSMutableArray alloc] init];
     

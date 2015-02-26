@@ -43,6 +43,8 @@
     locationManager.delegate = self;
     
     theNewSelectedStatus = nil;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(fetchComments) name:@"fetchComments" object:nil];
 }
 
 - (void)fetchComments
@@ -135,27 +137,27 @@
     switch (rowNum) {
         case 1:
             statusString = @"Issue set status Start";
-            theNewSelectedStatus = @"1";
+            theNewSelectedStatus = [NSNumber numberWithInt:1];
             break;
             
         case 2:
             statusString = @"Issue set status Stop";
-            theNewSelectedStatus = @"2";
+            theNewSelectedStatus = [NSNumber numberWithInt:2];
             break;
             
         case 3:
             statusString = @"Issue set status Completed";
-            theNewSelectedStatus = @"3";
+            theNewSelectedStatus = [NSNumber numberWithInt:3];
             break;
             
         case 4:
             statusString = @"Issue set status Close";
-            theNewSelectedStatus = @"4";
+            theNewSelectedStatus = [NSNumber numberWithInt:4];
             break;
         
         default:
             statusString = @"Issue set status Pending";
-            theNewSelectedStatus = @"0";
+            theNewSelectedStatus = [NSNumber numberWithInt:0];
             break;
     }
     
@@ -176,14 +178,14 @@
     PostStatusTableViewController *postStatVc = [[PostStatusTableViewController alloc] initWithStyle:UITableViewStylePlain];
     postStatVc.delegate = self;
     
-    NSString *postStatus;
+    NSNumber *postStatus;
     
     if(theNewSelectedStatus == nil)
-        postStatus = [[[postDict objectForKey:[[postDict allKeys] objectAtIndex:0]] objectForKey:@"post"] valueForKey:@"status"];
+        postStatus = [NSNumber numberWithInt:[[[[postDict objectForKey:[[postDict allKeys] objectAtIndex:0]] objectForKey:@"post"] valueForKey:@"status"] intValue]];
     else
         postStatus = theNewSelectedStatus;
     
-    postStatVc.selectedStatus = postStatus;
+    postStatVc.selectedStatus =  postStatus;
     popover = [[FPPopoverKeyboardResponsiveController alloc] initWithViewController:postStatVc];
     popover.arrowDirection = FPPopoverArrowDirectionUp;
     

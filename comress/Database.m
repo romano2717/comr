@@ -149,10 +149,12 @@ static const int newDatabaseVersion = 2; //this database version is incremented 
 
 - (NSDate *)createNSDateWithWcfDateString:(NSString *)dateString
 {
-    NSInteger offset = [[NSTimeZone defaultTimeZone] secondsFromGMT]; //get number of seconds to add or subtract according to the client default time zone
-    NSInteger startPosition = [dateString rangeOfString:@"("].location + 1; //start of the date value
-    NSTimeInterval unixTime = [[dateString substringWithRange:NSMakeRange(startPosition, 13)] doubleValue] / 1000; //WCF will send 13 digit-long value for the time interval since 1970 (millisecond precision) whereas iOS works with 10 digit-long values (second precision), hence the divide by 1000
-    NSDate *date = [[NSDate dateWithTimeIntervalSince1970:unixTime] dateByAddingTimeInterval:offset];
+    //the wcf is gmt+8 by default :-(
+    //NSInteger offset = [[NSTimeZone defaultTimeZone] secondsFromGMT];
+    
+    NSInteger startPosition = [dateString rangeOfString:@"("].location + 1;
+    NSTimeInterval unixTime = [[dateString substringWithRange:NSMakeRange(startPosition, 13)] doubleValue] / 1000;
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:unixTime];
     
     return date;
 }

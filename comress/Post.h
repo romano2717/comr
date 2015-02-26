@@ -21,9 +21,9 @@
 @property (nonatomic, strong) NSString *post_by;
 @property (nonatomic, strong) NSDate *post_date;
 @property (nonatomic, strong) NSString *post_type;
-@property (nonatomic, strong) NSString *severity;
+@property (nonatomic, strong) NSNumber *severity;
 @property (nonatomic, strong) NSString *address;
-@property (nonatomic, strong) NSString *status;
+@property (nonatomic, strong) NSNumber *status;
 @property (nonatomic, strong) NSString *level;
 @property (nonatomic, strong) NSNumber *block_id;
 @property (nonatomic, strong) NSString *postal_code;
@@ -31,8 +31,6 @@
 - (long long)savePostWithDictionary:(NSDictionary *)dict;
 
 - (NSArray *)fetchIssuesWithParams:(NSDictionary *)params forPostId:(NSNumber *)postId filterByBlock:(BOOL)filter;
-
-- (void)close;
 
 - (NSArray *)postsToSend;
 

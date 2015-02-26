@@ -390,7 +390,6 @@
 
 - (void)stopUpdatingLocation
 {
-    DDLogVerbose(@"found address %@",self.addressResultsArray);
     [locationManager stopUpdatingLocation];
     
     [ActionSheetStringPicker showPickerWithTitle:@"Found Postal Codes" rows:self.addressResultsArray initialSelection:0 doneBlock:^(ActionSheetStringPicker *picker, NSInteger selectedIndex, id selectedValue) {
@@ -482,20 +481,19 @@
         return;
     }
 
-    
+    NSNumber *severityNumber;
     if([severity isEqualToString:@"Routine"])
-        severity = @"2";
+        severityNumber = [NSNumber numberWithInt:2];
     else
-        severity = @"1";
+        severityNumber = [NSNumber numberWithInt:1];
     
     NSString *post_type = @"1";
     NSString *post_by = user.user_id;
     NSDate *post_date = [NSDate date];
     
-    NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:post_topic,@"post_topic",post_by,@"post_by",post_date,@"post_date",post_type,@"post_type",severity,@"severity",@"0",@"status",location,@"address",level,@"level",postal_code,@"postal_code",blockId,@"block_id", nil];
+    NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:post_topic,@"post_topic",post_by,@"post_by",post_date,@"post_date",post_type,@"post_type",severityNumber,@"severity",@"0",@"status",location,@"address",level,@"level",postal_code,@"postal_code",blockId,@"block_id", nil];
     
     long long lastClientPostId =  [post savePostWithDictionary:dict];
-    [post close];
 
     if(lastClientPostId > 0)
     {
@@ -527,11 +525,21 @@
                 DDLogVerbose(@"post successful!");
         }
         
-        [postImage close];
-        
         [self dismissViewControllerAnimated:YES completion:^{
             NSDictionary *useInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithLongLong:lastClientPostId] forKey:@"lastClientPostId"];
-            [[NSNotificationCenter defaultCenter] postNotificationName:@"autoOpenChatViewForPost" object:nil userInfo:useInfo];
+            
+            Database *myDatabase = [Database sharedMyDbManager];
+            
+            FMDatabase *db = [myDatabase prepareDatabaseFor:self];
+            db.traceExecution = YES;
+            
+            FMResultSet *rs = [db executeQuery:@"select is_own_block from blocks where block_id = ? and is_own_block = ?",blockId,[NSNumber numberWithBool:YES]];
+            
+            if([rs next])
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"autoOpenChatViewForPostMe" object:nil userInfo:useInfo];
+            else
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"autoOpenChatViewForPostOthers" object:nil userInfo:useInfo];
+            
         }];
     }
 }

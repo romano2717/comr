@@ -47,12 +47,20 @@
     
     sync = [Synchronize  sharedManager];
 
-    self.syncTimer = [NSTimer scheduledTimerWithTimeInterval:sync_interval target:self selector:@selector(synchronize) userInfo:nil repeats:YES];
+    self.syncTimer = [NSTimer scheduledTimerWithTimeInterval:sync_interval target:self selector:@selector(synchronizeUpload) userInfo:nil repeats:YES];
+    
+    
+    //observer to call download post
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(postDownloadFinish) name:@"postDownloadFinish" object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(postImageDownloadFinish) name:@"postImageDownloadFinish" object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(commentDownloadFinish) name:@"commentDownloadFinish" object:nil];
     
     return YES;
 }
 
-- (void)synchronize
+- (void)synchronizeUpload
 {
     /*
      only upload data to server if db file was modified to avoid un-necessary queries on the db
@@ -94,9 +102,94 @@
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         [sync uploadPostStatusChange];
     });
+}
+
+- (void)postDownloadFinish
+{
+    return;
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        
+        FMDatabase *db = [myDatabase prepareDatabaseFor:self];
+        FMResultSet *rs = [db executeQuery:@"select date from post_last_request_date"];
+        NSDate *requestDate;
+        if([rs next])
+        {
+            requestDate = [rs dateForColumn:@"date"];
+            [sync startDownloadPostForPage:1 totalPage:0 requestDate:requestDate];
+        }
+        else
+        {
+            NSString *jsonDate = @"/Date(1388505600000+0800)/";
+            NSDate *date = [self deserializeJsonDateString:jsonDate];
+            [sync startDownloadPostForPage:1 totalPage:0 requestDate:date];
+        }
+    });
+}
+
+- (void)postImageDownloadFinish
+{
+    return;
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        
+        FMDatabase *db = [myDatabase prepareDatabaseFor:self];
+        FMResultSet *rs = [db executeQuery:@"select date from post_image_last_request_date"];
+        NSDate *requestDate;
+        if([rs next])
+        {
+            requestDate = [rs dateForColumn:@"date"];
+            [sync startDownloadPostImagesForPage:1 totalPage:0 requestDate:requestDate];
+        }
+        else
+        {
+            NSString *jsonDate = @"/Date(1388505600000+0800)/";
+            NSDate *date = [self deserializeJsonDateString:jsonDate];
+            [sync startDownloadPostImagesForPage:1 totalPage:0 requestDate:date];
+        }
+    });
+}
+
+- (void)commentDownloadFinish
+{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        
+        FMDatabase *db = [myDatabase prepareDatabaseFor:self];
+        FMResultSet *rs = [db executeQuery:@"select date from comment_last_request_date"];
+        NSDate *requestDate;
+        if([rs next])
+        {
+            requestDate = [rs dateForColumn:@"date"];
+            [sync startDownloadCommentsForPage:1 totalPage:0 requestDate:requestDate];
+        }
+        else
+        {
+            NSString *jsonDate = @"/Date(1388505600000+0800)/";
+            NSDate *date = [self deserializeJsonDateString:jsonDate];
+            [sync startDownloadCommentsForPage:1 totalPage:0 requestDate:date];
+        }
+    });
+}
+- (NSDate *)deserializeJsonDateString: (NSString *)jsonDateString
+{
+    NSInteger startPosition = [jsonDateString rangeOfString:@"("].location + 1; //start of the date value
+    //NSInteger startPosition = [jsonDateString rangeOfString:@"("].location ;
+    
+    NSTimeInterval unixTime = [[jsonDateString substringWithRange:NSMakeRange(startPosition, 13)] doubleValue] / 1000; //WCF will send 13 digit-long value for the time interval since 1970 (millisecond precision) whereas iOS works with 10 digit-long values (second precision), hence the divide by 1000
+    
+    NSDate *date =  [NSDate dateWithTimeIntervalSince1970:unixTime];
+    
+    return date;
+}
+
+- (NSString *)serializedStringDateJson: (NSDate *)date
+{
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"Z"]; //for getting the timezone part of the date only.
+    
+    NSString *jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [date timeIntervalSince1970],[formatter stringFromDate:date]]; //three zeroes at the end of the unix timestamp are added because thats the millisecond part (WCF supports the millisecond precision)
     
     
-    //download
+    return jsonDate;
 }
 
 - (void)pingServer
@@ -121,7 +214,7 @@
     {
         DDLogVerbose(@"create bg task and sync!");
         
-        [self synchronize];
+        [self synchronizeUpload];
         
         bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
             DDLogVerbose(@"end bg task");

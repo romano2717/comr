@@ -15,15 +15,30 @@
 #import "PostImage.h"
 #import "Users.h"
 #import "Comment_noti.h"
+#import "InitializerViewController.h"
+#import "ImageOptions.h"
 
 @interface Synchronize : NSObject
 {
     AFManager *myAfManager;
     Database *myDatabase;
     FMDatabaseQueue *databaseQueue;
+    InitializerViewController *init;
+    
+    Blocks *blocks;
+    Post *post;
+    PostImage *postImage;
+    Comment *comment;
+    
+    ImageOptions *imgOpts;
 }
 
+@property (nonatomic, strong) NSMutableArray *imagesArray;
+
 + (id)sharedManager;
+
+
+//upload
 
 - (void)uploadPost;
 
@@ -32,4 +47,14 @@
 - (void)uploadImage;
 
 - (void)uploadPostStatusChange;
+
+
+
+//download
+
+- (void)startDownloadPostForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate;
+
+- (void)startDownloadPostImagesForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate;
+
+- (void)startDownloadCommentsForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate;
 @end
