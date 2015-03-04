@@ -12,11 +12,9 @@
 @interface Client : NSObject
 {
     Database *myDatabase;
-    FMDatabase *db;
 }
 
-@property (nonatomic, strong) NSString *activation_code;
-@property (nonatomic, strong) NSString *api_url;
-@property (nonatomic, strong) NSString *user_guid;
+@property (nonatomic, strong) NSDictionary *clientDictionary;
+
 
 @end

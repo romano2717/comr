@@ -19,7 +19,6 @@
     // Do any additional setup after loading the view.
     
     myDatabase = [Database sharedMyDbManager];
-    myAfManager = [AFManager sharedMyAfManager];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -33,52 +32,57 @@
     
     if(activateCode != nil && activateCode.length > 0)
     {
-        AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
+        [MBProgressHUD showHUDAddedTo:self.view animated:YES];
         
-        [manager GET:[NSString stringWithFormat:@"%@%@",api_activationUrl,activateCode] parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [myDatabase.AfManager GET:[NSString stringWithFormat:@"%@%@",api_activationUrl,activateCode] parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+            DDLogVerbose(@"%@",responseObject);
             NSDictionary *dict = (NSDictionary *)responseObject;
             
             if([[dict valueForKey:@"isValid"] intValue] == 1)
             {
-                myAfManager.api_url = [dict valueForKey:@"api_url"];
-                
-                FMDatabase *db = [myDatabase prepareDatabaseFor:self];
-                
-                BOOL q;
-                
-                FMResultSet *rs = [db executeQuery:@"select activation_code from client"];
-                if([rs next])
-                {
-                    [db beginTransaction];
-                    q = [db executeUpdate:@"update client set activation_code = ?, api_url = ?",activateCode,[dict valueForKey:@"url"]];
-                    if(!q)
-                        [db rollback];
+                [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+                    BOOL q;
+                    
+                    FMResultSet *rs = [db executeQuery:@"select activation_code from client"];
+                    if([rs next])
+                    {
+                        q = [db executeUpdate:@"update client set activation_code = ?, api_url = ?",activateCode,[dict valueForKey:@"url"]];
+                        if(!q)
+                        {
+                            *rollback = YES;
+                            return;
+                        }
+                    }
                     else
-                        [db commit];
-                }
-                else
-                {
-                    [db beginTransaction];
-                    q = [db executeUpdate:@"insert into client(activation_code, api_url) values(?,?)",activateCode,[dict valueForKey:@"url"]];
-                    if(!q)
-                        [db rollback];
-                    else
-                        [db commit];
-                }
-                
-                if(q)
-                {
-                    [self performSegueWithIdentifier:@"push_the_login" sender:self];
-                }
+                    {
+                        q = [db executeUpdate:@"insert into client(activation_code, api_url) values(?,?)",activateCode,[dict valueForKey:@"url"]];
+                        if(!q)
+                        {
+                            *rollback = YES;
+                        }
+                    }
+                    
+                    if(q)
+                    {
+                        FMResultSet *rs = [db executeQuery:@"select * from client"];
+                        while ([rs next]) {
+                            myDatabase.clientDictionary = [rs resultDictionary];
+                        }
+                        
+                        [self performSegueWithIdentifier:@"push_the_login" sender:self];
+                    }
+                }];
             }
             else
             {
                 [myDatabase alertMessageWithMessage:@"Invalid Activation code. Please try again."];
             }
             
-        } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-            DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription, THIS_FILE,THIS_METHOD);
+            [MBProgressHUD hideAllHUDsForView:self.view animated:YES];
             
+        } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+            [MBProgressHUD hideAllHUDsForView:self.view animated:YES];
+            DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription, THIS_FILE,THIS_METHOD);
         }];
     }
 }

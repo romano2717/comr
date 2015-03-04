@@ -12,7 +12,6 @@
 @interface Device_token : NSObject
 {
     Database *myDatabase;
-    FMDatabase *db;
 }
 @property (nonatomic, strong) NSString *device_token;
 

@@ -27,15 +27,14 @@ postal_code;
 -(id)init {
     if (self = [super init]) {
         myDatabase = [Database sharedMyDbManager];
-        databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
     }
     return self;
 }
 
 - (long long)savePostWithDictionary:(NSDictionary *)dict
 {
-    BOOL postSaved;
-    long long posClienttId = 0;
+    __block BOOL postSaved;
+    __block long long posClienttId = 0;
     
     client_post_id  = [[dict valueForKey:@"client_post_id"] intValue];
     post_id         = [[dict valueForKey:@"post_id"] intValue];
@@ -50,26 +49,16 @@ postal_code;
     block_id        = [dict valueForKey:@"block_id"];
     postal_code     = [dict valueForKey:@"postal_code"];
     
-    
-    FMDatabase *db = [myDatabase prepareDatabaseFor:self];
-    
-    [db beginTransaction];
-    
-    postSaved = [db executeUpdate:@"insert into post (post_topic,post_by,post_date,post_type,severity,address,status,level,block_id,isUpdated,postal_code) values (?,?,?,?,?,?,?,?,?,?,?)",post_topic,post_by,post_date,post_type,severity,address,status,level,block_id,[NSNumber numberWithBool:YES],postal_code];
-    
-    if(!postSaved)
-    {
-        [db rollback];
-        DDLogVerbose(@"%@ [%@-%@]",[db lastError],THIS_FILE,THIS_METHOD);
-    }
-    
-    else
-    {
-        [db commit];
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        postSaved = [db executeUpdate:@"insert into post (post_topic,post_by,post_date,post_type,severity,address,status,level,block_id,isUpdated,postal_code) values (?,?,?,?,?,?,?,?,?,?,?)",post_topic,post_by,post_date,post_type,severity,address,status,level,block_id,[NSNumber numberWithBool:YES],postal_code];
+        
+        if(!postSaved)
+        {
+            *rollback = YES;
+            DDLogVerbose(@"%@ [%@-%@]",[db lastError],THIS_FILE,THIS_METHOD);
+        }
         posClienttId = [db lastInsertRowId];
-    }
-    
-    [db close];
+    }];
     
     return posClienttId;
 }
@@ -104,125 +93,125 @@ postal_code;
         [q appendString:[params valueForKey:@"order"]];
     }
     
-    FMDatabase *db = [myDatabase prepareDatabaseFor:self];
-
-    FMResultSet *rsPost = [db executeQuery:q];
-    
-    while ([rsPost next]) {
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        FMResultSet *rsPost = [db executeQuery:q];
         
-        NSNumber *clientPostId = [NSNumber numberWithInt:[rsPost intForColumn:@"client_post_id"]];
-        NSNumber *serverPostId = [NSNumber numberWithInt:[rsPost intForColumn:@"post_id"]];
-        
-        NSMutableDictionary *postDict = [[NSMutableDictionary alloc] init];
-        NSMutableDictionary *postChild = [[NSMutableDictionary alloc] init];
-        
-        /*
-         add post info to our dict. this will be the top most level of our dictionary entry.
-         but first check if this post under this block belongs to current user or others
-         */
-
-        FMResultSet *rsBlock = [db executeQuery:@"select is_own_block from blocks where block_id = ? and is_own_block = ?", [rsPost stringForColumn:@"block_id"],[NSNumber numberWithBool:filter]];
+        while ([rsPost next]) {
             
-        if([rsBlock next] == NO)
-            continue;
-
-        
-        
-        [postChild setObject:[rsPost resultDictionary] forKey:@"post"];
-        
-        //add all images of this post
-        FMResultSet *rsPostImage;
-        
-        if([serverPostId intValue] != 0)
-        {
-            rsPostImage = [db executeQuery:@"select * from post_image where post_id = ? order by client_post_image_id ",serverPostId];
-        }
-        else if([clientPostId intValue] != 0)
-        {
-            rsPostImage = [db executeQuery:@"select * from post_image where client_post_id = ? order by client_post_image_id ",clientPostId];
-        }
-        
-        NSMutableArray *imagesArray = [[NSMutableArray alloc] init];
-        
-        while ([rsPostImage next]) {
-            [imagesArray addObject:[rsPostImage resultDictionary]];
-        }
-        
-        [postChild setObject:imagesArray forKey:@"postImages"];
-        
-        
-        //get all comments for this post including comment image if there's any
-        FMResultSet *rsPostComment = [db executeQuery:@"select * from comment where (client_post_id = ? or post_id = ?)  order by comment_on asc",clientPostId,serverPostId];
-        NSMutableArray *commentsArray = [[NSMutableArray alloc] init];
-
-        while ([rsPostComment next]) {
+            NSNumber *clientPostId = [NSNumber numberWithInt:[rsPost intForColumn:@"client_post_id"]];
+            NSNumber *serverPostId = [NSNumber numberWithInt:[rsPost intForColumn:@"post_id"]];
             
-            NSMutableDictionary *commentsDict = [[NSMutableDictionary alloc] initWithDictionary:[rsPostComment resultDictionary]];
+            NSMutableDictionary *postDict = [[NSMutableDictionary alloc] init];
+            NSMutableDictionary *postChild = [[NSMutableDictionary alloc] init];
             
-            if([[rsPostComment stringForColumn:@"comment"] isEqualToString:@"<image>"])
+            /*
+             add post info to our dict. this will be the top most level of our dictionary entry.
+             but first check if this post under this block belongs to current user or others
+             */
+            
+            FMResultSet *rsBlock = [db executeQuery:@"select is_own_block from blocks where block_id = ? and is_own_block = ?", [rsPost stringForColumn:@"block_id"],[NSNumber numberWithBool:filter]];
+            
+            if([rsBlock next] == NO)
+                continue;
+            
+            
+            
+            [postChild setObject:[rsPost resultDictionary] forKey:@"post"];
+            
+            //add all images of this post
+            FMResultSet *rsPostImage;
+            
+            if([serverPostId intValue] != 0)
             {
-                //get the image path
-                FMResultSet *rsImagePath = [db executeQuery:@"select image_path from post_image where client_comment_id = ?",[NSNumber numberWithInt:[rsPostComment intForColumn:@"client_comment_id"]]];
-                
-                while ([rsImagePath next]) {
-                    [commentsDict setObject:[rsImagePath stringForColumn:@"image_path"] forKey:@"image"];
-                }
+                rsPostImage = [db executeQuery:@"select * from post_image where post_id = ? order by client_post_image_id ",serverPostId];
+            }
+            else if([clientPostId intValue] != 0)
+            {
+                rsPostImage = [db executeQuery:@"select * from post_image where client_post_id = ? order by client_post_image_id ",clientPostId];
             }
             
-            [commentsArray addObject:commentsDict];
+            NSMutableArray *imagesArray = [[NSMutableArray alloc] init];
             
+            while ([rsPostImage next]) {
+                [imagesArray addObject:[rsPostImage resultDictionary]];
+            }
+            
+            [postChild setObject:imagesArray forKey:@"postImages"];
+            
+            
+            //get all comments for this post including comment image if there's any
+            FMResultSet *rsPostComment = [db executeQuery:@"select * from comment where (client_post_id = ? or post_id = ?)  order by comment_on asc",clientPostId,serverPostId];
+            NSMutableArray *commentsArray = [[NSMutableArray alloc] init];
+            
+            while ([rsPostComment next]) {
+                
+                NSMutableDictionary *commentsDict = [[NSMutableDictionary alloc] initWithDictionary:[rsPostComment resultDictionary]];
+                
+                if([[rsPostComment stringForColumn:@"comment"] isEqualToString:@"<image>"])
+                {
+                    //get the image path
+                    FMResultSet *rsImagePath = [db executeQuery:@"select image_path from post_image where client_comment_id = ?",[NSNumber numberWithInt:[rsPostComment intForColumn:@"client_comment_id"]]];
+                    
+                    while ([rsImagePath next]) {
+                        [commentsDict setObject:[rsImagePath stringForColumn:@"image_path"] forKey:@"image"];
+                    }
+                }
+                
+                [commentsArray addObject:commentsDict];
+                
+            }
+            
+            [postChild setObject:commentsArray forKey:@"postComments"];
+            
+            [postDict setObject:postChild forKey:postId ? postId : clientPostId];
+            
+            [arr addObject:postDict];
         }
-        
-        [postChild setObject:commentsArray forKey:@"postComments"];
-        
-        [postDict setObject:postChild forKey:postId ? postId : clientPostId];
-        
-        [arr addObject:postDict];
-    }
+    }];
+
     
-    [db close];
     
     return arr;
 }
 
 - (NSArray *)postsToSend
 {
-    FMDatabase *db = [myDatabase prepareDatabaseFor:self];
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        FMResultSet *rs = [db executeQuery:@"select * from post where post_id IS NULL or post_id = ?",[NSNumber numberWithInt:0]];
+        
+        NSMutableArray *rsArray = [[NSMutableArray alloc] init];
+        
+        while ([rs next]) {
+            
+            NSDictionary *dict = @{
+                                   @"PostTopic":[rs stringForColumn:@"post_topic"],
+                                   @"PostBy":[rs stringForColumn:@"post_by"],
+                                   @"PostType":[rs stringForColumn:@"post_type"],
+                                   @"Severity":[NSNumber numberWithInt:[rs intForColumn:@"severity"]],
+                                   @"ActionStatus":[rs stringForColumn:@"status"],
+                                   @"ClientPostId":[NSNumber numberWithInt:[rs intForColumn:@"client_post_id"]],
+                                   @"BlkId":[NSNumber numberWithInt:[rs intForColumn:@"block_id"]],
+                                   @"Location":[rs stringForColumn:@"address"],
+                                   @"PostalCode":[rs stringForColumn:@"postal_code"],
+                                   @"Level":[rs stringForColumn:@"level"],
+                                   @"IsUpdated":[NSNumber numberWithBool:NO]
+                                   };
+            
+            
+            [rsArray addObject:dict];
+            
+            dict = nil;
+        }
+        
+        [db close];
+    }];
     
-    FMResultSet *rs = [db executeQuery:@"select * from post where post_id IS NULL or post_id = ?",[NSNumber numberWithInt:0]];
-
-    NSMutableArray *rsArray = [[NSMutableArray alloc] init];
-    
-    while ([rs next]) {
-        
-        NSDictionary *dict = @{
-                               @"PostTopic":[rs stringForColumn:@"post_topic"],
-                               @"PostBy":[rs stringForColumn:@"post_by"],
-                               @"PostType":[rs stringForColumn:@"post_type"],
-                               @"Severity":[NSNumber numberWithInt:[rs intForColumn:@"severity"]],
-                               @"ActionStatus":[rs stringForColumn:@"status"],
-                               @"ClientPostId":[NSNumber numberWithInt:[rs intForColumn:@"client_post_id"]],
-                               @"BlkId":[NSNumber numberWithInt:[rs intForColumn:@"block_id"]],
-                               @"Location":[rs stringForColumn:@"address"],
-                               @"PostalCode":[rs stringForColumn:@"postal_code"],
-                               @"Level":[rs stringForColumn:@"level"],
-                               @"IsUpdated":[NSNumber numberWithBool:NO]
-                               };
-        
-        
-        [rsArray addObject:dict];
-        
-        dict = nil;
-    }
-    
-    [db close];
-
-    return rsArray;
+    return nil;
 }
 
 - (BOOL)updatePostStatusForClientPostId:(NSNumber *)clientPostId withStatus:(NSNumber *)theStatus
 {
-    [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
         BOOL upPost = [theDb executeUpdate:@"update post set status = ? where client_post_id = ?",theStatus,clientPostId];
         
         if(!upPost)
@@ -241,7 +230,7 @@ postal_code;
     NSTimeInterval unixTime = [[dateString substringWithRange:NSMakeRange(startPosition, 13)] doubleValue] / 1000;
     NSDate *date = [NSDate dateWithTimeIntervalSince1970:unixTime];
     
-    [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
         FMResultSet *rs = [theDb executeQuery:@"select * from post_last_request_date"];
         
         if(![rs next])

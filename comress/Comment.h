@@ -13,9 +13,7 @@
 @interface Comment : NSObject
 {
     Database *myDatabase;
-    FMDatabase *db;
     ImageOptions *imgOpts;
-    FMDatabaseQueue *databaseQueue;
 }
 
 @property (nonatomic) int client_comment_id;

@@ -18,6 +18,7 @@
 #import "ActionSheetStringPicker.h"
 #import "Blocks.h"
 #import "MPGTextField.h"
+#import "Database.h"
 
 @interface NewIssueViewController : UIViewController<UICollectionViewDataSource,UICollectionViewDelegate, UIActionSheetDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate,UITextFieldDelegate, UIPickerViewDataSource,UIPickerViewDelegate,UIScrollViewDelegate,CLLocationManagerDelegate,MPGTextFieldDelegate>
 {
@@ -27,6 +28,7 @@
     Post *post;
     PostImage *postImage;
     Blocks *blocks;
+    Database *myDatabase;
 }
 
 @property (nonatomic, weak) IBOutlet UIScrollView *scrollView;

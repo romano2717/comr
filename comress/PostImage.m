@@ -7,6 +7,7 @@
 //
 
 #import "PostImage.h"
+#import "NSData+Base64.h"
 
 @implementation PostImage
 
@@ -26,18 +27,13 @@ image_type
 
 -(id)init {
     if (self = [super init]) {
-        myDatabase = [Database sharedMyDbManager];
-        db = [myDatabase prepareDatabaseFor:self];
-        databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
+
     }
     return self;
 }
 
 - (long long)savePostImageWithDictionary:(NSDictionary *)dict
 {
-    BOOL postImageSaved;
-    long long postClientImageId = 0;
-    
     client_post_image_id    = [NSNumber numberWithInt:[[dict valueForKey:@"client_post_image_id"] intValue]] ;
     post_image_id           = [NSNumber numberWithInt:[[dict valueForKey:@"post_image_id"] intValue]];
     client_post_id          = [NSNumber numberWithInt:[[dict valueForKey:@"client_post_id"] intValue]];
@@ -50,31 +46,28 @@ image_type
     uploaded                = [dict valueForKey:@"uploaded"];
     image_type              = [NSNumber numberWithInt:[[dict valueForKey:@"image_type"] intValue]];
     
-    [db beginTransaction];
+    __block long long postClientImageId = 0;
     
-    postImageSaved = [db executeUpdate:@"insert into post_image (client_post_id,image_path,status,downloaded,uploaded,image_type) values (?,?,?,?,?,?)",client_post_id,image_path,status,downloaded,uploaded,image_type];
-    
-    if(!postImageSaved)
-    {
-        [db rollback];
-        DDLogVerbose(@"insert failed: %@ [%@-%@]",[db lastErrorMessage],THIS_FILE,THIS_METHOD);
-    }
-    
-    else
-    {
-        [db commit];
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
         
-        postClientImageId = [db lastInsertRowId];
-    }
-    
-    [db close];
+        BOOL postImageSaved;
+        
+        postImageSaved = [db executeUpdate:@"insert into post_image (client_post_id,image_path,status,downloaded,uploaded,image_type) values (?,?,?,?,?,?)",client_post_id,image_path,status,downloaded,uploaded,image_type];
+        
+        if(!postImageSaved)
+        {
+            *rollback = YES;
+            DDLogVerbose(@"insert failed: %@ [%@-%@]",[db lastErrorMessage],THIS_FILE,THIS_METHOD);
+            return;
+        }
+        
+        else
+        {
+            postClientImageId = [db lastInsertRowId];
+        }
+    }];
     
     return postClientImageId;
-}
-
-- (void)close
-{
-    [db close];
 }
 
 - (NSDictionary *)imagesTosend
@@ -82,53 +75,52 @@ image_type
 
     NSNumber *zero = [NSNumber numberWithInt:0];
     NSMutableArray *imagesArray = [[NSMutableArray alloc] init];
-    NSMutableDictionary *imagesDict = [[NSMutableDictionary alloc] init];
+    __block NSMutableDictionary *imagesDict = [[NSMutableDictionary alloc] init];
     
-    FMResultSet *rs = [db executeQuery:@"select * from post_image where post_image_id is null or post_image_id = ?",zero];
-    users = [[Users alloc] init];
-    
-    while ([rs next]) {
-        NSNumber *ImageType = [NSNumber numberWithInt:[rs intForColumn:@"image_type"]];
-        NSNumber *CilentPostImageId = [NSNumber numberWithInt:[rs intForColumn:@"client_post_image_id"]];
-        NSNumber *PostId = [NSNumber numberWithInt:[rs intForColumn:@"post_id"]];
-        NSNumber *CommentId = [NSNumber numberWithInt:[rs intForColumn:@"comment_id"]];
-        NSString *CreatedBy = users.user_id;
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
         
-        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-        NSString *documentsPath = [paths objectAtIndex:0];
-        NSString *filePath = [documentsPath stringByAppendingPathComponent:[rs stringForColumn:@"image_path"]];
+        db.traceExecution = YES;
         
-        NSFileManager *fileManager = [[NSFileManager alloc] init];
-        if([fileManager fileExistsAtPath:filePath] == NO) //file does not exist
-            continue ;
+        FMResultSet *rs = [db executeQuery:@"select * from post_image where post_image_id is null or post_image_id = ?",zero];
+        users = [[Users alloc] init];
         
-        UIImage *image = [UIImage imageWithContentsOfFile:filePath];
-        NSData *imageData = UIImageJPEGRepresentation(image, 1);
-        NSData *imageBase64 = [imageData base64EncodedDataWithOptions:NSDataBase64Encoding64CharacterLineLength];
-        NSString *imageString = [NSString stringWithUTF8String:[imageBase64 bytes]];
-        
-        if(imageString == nil)
-            return nil;
-        
-        if([ImageType intValue] == 1)//post image
-        {
-            CommentId = [NSNumber numberWithInt:0];
+        while ([rs next]) {
+            NSNumber *ImageType = [NSNumber numberWithInt:[rs intForColumn:@"image_type"]];
+            NSNumber *CilentPostImageId = [NSNumber numberWithInt:[rs intForColumn:@"client_post_image_id"]];
+            NSNumber *PostId = [NSNumber numberWithInt:[rs intForColumn:@"post_id"]];
+            NSNumber *CommentId = [NSNumber numberWithInt:[rs intForColumn:@"comment_id"]];
+            NSString *CreatedBy = users.user_id;
+            
+            NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+            NSString *documentsPath = [paths objectAtIndex:0];
+            NSString *filePath = [documentsPath stringByAppendingPathComponent:[rs stringForColumn:@"image_path"]];
+            
+            NSFileManager *fileManager = [[NSFileManager alloc] init];
+            if([fileManager fileExistsAtPath:filePath] == NO) //file does not exist
+                continue ;
+            
+            UIImage *image = [UIImage imageWithContentsOfFile:filePath];
+            NSData *imageData = UIImageJPEGRepresentation(image, 1.0);
+            NSString *imageString = [imageData base64EncodedStringWithSeparateLines:NO];
+            
+            if([ImageType intValue] == 1)//post image
+            {
+                CommentId = [NSNumber numberWithInt:0];
+            }
+            else if([ImageType intValue] == 2)
+            {
+                PostId = [NSNumber numberWithInt:0];
+            }
+            
+            
+            NSDictionary *dict = @{@"CilentPostImageId":CilentPostImageId,@"PostId":PostId,@"CommentId":CommentId,@"CreatedBy":CreatedBy,@"ImageType":ImageType,@"Image":imageString};
+            
+            [imagesArray addObject:dict];
         }
-        else if([ImageType intValue] == 2)
-        {
-            PostId = [NSNumber numberWithInt:0];
-        }
-        
-        
-        NSDictionary *dict = @{@"CilentPostImageId":CilentPostImageId,@"PostId":PostId,@"CommentId":CommentId,@"CreatedBy":CreatedBy,@"ImageType":ImageType,@"Image":imageString};
-        
-        [imagesArray addObject:dict];
-    }
+        [imagesDict setObject:imagesArray forKey:@"postImageList"];
+    }];
     
-    if(imagesArray.count == 0)
-        return nil;
     
-    [imagesDict setObject:imagesArray forKey:@"postImageList"];
     
     return imagesDict;
 }
@@ -139,7 +131,7 @@ image_type
     NSTimeInterval unixTime = [[dateString substringWithRange:NSMakeRange(startPosition, 13)] doubleValue] / 1000; //WCF will send 13 digit-long value for the time interval since 1970 (millisecond precision) whereas iOS works with 10 digit-long values (second precision), hence the divide by 1000
     NSDate *date = [NSDate dateWithTimeIntervalSince1970:unixTime];
     
-    [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
         FMResultSet *rs = [theDb executeQuery:@"select * from post_image_last_request_date"];
         
         if(![rs next])

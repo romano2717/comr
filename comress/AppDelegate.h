@@ -16,24 +16,20 @@
 #import "DDTTYLogger.h"
 #import "DDFileLogger.h"
 #import "AFNetworkActivityLogger.h"
-#import "AFManager.h"
 #import "Synchronize.h"
+
 #import "Device_token.h"
 #import "Users.h"
-#import "AFManager.h"
+#import "Client.h"
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 {
     DDFileLogger *fileLogger;
     Database *myDatabase;
-    Device_token *device_token;
     Synchronize *sync;
-    Users *user;
-    AFManager *myAfManager;
 }
 @property (strong, nonatomic) UIWindow *window;
 @property (nonatomic)UIBackgroundTaskIdentifier bgTask;
-@property (nonatomic, strong) NSTimer *syncTimer;
 
 @end
 

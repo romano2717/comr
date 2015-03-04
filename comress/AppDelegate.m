@@ -35,140 +35,88 @@
     [DDLog addLogger:[DDASLLogger sharedInstance]];
     [DDLog addLogger:[DDTTYLogger sharedInstance]];
     
-    //prepare the db
-    [myDatabase copyDbToDocumentsDir];
-    
     //migrate database
-    [myDatabase migrateDatabase];
+    //[myDatabase migrateDatabase];
     
     [application setKeepAliveTimeout:ping_interval handler:^{
         [self pingServer];
     }];
     
     sync = [Synchronize  sharedManager];
-
-    self.syncTimer = [NSTimer scheduledTimerWithTimeInterval:sync_interval target:self selector:@selector(synchronizeUpload) userInfo:nil repeats:YES];
-    
-    
-    //observer to call download post
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(postDownloadFinish) name:@"postDownloadFinish" object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(postImageDownloadFinish) name:@"postImageDownloadFinish" object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(commentDownloadFinish) name:@"commentDownloadFinish" object:nil];
+    [sync kickStartSync];
     
     return YES;
 }
 
-- (void)synchronizeUpload
-{
-    /*
-     only upload data to server if db file was modified to avoid un-necessary queries on the db
-     */
-    
-    NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:myDatabase.dbPath error:nil];
-    NSDate *modDate = [attributes fileModificationDate];
-    
-    NSUserDefaults *userDef = [NSUserDefaults standardUserDefaults];
-    
-    NSDate *storedModDate = [userDef objectForKey:@"modDate"];
-    
-    if (storedModDate != modDate)
-    {
-        DDLogVerbose(@"Db file was modified!");
-        [userDef setObject:modDate forKey:@"modDate"];
-    }
-    else
-    {
-        return; // db was not modified, don't do sync
-    }
-
-    if(myDatabase.initializingComplete == 0)
-        return;
-    
-    //upload
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        [sync uploadPost];
-    });
-    
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        [sync uploadComment];
-    });
-    
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        [sync uploadImage];
-    });
-    
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        [sync uploadPostStatusChange];
-    });
-}
-
 - (void)postDownloadFinish
 {
-    return;
-    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+            FMResultSet *rs = [db executeQuery:@"select date from post_last_request_date"];
+            NSDate *requestDate;
+            if([rs next])
+            {
+                requestDate = [rs dateForColumn:@"date"];
+                [sync startDownloadPostForPage:1 totalPage:0 requestDate:requestDate];
+            }
+            else
+            {
+                NSString *jsonDate = @"/Date(1388505600000+0800)/";
+                NSDate *date = [self deserializeJsonDateString:jsonDate];
+                [sync startDownloadPostForPage:1 totalPage:0 requestDate:date];
+            }
+        }];
         
-        FMDatabase *db = [myDatabase prepareDatabaseFor:self];
-        FMResultSet *rs = [db executeQuery:@"select date from post_last_request_date"];
-        NSDate *requestDate;
-        if([rs next])
-        {
-            requestDate = [rs dateForColumn:@"date"];
-            [sync startDownloadPostForPage:1 totalPage:0 requestDate:requestDate];
-        }
-        else
-        {
-            NSString *jsonDate = @"/Date(1388505600000+0800)/";
-            NSDate *date = [self deserializeJsonDateString:jsonDate];
-            [sync startDownloadPostForPage:1 totalPage:0 requestDate:date];
-        }
     });
 }
 
 - (void)postImageDownloadFinish
 {
-    return;
+
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         
-        FMDatabase *db = [myDatabase prepareDatabaseFor:self];
-        FMResultSet *rs = [db executeQuery:@"select date from post_image_last_request_date"];
-        NSDate *requestDate;
-        if([rs next])
-        {
-            requestDate = [rs dateForColumn:@"date"];
-            [sync startDownloadPostImagesForPage:1 totalPage:0 requestDate:requestDate];
-        }
-        else
-        {
-            NSString *jsonDate = @"/Date(1388505600000+0800)/";
-            NSDate *date = [self deserializeJsonDateString:jsonDate];
-            [sync startDownloadPostImagesForPage:1 totalPage:0 requestDate:date];
-        }
+        [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+            FMResultSet *rs = [db executeQuery:@"select date from post_image_last_request_date"];
+            NSDate *requestDate;
+            if([rs next])
+            {
+                requestDate = [rs dateForColumn:@"date"];
+                [sync startDownloadPostImagesForPage:1 totalPage:0 requestDate:requestDate];
+            }
+            else
+            {
+                NSString *jsonDate = @"/Date(1388505600000+0800)/";
+                NSDate *date = [self deserializeJsonDateString:jsonDate];
+                [sync startDownloadPostImagesForPage:1 totalPage:0 requestDate:date];
+            }
+        }];
     });
 }
 
 - (void)commentDownloadFinish
 {
+    return;
+    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         
-        FMDatabase *db = [myDatabase prepareDatabaseFor:self];
-        FMResultSet *rs = [db executeQuery:@"select date from comment_last_request_date"];
-        NSDate *requestDate;
-        if([rs next])
-        {
-            requestDate = [rs dateForColumn:@"date"];
-            [sync startDownloadCommentsForPage:1 totalPage:0 requestDate:requestDate];
-        }
-        else
-        {
-            NSString *jsonDate = @"/Date(1388505600000+0800)/";
-            NSDate *date = [self deserializeJsonDateString:jsonDate];
-            [sync startDownloadCommentsForPage:1 totalPage:0 requestDate:date];
-        }
+        [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+            FMResultSet *rs = [db executeQuery:@"select date from comment_last_request_date"];
+            NSDate *requestDate;
+            if([rs next])
+            {
+                requestDate = [rs dateForColumn:@"date"];
+                [sync startDownloadCommentsForPage:1 totalPage:0 requestDate:requestDate];
+            }
+            else
+            {
+                NSString *jsonDate = @"/Date(1388505600000+0800)/";
+                NSDate *date = [self deserializeJsonDateString:jsonDate];
+                [sync startDownloadCommentsForPage:1 totalPage:0 requestDate:date];
+            }
+        }];
     });
 }
+
 - (NSDate *)deserializeJsonDateString: (NSString *)jsonDateString
 {
     NSInteger startPosition = [jsonDateString rangeOfString:@"("].location + 1; //start of the date value
@@ -214,8 +162,6 @@
     {
         DDLogVerbose(@"create bg task and sync!");
         
-        [self synchronizeUpload];
-        
         bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
             DDLogVerbose(@"end bg task");
             [application endBackgroundTask:bgTask];
@@ -230,6 +176,8 @@
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+    
+    application.applicationIconBadgeNumber = 0;
     
     //-- Set Notification
     if ([application respondsToSelector:@selector(isRegisteredForRemoteNotifications)])
@@ -254,64 +202,54 @@
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
 {
+    
     NSString *token = [[[[deviceToken description]
                                  stringByReplacingOccurrencesOfString: @"<" withString: @""]
                                 stringByReplacingOccurrencesOfString: @">" withString: @""]
                                stringByReplacingOccurrencesOfString: @" " withString: @""];
 
-    FMDatabase *db = [myDatabase prepareDatabaseFor:self];
-    
-    FMResultSet *rs = [db executeQuery:@"select device_token from device_token"];
-    BOOL q;
-    
-    if([rs next])
-    {
-        [db beginTransaction];
-        q = [db executeUpdate:@"update device_token set device_token = ?",token];
-
-        if(!q)
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        FMResultSet *rs = [db executeQuery:@"select device_token from device_token"];
+        BOOL q;
+        
+        if([rs next])
         {
-            [db rollback];
-            DDLogVerbose(@"error saving device token");
+
+            q = [db executeUpdate:@"update device_token set device_token = ?",token];
+            
+            if(!q)
+            {
+                *rollback = YES;
+                DDLogVerbose(@"error saving device token");
+            }
+        }
+        else
+        {
+
+            BOOL q2 = [db executeUpdate:@"insert into device_token (device_token) values (?)",token];
+            if(!q2)
+            {
+                *rollback = YES;
+            }
         }
         
-        else
-            [db commit];
+        NSNumber *deviceId = [myDatabase.userDictionary valueForKey:@"device_id"] ? [myDatabase.userDictionary valueForKey:@"device_id"] : 0;
         
-    }
-    else
-    {
-        [db beginTransaction];
-        BOOL q2 = [db executeUpdate:@"insert into device_token (device_token) values (?)",token];
-        if(!q2)
-            [db rollback];
-        else
-            [db commit];
-    }
-    
-    
-    //register token to server
-    myAfManager = [AFManager sharedMyAfManager];
-    
-    AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
-    
-    device_token = [[Device_token alloc] init];
-    user = [[Users alloc] init];
-    
-    NSNumber *deviceId = user.device_id ? user.device_id : [NSNumber numberWithInt:0];
-    
-    if([deviceId intValue] != 0) //the use is currently logged in
-    {
-        NSString *urlParams = [NSString stringWithFormat:@"deviceId=%@&deviceToken=%@",deviceId,device_token.device_token];
-        
-        [manager GET:[NSString stringWithFormat:@"%@%@%@",myAfManager.api_url,api_update_device_token,urlParams] parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        if([deviceId intValue] != 0) //the use is currently logged in
+        {
+            NSString *urlParams = [NSString stringWithFormat:@"deviceId=%@&deviceToken=%@",deviceId,[myDatabase.deviceTokenDictionary valueForKey:@"device_token"]];
             
-            DDLogVerbose(@"update device token %@",responseObject);
-            
-        } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-            DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
-        }];
-    }
+            [myDatabase.AfManager GET:[NSString stringWithFormat:@"%@%@%@",myDatabase.api_url,api_update_device_token,urlParams] parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+                
+                DDLogVerbose(@"update device token %@",responseObject);
+                
+            } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+                DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+            }];
+        }
+    }];
+    
+    [myDatabase createDeviceToken];
 }
 
 @end

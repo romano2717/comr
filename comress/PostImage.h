@@ -13,9 +13,7 @@
 @interface PostImage : NSObject
 {
     Database *myDatabase;
-    FMDatabase *db;
-    Users *users;
-    FMDatabaseQueue *databaseQueue;    
+    Users *users;  
 }
 
 @property (nonatomic, strong) NSNumber *client_post_image_id;

@@ -12,7 +12,6 @@
 @interface Post : NSObject
 {
     Database *myDatabase;
-    FMDatabaseQueue *databaseQueue;
 }
 
 @property (nonatomic) int client_post_id;
@@ -37,4 +36,6 @@
 - (BOOL)updatePostStatusForClientPostId:(NSNumber *)clientPostId withStatus:(NSNumber *)theStatus;
 
 - (BOOL)updateLastRequestDateWithDate:(NSString *)dateString;
+
+
 @end

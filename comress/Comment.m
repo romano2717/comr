@@ -24,10 +24,6 @@ comment_type
 -(id)init {
     if (self = [super init]) {
         myDatabase = [Database sharedMyDbManager];
-        db = [myDatabase prepareDatabaseFor:self];
-        
-        databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
-        
     }
     return self;
 }
@@ -41,7 +37,7 @@ comment_type
         
         if([[dict valueForKey:@"comment_type"] intValue] == 1 || [[dict valueForKey:@"comment_type"] intValue] == 2)
         {
-            [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
                 
                 BOOL qComment = [theDb executeUpdate:@"insert into comment (client_post_id, comment, comment_on, comment_by, comment_type) values (?,?,?,?,?)",[NSNumber numberWithInt:[[dict valueForKey:@"client_post_id"] intValue]], [dict valueForKey:@"text"], [dict valueForKey:@"date"], [dict valueForKey:@"senderId"], [dict valueForKey:@"comment_type"]];
                 
@@ -57,7 +53,7 @@ comment_type
     }
     else //comment with image
     {
-        [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+        [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
             
             BOOL qComment2 = [theDb executeUpdate:@"insert into comment (client_post_id, comment, comment_on, comment_by, comment_type) values (?,?,?,?,?)",[NSNumber numberWithInt:[[dict valueForKey:@"client_post_id"] intValue]], @"<image>", [dict valueForKey:@"date"], [dict valueForKey:@"senderId"], [dict valueForKey:@"comment_type"]];
             
@@ -86,6 +82,10 @@ comment_type
                 NSString *filePath = [documentsPath stringByAppendingPathComponent:imageFileName]; //Add the file name
                 [jpegImageData writeToFile:filePath atomically:YES];
                 
+                NSFileManager *fManager = [[NSFileManager alloc] init];
+                if([fManager fileExistsAtPath:filePath] == NO)
+                    return;
+                
                 //resize the saved image
                 [imgOpts resizeImageAtPath:filePath];
                 
@@ -109,60 +109,56 @@ comment_type
 {
     NSNumber *zero = [NSNumber numberWithInt:0];
     
-    
-    //update comment and post relationship first
-    FMResultSet *rsComment = [db executeQuery:@"select * from comment where post_id is null or post_id = ? and comment",zero];
-    
-    while ([rsComment next]) {
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        //update comment and post relationship first
+        FMResultSet *rsComment = [db executeQuery:@"select * from comment where post_id is null or post_id = ? and comment",zero];
         
-        NSNumber *comment_client_post_id = [NSNumber numberWithInt:[rsComment intForColumn:@"client_post_id"]];
-        
-        FMResultSet *rsPost = [db executeQuery:@"select * from post where client_post_id = ?",comment_client_post_id];
-        
-        while ([rsPost next]) {
-            NSNumber *post_client_id = [NSNumber numberWithInt:[rsPost intForColumn:@"post_id"]];
+        while ([rsComment next]) {
             
-            [db beginTransaction];
-            BOOL commentUpQ = [db executeUpdate:@"update comment set post_id = ? where client_post_id = ?",post_client_id,comment_client_post_id];
+            NSNumber *comment_client_post_id = [NSNumber numberWithInt:[rsComment intForColumn:@"client_post_id"]];
             
-            if(!commentUpQ)
-                [db rollback];
-            else
-                [db commit];
+            FMResultSet *rsPost = [db executeQuery:@"select * from post where client_post_id = ?",comment_client_post_id];
+            
+            while ([rsPost next]) {
+                NSNumber *post_client_id = [NSNumber numberWithInt:[rsPost intForColumn:@"post_id"]];
+                
+                BOOL commentUpQ = [db executeUpdate:@"update comment set post_id = ? where client_post_id = ?",post_client_id,comment_client_post_id];
+                
+                if(!commentUpQ)
+                {
+                    *rollback = YES;
+                    return;
+                }
+            }
         }
-    }
-    
-    
-    
-    //prepare comments for sending
-    NSMutableArray *commentListArray = [[NSMutableArray alloc] init];
-    NSMutableDictionary *commentListDict = [[NSMutableDictionary alloc] init];
-    
-    FMResultSet *rs = [db executeQuery:@"select * from comment where comment_id  is null or comment_id = ?",zero];
-    
-    while ([rs next]) {
         
-        //{ "ClientCommentId": "1" , "PostId" : "1" ,"CommentString" : "comment 1" , "CommentBy" : "SUP2" , "CommentType" : "1"}
+        //prepare comments for sending
+        NSMutableArray *commentListArray = [[NSMutableArray alloc] init];
+        NSMutableDictionary *commentListDict = [[NSMutableDictionary alloc] init];
         
-        NSNumber *ClientCommentId = [NSNumber numberWithInt:[rs intForColumn:@"client_comment_id"]];
-        NSNumber *postId = [NSNumber numberWithInt:[rs intForColumn:@"post_id"]];
-        NSString *CommentString = [rs stringForColumn:@"comment"];
-        NSString *CommentBy = [rs stringForColumn:@"comment_by"];
-        NSString *CommentType = [rs stringForColumn:@"comment_type"];
+        FMResultSet *rs = [db executeQuery:@"select * from comment where comment_id  is null or comment_id = ?",zero];
         
-        NSDictionary *dict = @{ @"ClientCommentId": ClientCommentId , @"PostId" : postId ,@"CommentString" : CommentString , @"CommentBy" : CommentBy , @"CommentType" : CommentType};
+        while ([rs next]) {
+            
+            //{ "ClientCommentId": "1" , "PostId" : "1" ,"CommentString" : "comment 1" , "CommentBy" : "SUP2" , "CommentType" : "1"}
+            
+            NSNumber *ClientCommentId = [NSNumber numberWithInt:[rs intForColumn:@"client_comment_id"]];
+            NSNumber *postId = [NSNumber numberWithInt:[rs intForColumn:@"post_id"]];
+            NSString *CommentString = [rs stringForColumn:@"comment"];
+            NSString *CommentBy = [rs stringForColumn:@"comment_by"];
+            NSString *CommentType = [rs stringForColumn:@"comment_type"];
+            
+            NSDictionary *dict = @{ @"ClientCommentId": ClientCommentId , @"PostId" : postId ,@"CommentString" : CommentString , @"CommentBy" : CommentBy , @"CommentType" : CommentType};
+            
+            [commentListArray addObject:dict];
+            
+            dict = nil;
+        }
         
-        [commentListArray addObject:dict];
-        
-        dict = nil;
-    }
+        [commentListDict setObject:commentListArray forKey:@"commentList"];
+    }];
     
-    if(commentListArray.count == 0)
-        return nil;
-    
-    [commentListDict setObject:commentListArray forKey:@"commentList"];
-    
-    return commentListDict;
+    return nil;
 }
 
 
@@ -172,7 +168,7 @@ comment_type
     NSTimeInterval unixTime = [[dateString substringWithRange:NSMakeRange(startPosition, 13)] doubleValue] / 1000; //WCF will send 13 digit-long value for the time interval since 1970 (millisecond precision) whereas iOS works with 10 digit-long values (second precision), hence the divide by 1000
     NSDate *date = [NSDate dateWithTimeIntervalSince1970:unixTime];
     
-    [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
         FMResultSet *rs = [theDb executeQuery:@"select * from comment_last_request_date"];
         
         if(![rs next])

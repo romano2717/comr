@@ -32,6 +32,8 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
+    myDatabase = [Database sharedMyDbManager];
+    
     self.photoArray = [[NSMutableArray alloc] init];
     self.photoArrayFull = [[NSMutableArray alloc] init];
     self.severtiyArray = [NSArray arrayWithObjects:@"Routine",@"Severe", nil];
@@ -493,8 +495,9 @@
     
     NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:post_topic,@"post_topic",post_by,@"post_by",post_date,@"post_date",post_type,@"post_type",severityNumber,@"severity",@"0",@"status",location,@"address",level,@"level",postal_code,@"postal_code",blockId,@"block_id", nil];
     
-    long long lastClientPostId =  [post savePostWithDictionary:dict];
 
+    long long lastClientPostId =  [post savePostWithDictionary:dict];
+    
     if(lastClientPostId > 0)
     {
         //save image to app documents dir
@@ -511,35 +514,49 @@
             NSString *filePath = [documentsPath stringByAppendingPathComponent:imageFileName]; //Add the file name
             [jpegImageData writeToFile:filePath atomically:YES];
             
+            NSFileManager *fManager = [[NSFileManager alloc] init];
+            if([fManager fileExistsAtPath:filePath] == NO)
+                return;
+            
             //resize the saved image
             [imgOpts resizeImageAtPath:filePath];
             
             //save the image info to local db
             NSNumber *lastClientPostIdID = [NSNumber numberWithLongLong:lastClientPostId];
             
-            NSDictionary *postImageDict = [NSDictionary dictionaryWithObjectsAndKeys:lastClientPostIdID,@"client_post_id",imageFileName,@"image_path",@"new",@"status",@"yes",@"downloaded",@"no",@"uploaded",[NSNumber numberWithInt:1],@"image_type", nil];
-            
-            long long lastPostImageId = [postImage savePostImageWithDictionary:postImageDict];
-            
-            if(lastPostImageId > 0)
-                DDLogVerbose(@"post successful!");
+            //save images to db
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+                
+                BOOL postImageSaved;
+                
+                postImageSaved = [db executeUpdate:@"insert into post_image (client_post_id,image_path,status,downloaded,uploaded,image_type) values (?,?,?,?,?,?)",lastClientPostIdID,imageFileName,@"new",@"yes",@"no",[NSNumber numberWithInt:1]];
+                
+                if(!postImageSaved)
+                {
+                    *rollback = YES;
+                    DDLogVerbose(@"insert failed: %@ [%@-%@]",[db lastErrorMessage],THIS_FILE,THIS_METHOD);
+                    return;
+                }
+            }];
         }
         
         [self dismissViewControllerAnimated:YES completion:^{
+            
+            //get the saved post and pass it a notification to auto-open the chat view
+            
             NSDictionary *useInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithLongLong:lastClientPostId] forKey:@"lastClientPostId"];
             
-            Database *myDatabase = [Database sharedMyDbManager];
-            
-            FMDatabase *db = [myDatabase prepareDatabaseFor:self];
-            db.traceExecution = YES;
-            
-            FMResultSet *rs = [db executeQuery:@"select is_own_block from blocks where block_id = ? and is_own_block = ?",blockId,[NSNumber numberWithBool:YES]];
-            
-            if([rs next])
-                [[NSNotificationCenter defaultCenter] postNotificationName:@"autoOpenChatViewForPostMe" object:nil userInfo:useInfo];
-            else
-                [[NSNotificationCenter defaultCenter] postNotificationName:@"autoOpenChatViewForPostOthers" object:nil userInfo:useInfo];
-            
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+                db.traceExecution = YES;
+                
+                FMResultSet *rs = [db executeQuery:@"select is_own_block from blocks where block_id = ? and is_own_block = ?",blockId,[NSNumber numberWithBool:YES]];
+                
+                if([rs next])
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"autoOpenChatViewForPostMe" object:nil userInfo:useInfo];
+                else
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"autoOpenChatViewForPostOthers" object:nil userInfo:useInfo];
+
+            }];
         }];
     }
 }

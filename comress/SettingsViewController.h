@@ -8,15 +8,12 @@
 
 #import <UIKit/UIKit.h>
 #import "Database.h"
-#import "AFManager.h"
 #import "Users.h"
 #import "Client.h"
 
 @interface SettingsViewController : UIViewController<UIAlertViewDelegate>
 {
     Database *myDatabase;
-    AFManager *myAfManager;
-    FMDatabase *db;
     
     Users *users;
     Client *client;

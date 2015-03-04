@@ -10,24 +10,12 @@
 
 @implementation Synchronize
 
-@synthesize imagesArray;
+@synthesize syncKickstartTimerOutgoing,syncKickstartTimerIncoming,imagesArr,imageDownloadComplete;
 
 -(id)init {
     if (self = [super init]) {
-        
-        myAfManager = [AFManager sharedMyAfManager];
         myDatabase = [Database sharedMyDbManager];
-        databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
-        
-        init = [[InitializerViewController alloc] init];
-        
-        imagesArray = [[NSMutableArray alloc] init];
-        
-        blocks = [[Blocks alloc] init];
-        post = [[Post alloc] init];
-        postImage = [[PostImage alloc] init];
-        comment = [[Comment alloc] init];
-
+        imagesArr = [[NSMutableArray alloc] init];
     }
     return self;
 }
@@ -41,9 +29,59 @@
     return sharedMyManager;
 }
 
+- (void)kickStartSync
+{
+    //outgoing
+    [self uploadPost];
+    syncKickstartTimerOutgoing = [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(uploadPost) userInfo:nil repeats:YES];
+    
+    [self startDownload];
+    syncKickstartTimerIncoming = [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(startDownload) userInfo:nil repeats:YES];
+}
+
+- (void)startDownload
+{
+    if(myDatabase.initializingComplete == NO)
+        return;
+    
+    if([syncKickstartTimerIncoming isValid])
+        [syncKickstartTimerIncoming invalidate]; //init is done, no need for timer. post, comment and image will recurse automatically.
+    
+    //incoming
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(10 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        
+        __block NSDate *jsonDate = [self deserializeJsonDateString:@"/Date(1388505600000+0800)/"];
+
+
+        [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+
+            //download post
+            FMResultSet *rs = [db executeQuery:@"select date from post_last_request_date"];
+            
+            if([rs next])
+            {
+                jsonDate = (NSDate *)[rs dateForColumn:@"date"];
+                
+            }
+            [self startDownloadPostForPage:1 totalPage:0 requestDate:jsonDate];
+            
+            
+            //download post image
+            FMResultSet *rs2 = [db executeQuery:@"select date from post_image_last_request_date"];
+            
+            if([rs2 next])
+            {
+                jsonDate = (NSDate *)[rs2 dateForColumn:@"date"];
+                
+            }
+            [self startDownloadPostImagesForPage:1 totalPage:0 requestDate:jsonDate];
+        }];
+    });
+}
+
 - (void)uploadPostStatusChange
 {
-    [databaseQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
        
         FMResultSet *rs = [db executeQuery:@"select * from post where statusWasUpdated = ?",[NSNumber numberWithBool:YES]];
         
@@ -59,143 +97,316 @@
 
 - (void)uploadPost
 {
-    __block Post *myPost = [[Post alloc] init];
- 
-    NSArray *array = [myPost postsToSend];
-    
-    if(array.count == 0)
+    if(myDatabase.initializingComplete == NO)
         return;
     
-    NSMutableArray *postListArray     = [[NSMutableArray alloc] init];
-    NSMutableDictionary *postListDict = [[NSMutableDictionary alloc] init];
+    if([syncKickstartTimerOutgoing isValid])
+        [syncKickstartTimerOutgoing invalidate]; //init is done, no need for timer. post, comment and image will recurse automatically.
     
-    for (int i = 0; i < array.count; i++) {
-        NSDictionary *dict = [array objectAtIndex:i];
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
         
-        [postListArray addObject:dict];
+        //get the posts need to be uploaded
         
-        dict = nil;
-    }
-
-    [postListDict setObject:postListArray forKey:@"postList"];
-
-    if(postListArray.count == 0)
-        return;
-
-    AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
-    
-    [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_post_send] parameters:postListDict success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        FMResultSet *rs = [db executeQuery:@"select * from post where post_id IS NULL or post_id = ?",[NSNumber numberWithInt:0]];
         
-        NSDictionary *dict = (NSDictionary *)responseObject;
-        DDLogVerbose(@"response dict %@",dict);
-        NSArray *arr = [dict objectForKey:@"AckPostObj"];
-
-        for (int i = 0; i < arr.count; i++) {
+        NSMutableArray *rsArray = [[NSMutableArray alloc] init];
+        
+        while ([rs next]) {
             
-            NSDictionary *dict = [arr objectAtIndex:i];
+            NSDictionary *dict = @{
+                                   @"PostTopic":[rs stringForColumn:@"post_topic"],
+                                   @"PostBy":[rs stringForColumn:@"post_by"],
+                                   @"PostType":[rs stringForColumn:@"post_type"],
+                                   @"Severity":[NSNumber numberWithInt:[rs intForColumn:@"severity"]],
+                                   @"ActionStatus":[rs stringForColumn:@"status"],
+                                   @"ClientPostId":[NSNumber numberWithInt:[rs intForColumn:@"client_post_id"]],
+                                   @"BlkId":[NSNumber numberWithInt:[rs intForColumn:@"block_id"]],
+                                   @"Location":[rs stringForColumn:@"address"],
+                                   @"PostalCode":[rs stringForColumn:@"postal_code"],
+                                   @"Level":[rs stringForColumn:@"level"],
+                                   @"IsUpdated":[NSNumber numberWithBool:NO]
+                                   };
             
-            NSNumber *clientPostId = [dict valueForKey:@"ClientPostId"];
-            NSNumber *postId = [dict valueForKey:@"PostId"];
             
-            [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
-               
-                [theDb  executeUpdate:@"update post set post_id = ? where client_post_id = ?",postId, clientPostId];
-                
-                BOOL qPostImage = [theDb executeUpdate:@"update post_image set post_id = ? where client_post_id = ?",postId, clientPostId];
-                
-                if(!qPostImage)
-                {
-                    *rollback = YES;
-                    return;
-                }
-                
-                BOOL qComment = [theDb executeUpdate:@"update comment set post_id = ? where client_post_id = ?",postId, clientPostId];
-                
-                if(!qComment)
-                {
-                    *rollback = YES;
-                    return;
-                }
-            }];
+            [rsArray addObject:dict];
+            
+            dict = nil;
         }
         
-        myPost = nil;
-
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+        DDLogVerbose(@"postsToSend %@",rsArray);
+        
+        if(rsArray.count == 0)
+        {
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self uploadImage];
+            });
+            return;
+        }
+        
+        
+        NSMutableArray *postListArray     = [[NSMutableArray alloc] init];
+        NSMutableDictionary *postListDict = [[NSMutableDictionary alloc] init];
+        
+        for (int i = 0; i < rsArray.count; i++) {
+            NSDictionary *dict = [rsArray objectAtIndex:i];
+            
+            [postListArray addObject:dict];
+            
+            dict = nil;
+        }
+        
+        [postListDict setObject:postListArray forKey:@"postList"];
+        
+        if(postListArray.count == 0)
+        {
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self uploadImage];
+            });
+            return;
+        }
+        
+        
+        [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_post_send] parameters:postListDict success:^(AFHTTPRequestOperation *operation, id responseObject) {
+            
+            NSDictionary *dict = (NSDictionary *)responseObject;
+            DDLogVerbose(@"uploadPost Ack %@",dict);
+            NSArray *arr = [dict objectForKey:@"AckPostObj"];
+            
+            for (int i = 0; i < arr.count; i++) {
+                
+                NSDictionary *dict = [arr objectAtIndex:i];
+                
+                NSNumber *clientPostId = [dict valueForKey:@"ClientPostId"];
+                NSNumber *postId = [dict valueForKey:@"PostId"];
+                
+                [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+                    
+                    [theDb  executeUpdate:@"update post set post_id = ? where client_post_id = ?",postId, clientPostId];
+                    
+                    BOOL qPostImage = [theDb executeUpdate:@"update post_image set post_id = ? where client_post_id = ?",postId, clientPostId];
+                    
+                    if(!qPostImage)
+                    {
+                        *rollback = YES;
+                        return;
+                    }
+                    
+                    BOOL qComment = [theDb executeUpdate:@"update comment set post_id = ? where client_post_id = ?",postId, clientPostId];
+                    
+                    if(!qComment)
+                    {
+                        *rollback = YES;
+                        return;
+                    }
+                }];
+            }
+            
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self uploadImage];
+            });
+            
+        } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+            DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+            
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self uploadImage];
+            });
+        }];
     }];
 }
 
 
 - (void)uploadComment
 {
-    __block Comment *myComment = [[Comment alloc] init];
-    
-    NSDictionary *dict = [myComment commentsToSend];
-
-    if(dict == nil)
+    if(myDatabase.initializingComplete == NO)
         return;
     
-    DDLogVerbose(@"%@",dict);
-    
-    
-    AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
-    
-    [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_comment_send] parameters:dict success:^(AFHTTPRequestOperation *operation, id responseObject) {
-        
-        NSArray *arr = [responseObject objectForKey:@"AckCommentObj"];
+    NSNumber *zero = [NSNumber numberWithInt:0];
 
-        for(int i = 0; i < arr.count; i++)
+    NSMutableArray *commentListArray = [[NSMutableArray alloc] init];
+    NSMutableDictionary *commentListDict = [[NSMutableDictionary alloc] init];
+    
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        //update comment and post relationship first
+        FMResultSet *rsComment = [db executeQuery:@"select * from comment where post_id is null or post_id = ? and comment",zero];
+        
+        while ([rsComment next]) {
+            
+            NSNumber *comment_client_post_id = [NSNumber numberWithInt:[rsComment intForColumn:@"client_post_id"]];
+            
+            FMResultSet *rsPost = [db executeQuery:@"select * from post where client_post_id = ?",comment_client_post_id];
+            
+            while ([rsPost next]) {
+                NSNumber *post_client_id = [NSNumber numberWithInt:[rsPost intForColumn:@"post_id"]];
+                
+                BOOL commentUpQ = [db executeUpdate:@"update comment set post_id = ? where client_post_id = ?",post_client_id,comment_client_post_id];
+                
+                if(!commentUpQ)
+                {
+                    *rollback = YES;
+                    return;
+                }
+            }
+        }
+        
+        FMResultSet *rs = [db executeQuery:@"select * from comment where comment_id  is null or comment_id = ?",zero];
+        
+        while ([rs next]) {
+            NSNumber *ClientCommentId = [NSNumber numberWithInt:[rs intForColumn:@"client_comment_id"]];
+            NSNumber *postId = [NSNumber numberWithInt:[rs intForColumn:@"post_id"]];
+            NSString *CommentString = [rs stringForColumn:@"comment"];
+            NSString *CommentBy = [rs stringForColumn:@"comment_by"];
+            NSString *CommentType = [rs stringForColumn:@"comment_type"];
+            
+            NSDictionary *dict = @{ @"ClientCommentId": ClientCommentId , @"PostId" : postId ,@"CommentString" : CommentString , @"CommentBy" : CommentBy , @"CommentType" : CommentType};
+            
+            [commentListArray addObject:dict];
+            
+            dict = nil;
+        }
+        
+        [commentListDict setObject:commentListArray forKey:@"commentList"];
+        
+        NSDictionary *dict = commentListDict;
+        
+        DDLogVerbose(@"commentsToSend %@",dict);
+        NSArray *commentList = [dict objectForKey:@"commentList"];
+        if(commentList.count == 0)
         {
-            NSDictionary *dict = [arr objectAtIndex:i];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self uploadPost];
+            });
             
-            NSNumber *clientCommentId = [NSNumber numberWithInt:[[dict valueForKey:@"ClientCommentId"] intValue]];
-            NSNumber *commentId = [NSNumber numberWithInt:[[dict valueForKey:@"CommentId"] intValue]];
+            return;
+        }
+        
+        [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_comment_send] parameters:dict success:^(AFHTTPRequestOperation *operation, id responseObject) {
             
-            databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
+            NSArray *arr = [responseObject objectForKey:@"AckCommentObj"];
             
-            [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
-               
-                BOOL qComment = [theDb executeUpdate:@"update comment set comment_id = ? where client_comment_id = ?",commentId,clientCommentId];
+            DDLogVerbose(@"uploadComment Ack %@",responseObject);
+            
+            for(int i = 0; i < arr.count; i++)
+            {
+                NSDictionary *dict = [arr objectAtIndex:i];
+                
+                NSNumber *clientCommentId = [NSNumber numberWithInt:[[dict valueForKey:@"ClientCommentId"] intValue]];
+                NSNumber *commentId = [NSNumber numberWithInt:[[dict valueForKey:@"CommentId"] intValue]];
+                
+                BOOL qComment = [db executeUpdate:@"update comment set comment_id = ? where client_comment_id = ?",commentId,clientCommentId];
                 if(!qComment)
                 {
                     *rollback = YES;
                     return;
                 }
                 
-                BOOL qCommentImage = [theDb executeUpdate:@"update post_image set comment_id = ? where client_comment_id = ?",commentId,clientCommentId];
+                BOOL qCommentImage = [db executeUpdate:@"update post_image set comment_id = ? where client_comment_id = ?",commentId,clientCommentId];
                 if(!qCommentImage)
                 {
                     *rollback = YES;
                     return;
                 }
-            }];
-        }
-        
-        myComment = nil;
-        
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        
-        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+                
+            }
+            
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self uploadPost];
+            });
+            
+        } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+            DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+            
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self uploadPost];
+            });
+        }];
     }];
 }
 
 - (void)uploadImage
 {
-    __block PostImage *myPostImage = [[PostImage alloc] init];
-    
-    NSDictionary *dict = [myPostImage imagesTosend];
-    
-    if(dict == nil)
+    if(myDatabase.initializingComplete == NO)
         return;
-
-    AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
     
-    [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_send_images] parameters:dict success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    __block NSMutableDictionary *imagesDict = [[NSMutableDictionary alloc] init];
+    
+    __block NSMutableArray *imagesInDb = [[NSMutableArray alloc] init];
+    
+    //get images to send!
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        
+        db.traceExecution = YES;
+        
+        FMResultSet *rs = [db executeQuery:@"select * from post_image where post_image_id is null or post_image_id = ?",[NSNumber numberWithInt:0]];
+
+        while ([rs next]) {
+            NSNumber *ImageType = [NSNumber numberWithInt:[rs intForColumn:@"image_type"]];
+            NSNumber *CilentPostImageId = [NSNumber numberWithInt:[rs intForColumn:@"client_post_image_id"]];
+            NSNumber *PostId = [NSNumber numberWithInt:[rs intForColumn:@"post_id"]];
+            NSNumber *CommentId = [NSNumber numberWithInt:[rs intForColumn:@"comment_id"]];
+            NSString *CreatedBy = [myDatabase.userDictionary valueForKey:@"user_id"];
+            
+            NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+            NSString *documentsPath = [paths objectAtIndex:0];
+            NSString *filePath = [documentsPath stringByAppendingPathComponent:[rs stringForColumn:@"image_path"]];
+            
+            NSFileManager *fileManager = [[NSFileManager alloc] init];
+            if([fileManager fileExistsAtPath:filePath] == NO) //file does not exist
+                continue ;
+            
+            UIImage *image = [UIImage imageWithContentsOfFile:filePath];
+            NSData *imageData = UIImageJPEGRepresentation(image, 1.0);
+            NSString *imageString = [imageData base64EncodedStringWithSeparateLines:NO];
+            
+            if([ImageType intValue] == 1)//post image
+            {
+                CommentId = [NSNumber numberWithInt:0];
+            }
+            else if([ImageType intValue] == 2)
+            {
+                PostId = [NSNumber numberWithInt:0];
+            }
+            
+            
+            NSDictionary *dict = @{@"CilentPostImageId":CilentPostImageId,@"PostId":PostId,@"CommentId":CommentId,@"CreatedBy":CreatedBy,@"ImageType":ImageType,@"Image":imageString};
+            
+            [imagesInDb addObject:dict];
+        }
+        [imagesDict setObject:imagesInDb forKey:@"postImageList"];
+    }];
+    
+    
+    if(imagesDict == nil)
+    {
+        imagesInDb = nil;
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self uploadComment];
+        });
+        return;
+    }
+    
+    NSArray *imagesArray_temp = [imagesDict objectForKey:@"postImageList"];
+    DDLogVerbose(@"images to send %lu",(unsigned long)imagesArray_temp.count);
+    if (imagesArray_temp.count == 0) {
+        
+        imagesInDb = nil;
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self uploadComment];
+        });
+        return;
+    }
+    imagesArray_temp = nil;
+    
+    
+    [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_send_images] parameters:imagesDict success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        
+        imagesInDb = nil;
         
         NSArray *arr = [responseObject objectForKey:@"AckPostImageObj"];
         
-        DDLogVerbose(@"AckPostImageObj %@",arr);
+        DDLogVerbose(@"uploadImage Ack %@",arr);
         
         for (int i = 0; i < arr.count; i++) {
             NSDictionary *dict = [arr objectAtIndex:i];
@@ -203,7 +414,7 @@
             NSNumber *ClientPostImageId = [NSNumber numberWithInt:[[dict valueForKey:@"ClientPostImageId"] intValue]];
             NSNumber *PostImageId = [NSNumber numberWithInt:[[dict valueForKey:@"PostImageId"] intValue]];
             
-            [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
                 BOOL qPostImage = [theDb executeUpdate:@"update post_image set post_image_id = ?, uploaded = ? where client_post_image_id = ?  ",PostImageId,@"YES",ClientPostImageId];
                 
                 if(!qPostImage)
@@ -214,10 +425,18 @@
             }];
         }
         
-        myPostImage = nil;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self uploadComment];
+        });
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        imagesInDb = nil;
+        
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self uploadComment];
+        });
     }];
 }
 
@@ -226,17 +445,18 @@
 - (void)startDownloadPostForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate
 {
     __block int currentPage = page;
-    DDLogVerbose(@"currentPage %d",currentPage);
     NSString *jsonDate = [self serializedStringDateJson:reqDate];
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:page], @"lastRequestTime" : jsonDate};
-    DDLogVerbose(@"params %@",params);
+    DDLogVerbose(@"Post params %@",params);
     
-    AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
+    __block Post *post = [[Post alloc] init];
     
-    [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_download_posts] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_download_posts] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
         
         NSDictionary *dict = [responseObject objectForKey:@"PostContainer"];
+        
+        DDLogVerbose(@"New Post %@",dict);
 
         int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
             
@@ -244,6 +464,10 @@
 
         //prepare to download the blocks!
         NSArray *dictArray = [dict objectForKey:@"PostList"];
+
+        //local notif vars
+        NSString *fromUser;
+        NSString *msgFromUser;
         
         for (int i = 0; i < dictArray.count; i++) {
             NSDictionary *dictPost = [dictArray objectAtIndex:i];
@@ -260,9 +484,10 @@
             NSNumber *Severity = [NSNumber numberWithInt:[[dictPost valueForKey:@"Severity"] intValue]];
             NSDate *PostDate = [myDatabase createNSDateWithWcfDateString:[dictPost valueForKey:@"PostDate"]];
             
-            DDLogVerbose(@"new post from server %@",dictPost);
+            fromUser = PostBy;
+            msgFromUser = PostTopic;
             
-            [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
                 
                 FMResultSet *rsPost = [theDb executeQuery:@"select post_id from post where post_id = ?",PostId];
                 if([rsPost next] == NO) //does not exist. insert
@@ -288,19 +513,31 @@
             if(dictArray.count > 0)
             {
                 [post updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
-            }
-            else
+                
+                post = nil;
+                
                 [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadIssuesList" object:nil];
+            }
             
-            // Delay execution of my block for 10 seconds.
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-                [[NSNotificationCenter defaultCenter] postNotificationName:@"postDownloadFinish" object:nil];
+            //start download again
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                
+                NSDate *lrd = [self deserializeJsonDateString:[dict valueForKey:@"LastRequestDate"]];
+                
+                [self startDownloadPostForPage:1 totalPage:0 requestDate:lrd];
             });
         }
         
-        
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+        
+        //start download again
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            
+            NSDate *lrd = [self deserializeJsonDateString:jsonDate];
+            
+            [self startDownloadPostForPage:1 totalPage:0 requestDate:lrd];
+        });
     }];
 }
 
@@ -308,17 +545,20 @@
 - (void)startDownloadPostImagesForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate
 {
     __block int currentPage = page;
-    NSString *jsonDate = [self serializedStringDateJson:reqDate];
+    __block NSDate *requestDate = reqDate;
+    
+    NSString *jsonDate = @"/Date(1388505600000+0800)/";
+    
+    if(currentPage > 1)
+        jsonDate = [NSString stringWithFormat:@"%@",requestDate];
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:page], @"lastRequestTime" : jsonDate};
-    DDLogVerbose(@"params %@",params);
-    
-    AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
-    
-    [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_download_images] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    DDLogVerbose(@"GetImages %@",[myDatabase toJsonString:params]);
+    [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_download_images] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
         
         NSDictionary *dict = [responseObject objectForKey:@"ImageContainer"];
-        [imagesArray addObject:dict];
+        DDLogVerbose(@"%@",responseObject);
+        [imagesArr addObject:dict];
         
         int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
         NSDate *LastRequestDate = [dict valueForKey:@"LastRequestDate"];
@@ -330,99 +570,162 @@
         }
         else
         {
-            if(totalPage > 0)
-            {
-                [postImage updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
-                [self SavePostImagesToDb];
-            }
+            [self SavePostImagesToDb];
         }
         
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+        
+        //start download again
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            
+            NSDate *lrd = [self deserializeJsonDateString:jsonDate];
+            
+            [self startDownloadPostImagesForPage:1 totalPage:0 requestDate:lrd];
+            
+        });
     }];
 }
 
 
 - (void)SavePostImagesToDb
 {
-    //NSArray *imagesArray = [imagesDict objectForKey:@"ImageList"];
+    imageDownloadComplete = NO;
     
-    if (imagesArray.count > 0) {
-        for (int i = 0; i < imagesArray.count; i++) {
+    NSDictionary *topDict = (NSDictionary *)[imagesArr lastObject];
+    DDLogVerbose(@"topDict %@",topDict);
+    NSDate *lastRequestDate = [myDatabase createNSDateWithWcfDateString:[topDict valueForKey:@"LastRequestDate"]];
+    NSString *jsonDate = [self serializedStringDateJson:lastRequestDate];
+    
+    if (imagesArr.count > 0) {
+        
+        SDWebImageManager *sd_manager = [SDWebImageManager sharedManager];
+        
+        for (int xx = 0; xx < imagesArr.count; xx++) {
+            NSDictionary *dict = (NSDictionary *) [imagesArr objectAtIndex:xx];
             
-            NSDictionary *dict = (NSDictionary *) [imagesArray objectAtIndex:i];
-
-            NSNumber *CommentId = [NSNumber numberWithInt:[[dict valueForKey:@"CommentId"] intValue]];
-            NSNumber *ImageType = [NSNumber numberWithInt:[[dict valueForKey:@"ImageType"] intValue]];
-            NSNumber *PostId = [NSNumber numberWithInt:[[dict valueForKey:@"PostId"] intValue]];
-            NSNumber *PostImageId = [NSNumber numberWithInt:[[dict valueForKey:@"PostImageId"] intValue]];
-            NSString *ImagePath = [dict valueForKey:@"ImagePath"];
-            SDWebImageManager *sd_manager = [SDWebImageManager sharedManager];
+            NSArray *ImageList = [dict objectForKey:@"ImageList"];
             
-            [sd_manager downloadImageWithURL:[NSURL URLWithString:ImagePath] options:0 progress:^(NSInteger receivedSize, NSInteger expectedSize) {
+            if(ImageList.count == 0) //no image to download, set true flag to watch download again
+                imageDownloadComplete = YES;
+            
+            for (int j = 0; j < ImageList.count; j++) {
                 
-            } completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
+                NSDictionary *ImageListDict = [ImageList objectAtIndex:j];
                 
-                //create the image here
-                NSData *jpegImageData = UIImageJPEGRepresentation(image, 1);
+                NSNumber *CommentId = [NSNumber numberWithInt:[[ImageListDict valueForKey:@"CommentId"] intValue]];
+                NSNumber *ImageType = [NSNumber numberWithInt:[[ImageListDict valueForKey:@"ImageType"] intValue]];
+                NSNumber *PostId = [NSNumber numberWithInt:[[ImageListDict valueForKey:@"PostId"] intValue]];
+                NSNumber *PostImageId = [NSNumber numberWithInt:[[ImageListDict valueForKey:@"PostImageId"] intValue]];
                 
-                //save the image to app documents dir
-                NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-                NSString *documentsPath = [paths objectAtIndex:0];
-                NSString *imageFileName = [NSString stringWithFormat:@"%@.jpg",[[NSUUID UUID] UUIDString]];
+                DDLogVerbose(@"PostImageId %@",PostImageId);
                 
-                NSString *filePath = [documentsPath stringByAppendingPathComponent:imageFileName]; //Add the file name
-                [jpegImageData writeToFile:filePath atomically:YES];
+                NSMutableString *ImagePath = [[NSMutableString alloc] initWithString:myDatabase.domain];
+                NSString *imageFilename = [ImageListDict valueForKey:@"ImagePath"];
                 
-                imgOpts = nil;
-                imgOpts = [ImageOptions new];
-                
-                //resize the saved image
-                [imgOpts resizeImageAtPath:filePath];
-                
-                FMDatabase *db = [myDatabase prepareDatabaseFor:self];
-                
-                [db beginTransaction];
-                
-                FMResultSet *rsPostImage = [db executeQuery:@"select post_image_id from post_image where post_image_id = ?",postImage];
-                
-                if([rsPostImage next] == NO) //does not exist, insert
+                if([CommentId intValue] > 1)
                 {
-                    BOOL qIns = [db executeUpdate:@"insert into post_image(comment_id, image_type, post_id, post_image_id, image_path) values(?,?,?,?,?)",CommentId,ImageType,PostId,PostImageId,imageFileName];
+                    [ImagePath appendString:[NSString stringWithFormat:@"ComressMImage/comment/%d/%@",[CommentId intValue],imageFilename]];
+                }
+                else if ([PostId intValue] > 1)
+                {
+                    [ImagePath appendString:[NSString stringWithFormat:@"ComressMImage/post/%d/%@",[PostId intValue],imageFilename]];
+                }
+                
+                [sd_manager downloadImageWithURL:[NSURL URLWithString:ImagePath] options:0 progress:^(NSInteger receivedSize, NSInteger expectedSize) {
                     
-                    if(!qIns)
-                        [db rollback];
-                    else
-                    {
-                        [db commit];
-                        DDLogVerbose(@"commit!");
+                } completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
+                    
+                    if(image == nil)
+                        return;
+                    
+                    //create the image here
+                    NSData *jpegImageData = UIImageJPEGRepresentation(image, 1);
+                    
+                    //save the image to app documents dir
+                    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+                    NSString *documentsPath = [paths objectAtIndex:0];
+                    
+                    NSString *filePath = [documentsPath stringByAppendingPathComponent:imageFilename]; //Add the file name
+                    [jpegImageData writeToFile:filePath atomically:YES];
+                    
+                    NSFileManager *fManager = [[NSFileManager alloc] init];
+                    if([fManager fileExistsAtPath:filePath] == NO)
+                        return;
+                    
+                    //resize the saved image
+                    [imgOpts resizeImageAtPath:filePath];
+                    
+                    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+                        DDLogVerbose(@"j index %d",j);
+                        db.traceExecution = YES;
                         
-                    }
-                }
-                
-                [db close];
-                
-                if(imagesArray.count-1 == i) //last object
-                {
-                    DDLogVerbose(@"image count %lu, current index %d",(unsigned long)imagesArray.count,i);
-                    
-                    [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadIssuesList" object:nil];
-                    
-                    // Delay execution of my block for 10 seconds.
-                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-                        [[NSNotificationCenter defaultCenter] postNotificationName:@"postImageDownloadFinish" object:nil];
-                    });
-                }
-                
-            }];
-        }
-    }
+                        FMResultSet *rsPostImage = [db executeQuery:@"select post_image_id from post_image where post_image_id = ? and (post_image_id is not null or post_image_id > ?)",PostImageId,[NSNumber numberWithInt:0]];
+                        DDLogVerbose(@"imageUrl %@",imageURL);
+                        if([rsPostImage next] == NO) //does not exist, insert
+                        {
+                            BOOL qIns = [db executeUpdate:@"insert into post_image(comment_id, image_type, post_id, post_image_id, image_path) values(?,?,?,?,?)",CommentId,ImageType,PostId,PostImageId,imageFilename];
+                            
+                            if(!qIns)
+                            {
+                                *rollback = YES;
+                                return;
+                            }
+                        }
+                        
+                        if(imagesArr.count-1 == xx) //last image
+                        {
+                            FMResultSet *rs = [db executeQuery:@"select * from post_image_last_request_date"];
+                            
+                            if(![rs next])
+                            {
+                                BOOL qIns = [db executeUpdate:@"insert into post_image_last_request_date(date) values(?)",lastRequestDate];
+                                
+                                if(!qIns)
+                                {
+                                    *rollback = YES;
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                BOOL qUp = [db executeUpdate:@"update post_image_last_request_date set date = ? ",lastRequestDate];
+                                
+                                if(!qUp)
+                                {
+                                    *rollback = YES;
+                                    return;
+                                }
+                            }
+                            
+                            DDLogVerbose(@"image count %lu, current index %d",(unsigned long)ImageList.count,j);
+                            
+                            imageDownloadComplete = YES;
+                            
+                            [imagesArr removeAllObjects];
+                            
+                            //start download again
+                            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                                
+                                [self startDownloadPostImagesForPage:1 totalPage:0 requestDate:lastRequestDate];
+                                
+                            });
+                        }
+                    }];
+                }];
+            } // for (int j = 0; j < ImageList.count; j++)
+        } // for (int xx = 0; xx < imagesArr.count; xx++)
+    } // if (imagesArr.count > 0)
     else
     {
-        // Delay execution of my block for 10 seconds.
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-            [[NSNotificationCenter defaultCenter] postNotificationName:@"postImageDownloadFinish" object:nil];
+        //start download again
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            
+            NSDate *lrd = [self deserializeJsonDateString:jsonDate];
+            
+            [self startDownloadPostImagesForPage:1 totalPage:0 requestDate:lrd];
+            
         });
     }
 }
@@ -437,9 +740,10 @@
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:page], @"lastRequestTime" : jsonDate};
     DDLogVerbose(@"params %@",params);
     
-    AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
+    __block Comment *comment = [[Comment alloc] init];
     
-    [manager POST:[NSString stringWithFormat:@"%@%@",myAfManager.api_url,api_download_comments] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    
+    [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_download_comments] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
         
         NSDictionary *dict = [responseObject objectForKey:@"CommentContainer"];
         
@@ -459,7 +763,7 @@
             NSNumber *PostId = [NSNumber numberWithInt:[[dictComment valueForKey:@"PostId"] intValue]];
             NSDate *CommentDate = [myDatabase createNSDateWithWcfDateString:[dictComment valueForKey:@"CommentDate"]];
             
-            [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
                 
                 FMResultSet *rsComment = [theDb executeQuery:@"select comment_id from comment where comment_id = ?",CommentId];
                 
@@ -486,18 +790,8 @@
             if(dictArray.count > 0)
             {
                 [comment updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
+                comment = nil;
             }
-            else
-            {
-                [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadIssuesList" object:nil];
-                [[NSNotificationCenter defaultCenter] postNotificationName:@"fetchComments" object:nil];
-            }
-            
-            
-            // Delay execution of my block for 10 seconds.
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-                [[NSNotificationCenter defaultCenter] postNotificationName:@"commentDownloadFinish" object:nil];
-            });
         }
         
         
@@ -530,5 +824,17 @@
     
     
     return jsonDate;
+}
+
+- (void)notifyLocallyWithMessage:(NSString *)message
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadIssuesList" object:nil];
+    
+    UILocalNotification *localNotification = [[UILocalNotification alloc] init];
+    localNotification.fireDate = [NSDate date];
+    localNotification.alertBody = message;
+    localNotification.soundName = UILocalNotificationDefaultSoundName;
+    localNotification.applicationIconBadgeNumber = [UIApplication sharedApplication].applicationIconBadgeNumber + 1;
+    [[UIApplication sharedApplication] scheduleLocalNotification:localNotification];
 }
 @end

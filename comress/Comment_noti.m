@@ -18,10 +18,6 @@ status;
 -(id)init {
     if (self = [super init]) {
         myDatabase = [Database sharedMyDbManager];
-        db = [myDatabase prepareDatabaseFor:self];
-        
-        databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
-        
     }
     return self;
 }
@@ -32,7 +28,7 @@ status;
     NSTimeInterval unixTime = [[dateString substringWithRange:NSMakeRange(startPosition, 13)] doubleValue] / 1000; //WCF will send 13 digit-long value for the time interval since 1970 (millisecond precision) whereas iOS works with 10 digit-long values (second precision), hence the divide by 1000
     NSDate *date = [NSDate dateWithTimeIntervalSince1970:unixTime];
     
-    [databaseQueue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
         FMResultSet *rs = [theDb executeQuery:@"select * from comment_noti_last_request_date"];
         
         if(![rs next])

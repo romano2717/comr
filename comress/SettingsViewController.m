@@ -21,23 +21,24 @@
     // Do any additional setup after loading the view.
     
     myDatabase = [Database sharedMyDbManager];
-    db = [myDatabase prepareDatabaseFor:self];
-    myAfManager = [AFManager sharedMyAfManager];
     
     users = [[Users alloc] init];
     client = [[Client alloc] init];
     
     //get user profile
-    FMResultSet *rs = [db executeQuery:@"select user_guid from client"];
-    if([rs next])
-    {
-        FMResultSet *rs2 = [db executeQuery:@"select * from users where guid = ?",[rs stringForColumn:@"user_guid"]];
-        
-        if([rs2 next])
-            userFullNameLabel.text = [rs2 stringForColumn:@"full_name"];
-    }
     
-    userFullNameLabel.text = users.full_name;
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        FMResultSet *rs = [db executeQuery:@"select user_guid from client"];
+        if([rs next])
+        {
+            FMResultSet *rs2 = [db executeQuery:@"select * from users where guid = ?",[rs stringForColumn:@"user_guid"]];
+            
+            if([rs2 next])
+                userFullNameLabel.text = [rs2 stringForColumn:@"full_name"];
+        }
+        
+        userFullNameLabel.text = users.full_name;
+    }];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -71,36 +72,37 @@
     {
         if(buttonIndex == 1)
         {
-            AFHTTPRequestOperationManager *manager = [myAfManager createManagerWithParams:@{AFkey_allowInvalidCertificates:@YES}];
-            [manager GET:[NSString stringWithFormat:@"%@%@%@",myAfManager.api_url,api_logout,client.user_guid] parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+            [myDatabase.AfManager GET:[NSString stringWithFormat:@"%@%@%@",myDatabase.api_url,api_logout,[myDatabase.clientDictionary valueForKey:@"user_guid"] ] parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
                 
                 NSDictionary *dict = (NSDictionary *)responseObject;
                 if([[dict valueForKey:@"Result"] intValue] == 1)
                 {
-                    BOOL q;
                     
-                    [db beginTransaction];
-                    q = [db executeUpdate:@"delete from users where guid= ? ",client.user_guid];
                     
-                    if(!q)
-                    {
-                        [db rollback];
-                    }
-                    else
-                    {
-                        [db commit];
+                    
+                    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+                        BOOL q;
+                        q = [db executeUpdate:@"delete from users where guid= ? ",[myDatabase.clientDictionary valueForKey:@"user_guid"]];
                         
-                        if(self.presentingViewController != nil) //the tab was presented modall, dismiss it first.
+                        if(!q)
                         {
-                            [self dismissViewControllerAnimated:YES completion:nil];
-                            [self.navigationController popToRootViewControllerAnimated:YES];
+                            *rollback = YES;
+                            return;
                         }
-                        else //the tab was presented at first launch(user previously logged)
+                        else
                         {
-                            [self dismissViewControllerAnimated:YES completion:nil];
-                            [self performSegueWithIdentifier:@"modal_login" sender:self];
+                            if(self.presentingViewController != nil) //the tab was presented modall, dismiss it first.
+                            {
+                                [self dismissViewControllerAnimated:YES completion:nil];
+                                [self.navigationController popToRootViewControllerAnimated:YES];
+                            }
+                            else //the tab was presented at first launch(user previously logged)
+                            {
+                                [self dismissViewControllerAnimated:YES completion:nil];
+                                [self performSegueWithIdentifier:@"modal_login" sender:self];
+                            }
                         }
-                    }
+                    }];
                 }
             } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
                 DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
@@ -111,9 +113,7 @@
 
 - (IBAction)reset:(id)sender
 {
-    FMDatabaseQueue *queue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
-    
-    [queue inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
         [theDb executeUpdate:@"delete from client"];
         
         BOOL qComment = [theDb executeUpdate:@"delete from comment"];

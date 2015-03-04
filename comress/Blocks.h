@@ -12,7 +12,6 @@
 @interface Blocks : NSObject
 {
     Database *myDatabase;
-    FMDatabaseQueue *databaseQueue;
 }
 @property (nonatomic, strong) NSNumber *pk_id;
 @property (nonatomic, strong) NSNumber *block_id;

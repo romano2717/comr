@@ -8,34 +8,27 @@
 
 #import <Foundation/Foundation.h>
 #import "Database.h"
-#import "AFManager.h"
-#import "Database.h"
-#import "Post.h"
-#import "Comment.h"
-#import "PostImage.h"
-#import "Users.h"
-#import "Comment_noti.h"
 #import "InitializerViewController.h"
 #import "ImageOptions.h"
+#import "NSData+Base64.h"
 
 @interface Synchronize : NSObject
 {
-    AFManager *myAfManager;
     Database *myDatabase;
-    FMDatabaseQueue *databaseQueue;
-    InitializerViewController *init;
+//    InitializerViewController *init;
     
-    Blocks *blocks;
-    Post *post;
-    PostImage *postImage;
-    Comment *comment;
     
     ImageOptions *imgOpts;
 }
 
-@property (nonatomic, strong) NSMutableArray *imagesArray;
+@property (nonatomic, strong) NSTimer *syncKickstartTimerOutgoing;
+@property (nonatomic, strong) NSTimer *syncKickstartTimerIncoming;
+@property (nonatomic) BOOL imageDownloadComplete;
+@property (nonatomic, strong) NSMutableArray *imagesArr;
 
 + (id)sharedManager;
+
+- (void)kickStartSync;
 
 
 //upload

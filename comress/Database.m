@@ -8,15 +8,15 @@
 
 #import "Database.h"
 
-static const int newDatabaseVersion = 2; //this database version is incremented everytime the database version is updated
+static const int newDatabaseVersion = 1; //this database version is incremented everytime the database version is updated
 
 @implementation Database
 
 @synthesize initializingComplete;
 
 
-+(id)sharedMyDbManager {
-    static Database *sharedMyDbManager = nil;
++(instancetype)sharedMyDbManager {
+    static id sharedMyDbManager = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedMyDbManager = [[self alloc] init];
@@ -27,19 +27,85 @@ static const int newDatabaseVersion = 2; //this database version is incremented 
 -(id)init {
     if (self = [super init]) {
         initializingComplete = 0;
+        
+        [self copyDbToDocumentsDir];
+        
+        _databaseQ = [[FMDatabaseQueue alloc] initWithPath:self.dbPath];
+        
+        [_databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+            
+            FMResultSet *rs;
+
+            rs = [db executeQuery:@"select * from client"];
+            while ([rs next]) {
+                _clientDictionary = [rs resultDictionary];
+            }
+            
+            rs = [db executeQuery:@"select * from users"];
+            while ([rs next]) {
+                _userDictionary = [rs resultDictionary];
+            }
+            
+            rs  = [db executeQuery:@"select * from device_token"];
+            while ([rs next]) {
+                _deviceTokenDictionary = [rs resultDictionary];
+            }
+            
+            [self createAfManager];
+        }];
+        
+        
+        [self createUser];
+        
+        [self createDeviceToken];
+        
     }
     return self;
 }
 
-- (FMDatabase *)prepareDatabaseFor:(id) obj
+- (void)createUser
 {
-    NSString *dbPath = [self dbPath];
+    [_databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        
+        FMResultSet *rs;
+        
+        rs = [db executeQuery:@"select * from users"];
+        while ([rs next]) {
+            _userDictionary = [rs resultDictionary];
+        }
+    }];
+}
 
-    FMDatabase *db = [FMDatabase databaseWithPath:dbPath];
-    if(![db open])
-        DDLogVerbose(@"db open failed for %@ [%@-%@]",obj,THIS_FILE, THIS_METHOD);
+- (void)createDeviceToken
+{
+    [_databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        
+        FMResultSet *rs;
+        
+        rs  = [db executeQuery:@"select * from device_token"];
+        while ([rs next]) {
+            _deviceTokenDictionary = [rs resultDictionary];
+        }
+    }];
+}
+
+- (void)createAfManager
+{
+    _api_url = @"http://comresstest.selfip.com/ComressMWCF/";
+    _domain = @"http://comresstest.selfip.com/";
     
-    return db;
+    DDLogVerbose(@"session id: %@",[_clientDictionary valueForKey:@"user_guid"]);
+    
+    _AfManager = [AFHTTPRequestOperationManager manager];
+    _AfManager.requestSerializer = [AFJSONRequestSerializer serializer];
+    _AfManager.responseSerializer = [AFJSONResponseSerializer serializer];
+    
+    if([_clientDictionary valueForKey:@"user_guid"] != [NSNull null])
+        [_AfManager.requestSerializer setValue:[_clientDictionary valueForKey:@"user_guid"] forHTTPHeaderField:@"ComSessionId"];
+    
+    AFSecurityPolicy *policy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeNone];
+    policy.allowInvalidCertificates = YES;
+    _AfManager.securityPolicy = policy;
 }
 
 - (NSString*)dbPath;
@@ -80,64 +146,6 @@ static const int newDatabaseVersion = 2; //this database version is incremented 
 {
     BOOL success;
     
-    FMDatabase *db = [self prepareDatabaseFor:self];
-    if(allowLogging)
-        db.traceExecution = NO;
-    [db open];
-    
-    FMResultSet *rs = [db executeQuery:@"select max(version) as version from db_version"];
-    
-    int currentAppDbVersion = 1;
-    while ([rs next]) {
-        currentAppDbVersion = [rs intForColumn:@"version"];
-    }
-    
-    if(currentAppDbVersion < newDatabaseVersion)
-    {
-        //do the migration!
-        
-        /*
-         January 29, 2015 3:47:08
-         add column: email
-         for table: users
-         purpose: additional field
-         */
-        
-        if(![db columnExists:@"email" inTableWithName:@"users"])
-        {
-            [db beginTransaction];
-            success = [db executeUpdate:@"ALTER TABLE users ADD COLUMN email STRING"];
-            
-            if(!success)
-                [db rollback];
-            else
-                [db commit];
-        }
-    }
-    
-    if(success)
-    {
-        [db beginTransaction];
-        
-        BOOL versionUp =   [db executeUpdate:@"update db_version set version = version + 1 "];
-        
-        if(!versionUp)
-            [db rollback];
-        else
-            [db commit];
-    }
-    
-    //db version check
-    FMResultSet *rs2 = [db executeQuery:@"select max(version) as version from db_version"];
-    
-    int currentAppDbVersion2 = 0;
-    while ([rs2 next]) {
-        currentAppDbVersion2 = [rs2 intForColumn:@"version"];
-    }
-    
-    //DDLogVerbose(@"newDatabaseVersion %d [%@-%@]",newDatabaseVersion,THIS_FILE,THIS_METHOD);
-    //DDLogVerbose(@"db version check = currentAppDbVersion %d [%@-%@]",currentAppDbVersion2,THIS_FILE,THIS_METHOD);
-    
     return success;
 }
 
@@ -157,6 +165,36 @@ static const int newDatabaseVersion = 2; //this database version is incremented 
     NSDate *date = [NSDate dateWithTimeIntervalSince1970:unixTime];
     
     return date;
+}
+
+- (void)notifyLocallyWithMessage:(NSString *)message
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadIssuesList" object:nil];
+    
+    UILocalNotification *localNotification = [[UILocalNotification alloc] init];
+    localNotification.fireDate = [NSDate date];
+    localNotification.alertBody = message;
+    localNotification.soundName = UILocalNotificationDefaultSoundName;
+    localNotification.applicationIconBadgeNumber = [UIApplication sharedApplication].applicationIconBadgeNumber + 1;
+    [[UIApplication sharedApplication] scheduleLocalNotification:localNotification];
+}
+
+- (NSString *)toJsonString:(id)obj
+{
+    NSError *error;
+    NSString *jsonString;
+    
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:obj
+                                                       options:NSJSONWritingPrettyPrinted // Pass 0 if you don't care about the readability of the generated string
+                                                         error:&error];
+    
+    if (! jsonData) {
+        NSLog(@"Got an error: %@", error);
+    } else {
+       jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+    }
+    
+    return jsonString;
 }
 
 

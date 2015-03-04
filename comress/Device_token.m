@@ -15,15 +15,14 @@
 -(id)init {
     if (self = [super init]) {
         myDatabase = [Database sharedMyDbManager];
-        db = [myDatabase prepareDatabaseFor:self];
         
-        FMResultSet *rs = [db executeQuery:@"select device_token from device_token"];
-        
-        while ([rs next]) {
-            device_token = [rs stringForColumn:@"device_token"];
-        }
-        
-        [db close];
+        [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+            FMResultSet *rs = [db executeQuery:@"select device_token from device_token"];
+            
+            while ([rs next]) {
+                device_token = [rs stringForColumn:@"device_token"];
+            }
+        }];
     }
     return self;
 }

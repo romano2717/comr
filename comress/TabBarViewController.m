@@ -13,6 +13,7 @@
 {
     BOOL needToActivate;
     BOOL needToLogin;
+    BOOL needToInit;
 }
 @end
 
@@ -23,11 +24,6 @@
     // Do any additional setup after loading the view.
     
     myDatabase = [Database sharedMyDbManager];
-    db = [myDatabase prepareDatabaseFor:self];
-    myAfManager = [AFManager sharedMyAfManager];
-    databaseQueue = [FMDatabaseQueue databaseQueueWithPath:myDatabase.dbPath];
-    
-    
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -35,30 +31,50 @@
     [super viewDidAppear:animated];
     
     //check for a valid activation code
-    NSString *activationCode = nil;
     
-    FMResultSet *rs = [db executeQuery:@"select activation_code from client"];
-    while([rs next])
-    {
-        activationCode = [rs stringForColumn:@"activation_code"];
-    }
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        
+        NSString *activationCode = nil;
+        
+        FMResultSet *rs = [db executeQuery:@"select activation_code from client"];
+        while([rs next])
+        {
+            activationCode = [rs stringForColumn:@"activation_code"];
+        }
+        
+        if(activationCode == nil || activationCode.length == 0)
+        {
+            needToActivate = YES;
+        }
+        else
+        {
+            //check for valid login
+            FMResultSet *rsClient = [db executeQuery:@"select c.user_guid, u.* from client c, users u where c.user_guid = u.guid"];
+            
+            if(![rsClient next])
+            {
+                needToLogin = YES;
+            }
+            
+            else if(!needToActivate && !needToLogin) //init
+            {
+                if(myDatabase.initializingComplete == 0)
+                {
+                    needToInit = YES;
+                }
+            }
+        }
+    }];
     
-    if(activationCode == nil || activationCode.length == 0)
+    if(needToActivate)
     {
         [self performSegueWithIdentifier:@"modal_activation" sender:self];
-        return;
     }
-    
-    //check for valid login
-    FMResultSet *rsClient = [db executeQuery:@"select c.user_guid, u.* from client c, users u where c.user_guid = u.guid"];
-    
-    if(![rsClient next])
+    else if (needToLogin)
     {
         [self performSegueWithIdentifier:@"modal_login" sender:self];
-        return;
     }
-    
-    else if(!needToActivate && !needToLogin) //init
+    else
     {
         if(myDatabase.initializingComplete == 0)
             [self performSegueWithIdentifier:@"modal_initializer" sender:self];

@@ -14,6 +14,8 @@ static NSString * AFkey_allowInvalidCertificates = @"allowInvalidCertificates";
 
 static NSString *api_activationUrl = @"http://fmit.com.sg/comressmainservice/AddressManager.svc/json/GetUrlAddress/?group=";
 
+static NSString *server_url = @"http://comresstest.selfip.com/ComressMWCF/"; //temporary
+
 static NSString *api_login = @"User.svc/ComressLogin";
 
 static NSString *api_logout = @"User.svc/Logout?sessionId=";

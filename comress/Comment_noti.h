@@ -12,8 +12,6 @@
 @interface Comment_noti : NSObject
 {
     Database *myDatabase;
-    FMDatabase *db;
-    FMDatabaseQueue *databaseQueue;
 }
 @property (nonatomic) int post_id;
 @property (nonatomic) int comment_id;

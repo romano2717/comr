@@ -9,10 +9,10 @@
 #import <Foundation/Foundation.h>
 #import "Database.h"
 
+
 @interface Users : NSObject
 {
     Database *myDatabase;
-    FMDatabase *db;
 }
 
 @property (nonatomic, strong) NSNumber *client_id;
@@ -26,6 +26,7 @@
 @property (nonatomic, strong) NSNumber *group_id;
 @property (nonatomic, strong) NSString *group_name;
 @property (nonatomic, strong) NSNumber *device_id;
+
 
 
 @end

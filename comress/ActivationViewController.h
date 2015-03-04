@@ -8,13 +8,12 @@
 
 #import <UIKit/UIKit.h>
 #import "Database.h"
-#import "AFManager.h"
 #import "LoginViewController.h"
+#import "MBProgressHUD.h"
 
 @interface ActivationViewController : UIViewController
 {
     Database *myDatabase;
-    AFManager *myAfManager;
 }
 
 @property (nonatomic, weak) IBOutlet UITextField *activationCodeTextField;

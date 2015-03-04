@@ -9,16 +9,11 @@
 #import <UIKit/UIKit.h>
 #import "ApiCallUrl.h"
 #import "Database.h"
-#import "AFManager.h"
-#import "Users.h"
-#import "Device_token.h"
+#import "MBProgressHUD.h"
 
 @interface LoginViewController : UIViewController
 {
-    Users *user;
-    AFManager *myAfManager;
     Database *myDatabase;
-    Device_token *device_token;
 }
 
 @property (nonatomic, weak) IBOutlet UITextField *companyIdTextField;
