@@ -150,7 +150,7 @@ postal_code;
                 if([[rsPostComment stringForColumn:@"comment"] isEqualToString:@"<image>"])
                 {
                     //get the image path
-                    FMResultSet *rsImagePath = [db executeQuery:@"select image_path from post_image where client_comment_id = ?",[NSNumber numberWithInt:[rsPostComment intForColumn:@"client_comment_id"]]];
+                    FMResultSet *rsImagePath = [db executeQuery:@"select image_path from post_image where client_comment_id = ? or comment_id = ?",[NSNumber numberWithInt:[rsPostComment intForColumn:@"client_comment_id"]],[NSNumber numberWithInt:[rsPostComment intForColumn:@"comment_id"]]];
                     
                     while ([rsImagePath next]) {
                         [commentsDict setObject:[rsImagePath stringForColumn:@"image_path"] forKey:@"image"];
@@ -168,7 +168,31 @@ postal_code;
             [arr addObject:postDict];
         }
     }];
+    
+    DDLogVerbose(@"arr %@",arr);
 
+    NSMutableArray *mutArr = [[NSMutableArray alloc] initWithArray:arr];
+    
+    //re-order the posts according to unread messages
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        FMResultSet *rs = [db executeQuery:@"select * from comment_noti order by id desc"];
+        
+        while ([rs next]) {
+            NSNumber *postId = [NSNumber numberWithInt:[rs intForColumn:@"post_id"]];
+            
+            for (int i = 0; i < arr.count; i++) {
+                NSDictionary *dict = (NSDictionary *)[arr objectAtIndex:i];
+                NSNumber *key = [NSNumber numberWithInt:[[[dict allKeys] lastObject] intValue]];
+                
+                if(key == postId)
+                {
+                    [mutArr insertObject:dict atIndex:i];
+                }
+            }
+        }
+    }];
+
+    DDLogVerbose(@"mutArr %@",mutArr);
     
     
     return arr;

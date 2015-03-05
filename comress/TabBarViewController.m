@@ -13,7 +13,6 @@
 {
     BOOL needToActivate;
     BOOL needToLogin;
-    BOOL needToInit;
 }
 @end
 
@@ -55,14 +54,6 @@
             {
                 needToLogin = YES;
             }
-            
-            else if(!needToActivate && !needToLogin) //init
-            {
-                if(myDatabase.initializingComplete == 0)
-                {
-                    needToInit = YES;
-                }
-            }
         }
     }];
     
@@ -77,7 +68,19 @@
     else
     {
         if(myDatabase.initializingComplete == 0)
-            [self performSegueWithIdentifier:@"modal_initializer" sender:self];
+        {
+            __block BOOL needtoInit = NO;
+            
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+                FMResultSet *rs = [db executeQuery:@"select initialise from client where initialise = ?",[NSNumber numberWithInt:0]];
+                if([rs next] == YES)
+                    needtoInit = YES;
+            }];
+            if(needtoInit == YES)
+                [self performSegueWithIdentifier:@"modal_initializer" sender:self];
+            else
+                myDatabase.initializingComplete = 1;
+        }
     }
 }
 

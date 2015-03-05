@@ -42,7 +42,18 @@
 {
     myDatabase.initializingComplete = 1;
     
-    [self dismissViewControllerAnimated:YES completion:nil];
+    [self dismissViewControllerAnimated:YES completion:^{
+       
+        [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+            BOOL upClient = [db executeUpdate:@"update client set initialise = ?",[NSNumber numberWithInt:1]];
+            if(!upClient)
+            {
+                *rollback = YES;
+                return;
+            }
+        }];
+        
+    }];
 }
 
 #pragma mark - check if we need to sync blocks
@@ -364,11 +375,9 @@
     if(currentPage > 1)
         jsonDate = [NSString stringWithFormat:@"%@",requestDate];
     
-    
     self.processLabel.text = [NSString stringWithFormat:@"Downloading notifications page... %d/%d",currentPage,totPage];
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:page], @"lastRequestTime" : jsonDate};
-    
     
     [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_download_comment_noti] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
         
@@ -390,12 +399,17 @@
 
             
             [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
-                BOOL qIns = [theDb executeUpdate:@"insert into comment_noti(comment_id, user_id, post_id, status) values(?,?,?,?)",CommentId,UserId,PostId,Status];
                 
-                if(!qIns)
+                FMResultSet *rs = [theDb executeQuery:@"select * from comment_noti where comment_id = ? or post_id = ?",CommentId,PostId];
+                if([rs next] == NO)//does not exist
                 {
-                    *rollback = YES;
-                    return;
+                    BOOL qIns = [theDb executeUpdate:@"insert into comment_noti(comment_id, user_id, post_id, status) values(?,?,?,?)",CommentId,UserId,PostId,Status];
+                    
+                    if(!qIns)
+                    {
+                        *rollback = YES;
+                        return;
+                    }
                 }
             }];
         }
@@ -432,7 +446,6 @@
     
     if(currentPage > 1)
         jsonDate = [NSString stringWithFormat:@"%@",requestDate];
-    
     
     self.processLabel.text = [NSString stringWithFormat:@"Downloading images page... %d/%d",currentPage,totPage];
     
@@ -508,10 +521,12 @@
                 
                 [sd_manager downloadImageWithURL:[NSURL URLWithString:ImagePath] options:0 progress:^(NSInteger receivedSize, NSInteger expectedSize) {
                     
-                    NSInteger percentage = 100 / (expectedSize / receivedSize);
-                    
-                    self.processLabel.text = [NSString stringWithFormat:@"Downloading image. %ld%%",(long)percentage];
-                    
+                    if(expectedSize > 1 && receivedSize > 1)
+                    {
+                        NSInteger percentage = 100 / (expectedSize / receivedSize);
+                        
+                        self.processLabel.text = [NSString stringWithFormat:@"Downloading image. %ld%%",(long)percentage];
+                    }
                 } completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
                     
                     if(image == nil)

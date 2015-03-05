@@ -48,75 +48,6 @@
     return YES;
 }
 
-- (void)postDownloadFinish
-{
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-            FMResultSet *rs = [db executeQuery:@"select date from post_last_request_date"];
-            NSDate *requestDate;
-            if([rs next])
-            {
-                requestDate = [rs dateForColumn:@"date"];
-                [sync startDownloadPostForPage:1 totalPage:0 requestDate:requestDate];
-            }
-            else
-            {
-                NSString *jsonDate = @"/Date(1388505600000+0800)/";
-                NSDate *date = [self deserializeJsonDateString:jsonDate];
-                [sync startDownloadPostForPage:1 totalPage:0 requestDate:date];
-            }
-        }];
-        
-    });
-}
-
-- (void)postImageDownloadFinish
-{
-
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        
-        [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-            FMResultSet *rs = [db executeQuery:@"select date from post_image_last_request_date"];
-            NSDate *requestDate;
-            if([rs next])
-            {
-                requestDate = [rs dateForColumn:@"date"];
-                [sync startDownloadPostImagesForPage:1 totalPage:0 requestDate:requestDate];
-            }
-            else
-            {
-                NSString *jsonDate = @"/Date(1388505600000+0800)/";
-                NSDate *date = [self deserializeJsonDateString:jsonDate];
-                [sync startDownloadPostImagesForPage:1 totalPage:0 requestDate:date];
-            }
-        }];
-    });
-}
-
-- (void)commentDownloadFinish
-{
-    return;
-    
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        
-        [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-            FMResultSet *rs = [db executeQuery:@"select date from comment_last_request_date"];
-            NSDate *requestDate;
-            if([rs next])
-            {
-                requestDate = [rs dateForColumn:@"date"];
-                [sync startDownloadCommentsForPage:1 totalPage:0 requestDate:requestDate];
-            }
-            else
-            {
-                NSString *jsonDate = @"/Date(1388505600000+0800)/";
-                NSDate *date = [self deserializeJsonDateString:jsonDate];
-                [sync startDownloadCommentsForPage:1 totalPage:0 requestDate:date];
-            }
-        }];
-    });
-}
-
 - (NSDate *)deserializeJsonDateString: (NSString *)jsonDateString
 {
     NSInteger startPosition = [jsonDateString rangeOfString:@"("].location + 1; //start of the date value
@@ -187,12 +118,15 @@
         
         [application registerForRemoteNotifications];
     }
-    else
-    {
-        // iOS < 8 Notifications
-        [application registerForRemoteNotificationTypes: (UIUserNotificationTypeBadge | UIUserNotificationTypeSound | UIUserNotificationTypeAlert)];
-    }
+ 
+    //ask permission to use location
+    CLLocationManager *locationManager = [[CLLocationManager alloc] init];
     
+    if([locationManager respondsToSelector:@selector(requestAlwaysAuthorization)])
+        [locationManager requestAlwaysAuthorization];
+    
+    if([locationManager respondsToSelector:@selector(requestWhenInUseAuthorization)])
+        [locationManager requestWhenInUseAuthorization];
     
 }
 

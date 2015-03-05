@@ -21,6 +21,7 @@
 #import "Device_token.h"
 #import "Users.h"
 #import "Client.h"
+#import <CoreLocation/CoreLocation.h>
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 {

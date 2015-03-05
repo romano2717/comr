@@ -7,6 +7,7 @@
 //
 
 #import "IssuesChatViewController.h"
+#import "Synchronize.h"
 
 @interface IssuesChatViewController ()
 
@@ -44,13 +45,17 @@
     
     theNewSelectedStatus = nil;
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(fetchComments) name:@"fetchComments" object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(fetchComments) name:@"reloadChatView" object:nil];
 }
 
 - (void)fetchComments
 {
     //clear messages
     [self.messageData.messages removeAllObjects];
+    postDict = nil;
+    commentsArray = nil;
+
+    
     
     NSDictionary *params = @{@"order":@"order by post_date desc"};
     if(isFiltered)
@@ -60,12 +65,12 @@
     
     //get the post information so we can do a pop-up view for post
     self.postInfoDict = [NSDictionary dictionaryWithObjectsAndKeys:[[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"post"],@"post",[[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"postImages"],@"images", nil];
-    
+
     commentsArray = [[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"postComments"];
-    
+
     for (int i = 0; i < commentsArray.count; i++) {
         NSDictionary *dict = [commentsArray objectAtIndex:i];
-        
+
         double timeStamp = [[dict valueForKeyPath:@"comment_on"] doubleValue];
         NSDate *date = [NSDate dateWithTimeIntervalSince1970:timeStamp];
         
@@ -204,7 +209,7 @@
     
     popover = [[FPPopoverKeyboardResponsiveController alloc] initWithViewController:postInfoVc];
     popover.arrowDirection = FPPopoverArrowDirectionUp;
-    popover.contentSize = CGSizeMake(CGRectGetWidth(self.view.frame) * 0.90, CGRectGetHeight(self.view.frame) * 0.60);
+    popover.contentSize = CGSizeMake(CGRectGetWidth(self.view.frame) * 0.90, CGRectGetHeight(self.view.frame) * 0.80);
     
     [popover presentPopoverFromView:self.navigationController.navigationBar];
 }
@@ -405,6 +410,11 @@
         DDLogVerbose(@"comment not saved");
     
     [self fetchComments];
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        Synchronize *sync = [Synchronize sharedManager];
+        [sync uploadCommentFromSelf:NO];
+    });
 }
 
 - (void)messageReceived

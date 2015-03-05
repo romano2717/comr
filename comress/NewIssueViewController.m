@@ -7,6 +7,7 @@
 //
 
 #import "NewIssueViewController.h"
+#import "Synchronize.h"
 
 @interface NewIssueViewController ()
 {
@@ -63,13 +64,6 @@
     locationManager.distanceFilter = 100;
     locationManager.desiredAccuracy = kCLLocationAccuracyBest;
     locationManager.delegate = self;
-    
-    //iOS 8
-    if([locationManager respondsToSelector:@selector(requestAlwaysAuthorization)])
-        [locationManager requestAlwaysAuthorization];
-    
-    if([locationManager respondsToSelector:@selector(requestWhenInUseAuthorization)])
-        [locationManager requestWhenInUseAuthorization];
     
     blocks = [[Blocks alloc] init];
     
@@ -557,6 +551,11 @@
                     [[NSNotificationCenter defaultCenter] postNotificationName:@"autoOpenChatViewForPostOthers" object:nil userInfo:useInfo];
 
             }];
+            
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                Synchronize *sync = [Synchronize sharedManager];
+                [sync uploadPostFromSelf:NO];
+            });
         }];
     }
 }

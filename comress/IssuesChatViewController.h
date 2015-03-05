@@ -25,6 +25,7 @@
 #import "FPPopoverKeyboardResponsiveController.h"
 
 
+
 @class IssuesChatViewController;
 
 @protocol IssuesChatViewControllerDelegate <NSObject>

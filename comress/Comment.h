@@ -10,10 +10,12 @@
 #import "Database.h"
 #import "ImageOptions.h"
 
+
 @interface Comment : NSObject
 {
     Database *myDatabase;
     ImageOptions *imgOpts;
+
 }
 
 @property (nonatomic) int client_comment_id;

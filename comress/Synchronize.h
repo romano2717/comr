@@ -33,13 +33,13 @@
 
 //upload
 
-- (void)uploadPost;
+- (void)uploadPostFromSelf:(BOOL )thisSelf;
 
-- (void)uploadComment;
+- (void)uploadCommentFromSelf:(BOOL )thisSelf;
 
-- (void)uploadImage;
+- (void)uploadImageFromSelf:(BOOL )thisSelf;
 
-- (void)uploadPostStatusChange;
+- (void)uploadPostStatusChangeFromSelf:(BOOL )thisSelf;
 
 
 

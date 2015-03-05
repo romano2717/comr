@@ -32,6 +32,16 @@
     // Dispose of any resources that can be recreated.
 }
 
+
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
+{
+    
+    [self doLogin:self];
+    
+    return YES;
+}
+
 - (IBAction)doLogin:(id)sender
 {
     NSString *companyId = [self.companyIdTextField.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];

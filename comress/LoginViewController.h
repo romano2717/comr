@@ -11,7 +11,7 @@
 #import "Database.h"
 #import "MBProgressHUD.h"
 
-@interface LoginViewController : UIViewController
+@interface LoginViewController : UIViewController<UITextFieldDelegate>
 {
     Database *myDatabase;
 }
