@@ -56,6 +56,8 @@
     
     [sync kickStartSync];
     
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(downloadNewItems) name:@"downloadNewItems" object:nil];
+    
     return YES;
 }
 - (void)createBackgroundTaskWithSync:(BOOL)withSync
@@ -198,6 +200,9 @@
 
 - (void)downloadNewItems
 {
+    if(myDatabase.initializingComplete == 0)
+        return;
+    
     __block NSDate *jsonDate = [self deserializeJsonDateString:@"/Date(1388505600000+0800)/"];
     
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {

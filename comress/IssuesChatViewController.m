@@ -55,9 +55,6 @@
     locationManager.desiredAccuracy = kCLLocationAccuracyBest;
     locationManager.delegate = self;
     
-    [locationManager requestAlwaysAuthorization];
-    [locationManager requestWhenInUseAuthorization];
-    
     theNewSelectedStatus = nil;
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(fetchComments) name:@"reloadChatView" object:nil];
@@ -144,6 +141,15 @@
 - (void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
+
+    //auth pop-up sometimes crashes the app overlapping table datasource
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        //ask permission to use location service
+        [locationManager requestAlwaysAuthorization];
+        [locationManager requestWhenInUseAuthorization];
+    });
+    
+    
     
     NavigationBarTitleWithSubtitleView *navigationBarTitleView = [[NavigationBarTitleWithSubtitleView alloc] init];
     [self.navigationItem setTitleView: navigationBarTitleView];

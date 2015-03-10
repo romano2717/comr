@@ -84,7 +84,9 @@
 
 - (void)refresh:(id)sender
 {
-    [self fetchPosts];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"downloadNewItems" object:nil];
+    
+//    [self fetchPosts];
     
     [(UIRefreshControl *)sender endRefreshing];
 }
@@ -226,9 +228,9 @@
         self.postsArray = groupedPost;
     }
     
-    //dispatch_async(dispatch_get_main_queue(), ^{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [self.issuesTable reloadData];
-    //});
+    });
 }
 
 
