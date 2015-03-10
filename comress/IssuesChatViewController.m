@@ -43,6 +43,9 @@
     locationManager.desiredAccuracy = kCLLocationAccuracyBest;
     locationManager.delegate = self;
     
+    [locationManager requestAlwaysAuthorization];
+    [locationManager requestWhenInUseAuthorization];
+    
     theNewSelectedStatus = nil;
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(fetchComments) name:@"reloadChatView" object:nil];
@@ -55,9 +58,7 @@
     postDict = nil;
     commentsArray = nil;
 
-    
-    
-    NSDictionary *params = @{@"order":@"order by post_date desc"};
+    NSDictionary *params = @{@"order":@"order by post_date asc"};
     if(isFiltered)
         postDict = [[post fetchIssuesWithParams:params forPostId:[NSNumber numberWithInt:self.postId] filterByBlock:YES] objectAtIndex:0];
     else
@@ -118,8 +119,6 @@
 {
     [super viewWillAppear:animated];
     
-    self.title = [[self.postInfoDict objectForKey:@"post"] valueForKey:@"post_topic"];
-    
     NSMutableDictionary *dict = [[NSMutableDictionary alloc] initWithObjectsAndKeys:[self.postInfoDict objectForKey:@"post"],@"post",[self.postInfoDict objectForKey:@"images"],@"images", nil];
     self.postInfoDict = dict;
     
@@ -129,6 +128,17 @@
     
     [self.navigationController.navigationBar addGestureRecognizer:tapNavBar];
 }
+
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    
+    NavigationBarTitleWithSubtitleView *navigationBarTitleView = [[NavigationBarTitleWithSubtitleView alloc] init];
+    [self.navigationItem setTitleView: navigationBarTitleView];
+    [navigationBarTitleView setTitleText:[[self.postInfoDict objectForKey:@"post"] valueForKey:@"post_topic"]];
+    [navigationBarTitleView setDetailText:@"Tap here for info."];
+}
+
 
 #pragma mark - status post update
 -(void)selectedTableRow:(NSUInteger)rowNum
@@ -296,6 +306,9 @@
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations
 {
+    MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    hud.labelText = @"Capturing location...";
+    
     CLLocation *loc = [locations lastObject];
     
     CGFloat longitude = loc.coordinate.longitude;
@@ -342,6 +355,8 @@
         [self saveCommentForMessage:dict];
         
         [self finishReceivingMessageAnimated:YES];
+        
+        [MBProgressHUD hideHUDForView:self.view animated:YES];
     }];
 }
 

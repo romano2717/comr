@@ -114,9 +114,15 @@ postal_code;
             if([rsBlock next] == NO)
                 continue;
             
-            
-            
             [postChild setObject:[rsPost resultDictionary] forKey:@"post"];
+            
+            //check if this post is not yet read by the user
+            NSNumber *readStatus = [NSNumber numberWithInt:1]; //already read
+            FMResultSet *rsRead = [db executeQuery:@"select * from comment_noti where post_id = ?",serverPostId];
+            if([rsRead next] == YES)
+                readStatus = [NSNumber numberWithInt:0];
+            
+            [postChild setObject:readStatus forKey:@"readStatus"];
             
             //add all images of this post
             FMResultSet *rsPostImage;
@@ -182,18 +188,24 @@ postal_code;
             
             for (int i = 0; i < arr.count; i++) {
                 NSDictionary *dict = (NSDictionary *)[arr objectAtIndex:i];
-                NSNumber *key = [NSNumber numberWithInt:[[[dict allKeys] lastObject] intValue]];
+                NSNumber *key = [[dict allKeys] lastObject];
+                NSNumber *postIdNum = [[[dict objectForKey:key] objectForKey:@"post"] valueForKey:@"post_id"];
+
+                DDLogVerbose(@"postId:%d key:%d",[postIdNum intValue],[postId intValue]);
                 
-                if(key == postId)
+                if([postId intValue] == [postIdNum intValue])
                 {
-                    [mutArr insertObject:dict atIndex:i];
+                    [mutArr removeObject:dict];
+                    [mutArr insertObject:dict atIndex:0];
                 }
             }
         }
     }];
 
+    if(mutArr.count == arr.count)
+        return mutArr;
+
     DDLogVerbose(@"mutArr %@",mutArr);
-    
     
     return arr;
 }
@@ -243,9 +255,17 @@ postal_code;
             *rollback = YES;
             return ;
         }
+        
+        BOOL postWasUpdated = [theDb executeUpdate:@"update post set statusWasUpdated = ? where client_post_id = ?",[NSNumber numberWithBool:YES],clientPostId];
+        
+        if(!postWasUpdated)
+        {
+            *rollback = YES;
+            return;
+        }
     }];
     
-    return NO;
+    return YES;
 }
 
 - (BOOL)updateLastRequestDateWithDate:(NSString *)dateString

@@ -10,7 +10,7 @@
 
 @implementation IssuesTableViewCell
 
-@synthesize mainImageView,statusLabel,statusProgressView,postTitleLabel,addressLabel,lastMessagByLabel,lastMessageLabel,dateLabel,messageCountLabel,pinImageView;
+@synthesize mainImageView,statusLabel,statusProgressView,postTitleLabel,addressLabel,lastMessagByLabel,lastMessageLabel,dateLabel,messageCountLabel,pinImageView,readStatusImageView;
 
 
 - (void)awakeFromNib {
@@ -30,6 +30,8 @@
     NSArray *postComments = [topDict valueForKey:@"postComments"];
     NSArray *postImages = [topDict valueForKey:@"postImages"];
     
+    NSString *postTopic = [postDict valueForKey:@"post_topic"] ? [postDict valueForKey:@"post_topic"] : @"Untitled";
+    
     //post date
     double timeStamp = [[postDict valueForKeyPath:@"post_date"] doubleValue];
     NSDate *date = [NSDate dateWithTimeIntervalSince1970:timeStamp];
@@ -47,6 +49,9 @@
     //by default, last post is by OP until last commenter
     NSString *lastMsgBy = [postDict valueForKey:@"post_by"];
     NSString *lastMsg = @"";
+    
+    //read status
+    int readStatus = [[topDict valueForKey:@"readStatus"] intValue];
     
     int severity = [[postDict valueForKey:@"severity"] intValue];
     
@@ -109,7 +114,7 @@
     [mainImageView sd_setImageWithURL:imageUrl placeholderImage:[UIImage imageNamed:@"noImage"] options:SDWebImageProgressiveDownload];
     statusLabel.text = statusString;
     statusProgressView.progress = progress;
-    postTitleLabel.text = [postDict valueForKey:@"post_topic"] ? [postDict valueForKey:@"post_topic"] : @"Untitled";
+    postTitleLabel.text = postTopic;
     addressLabel.text = [postDict valueForKey:@"address"] ? [postDict valueForKey:@"address"] : @"Address:";
     lastMessagByLabel.text = lastMsgBy;
     lastMessageLabel.text = lastMsg;
@@ -118,6 +123,12 @@
     
     if(severity == 2)//Routine
         pinImageView.hidden = YES;
+    
+    if(readStatus == 1)
+    {
+        readStatusImageView.hidden = YES;
+    }
+    
 }
 
 

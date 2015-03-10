@@ -369,6 +369,7 @@
                                             <outlet property="mainImageView" destination="Vgv-sF-0wZ" id="JxJ-iB-JBs"/>
                                             <outlet property="pinImageView" destination="SYh-uD-1Tw" id="jcd-AU-QUV"/>
                                             <outlet property="postTitleLabel" destination="Ah2-SA-x4L" id="Y1f-ix-I6b"/>
+                                            <outlet property="readStatusImageView" destination="yCI-H9-lvv" id="hym-ah-Efb"/>
                                             <outlet property="statusLabel" destination="w8M-Ff-YNm" id="Alq-Ha-YZf"/>
                                             <outlet property="statusProgressView" destination="a9k-pE-rtO" id="jYu-oI-3Sr"/>
                                         </connections>
@@ -422,15 +423,6 @@
         <scene sceneID="2nO-4z-DQH">
             <objects>
                 <viewController id="hU5-Vl-PAR" customClass="IssuesChatViewController" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="Lcj-9E-xLD"/>
-                        <viewControllerLayoutGuide type="bottom" id="jgB-I1-BnB"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="5rI-ca-4cs">
-                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                    </view>
                     <navigationItem key="navigationItem" title="Comments" id="ja7-tz-gBC">
                         <barButtonItem key="leftBarButtonItem" title="Back" id="Y63-Mj-8GX">
                             <connections>
@@ -451,7 +443,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="jzD-OC-kRF" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="885" y="-974"/>
+            <point key="canvasLocation" x="655" y="-987"/>
         </scene>
         <!--Post Info View Controller-->
         <scene sceneID="Zcb-Js-a9h">
@@ -975,7 +967,7 @@
                             </mask>
                         </variation>
                     </view>
-                    <tabBarItem key="tabBarItem" systemItem="bookmarks" id="cPa-gy-q4n"/>
+                    <tabBarItem key="tabBarItem" title="Routine" image="routine.png" id="cPa-gy-q4n"/>
                     <navigationItem key="navigationItem" title="Routine" id="8YJ-Xz-wIN">
                         <barButtonItem key="rightBarButtonItem" title="Scan QR Code" id="hqJ-93-r01"/>
                     </navigationItem>
@@ -1126,10 +1118,10 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                                                            <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
+                                                            <rect key="frame" x="0.0" y="0.0" width="80" height="80"/>
                                                             <autoresizingMask key="autoresizingMask"/>
                                                             <subviews>
-                                                                <imageView userInteractionEnabled="NO" tag="1" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="bulb_off.png" translatesAutoresizingMaskIntoConstraints="NO" id="UyS-n6-qnE">
+                                                                <imageView userInteractionEnabled="NO" tag="1" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" image="bulb_off.png" translatesAutoresizingMaskIntoConstraints="NO" id="UyS-n6-qnE">
                                                                     <rect key="frame" x="0.0" y="0.0" width="20" height="20"/>
                                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                                 </imageView>
@@ -1407,7 +1399,7 @@
                             </mask>
                         </variation>
                     </view>
-                    <tabBarItem key="tabBarItem" systemItem="more" id="FBD-v7-Kns"/>
+                    <tabBarItem key="tabBarItem" title="Settings" image="settings.png" id="FBD-v7-Kns"/>
                     <connections>
                         <outlet property="userFullNameLabel" destination="0S5-Vp-pl3" id="Ko7-dP-eYb"/>
                         <segue destination="onP-e6-mVT" kind="presentation" identifier="modal_login" id="SMc-XH-H8D"/>
@@ -1418,7 +1410,7 @@
             </objects>
             <point key="canvasLocation" x="-3282" y="-210"/>
         </scene>
-        <!--View Controller-->
+        <!--Crm-->
         <scene sceneID="D68-9M-1BK">
             <objects>
                 <viewController id="kaZ-dK-GZq" sceneMemberID="viewController">
@@ -1431,7 +1423,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
-                    <tabBarItem key="tabBarItem" systemItem="favorites" id="pJD-L5-Fly"/>
+                    <tabBarItem key="tabBarItem" title="Crm" image="crm.png" id="pJD-L5-Fly"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="nFJ-eL-snC" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -1541,11 +1533,11 @@
             </objects>
             <point key="canvasLocation" x="-1539" y="-2037.75"/>
         </scene>
-        <!--Navigation Controller-->
+        <!--Issues-->
         <scene sceneID="RAy-d1-kg0">
             <objects>
                 <navigationController automaticallyAdjustsScrollViewInsets="NO" id="BW0-OX-23b" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" systemItem="featured" id="acW-dT-cKf"/>
+                    <tabBarItem key="tabBarItem" title="Issues" image="issue.png" id="acW-dT-cKf"/>
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="y7v-cG-aFM">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
@@ -1563,14 +1555,18 @@
     </scenes>
     <resources>
         <image name="arrow.png" width="32" height="32"/>
-        <image name="bulb_off.png" width="48" height="72"/>
-        <image name="bulb_on.png" width="48" height="72"/>
+        <image name="bulb_off.png" width="14" height="22"/>
+        <image name="bulb_on.png" width="14" height="22"/>
+        <image name="crm.png" width="27" height="27"/>
+        <image name="issue.png" width="30" height="27"/>
         <image name="newmsg.png" width="40" height="40"/>
         <image name="pin2.png" width="75" height="75"/>
+        <image name="routine.png" width="23" height="27"/>
+        <image name="settings.png" width="27" height="27"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="j8d-1K-yvk"/>
+        <segue reference="SMc-XH-H8D"/>
         <segue reference="q2U-TG-uMs"/>
-        <segue reference="ZhQ-si-3R4"/>
+        <segue reference="Olt-rM-pEr"/>
     </inferredMetricsTieBreakers>
 </document>

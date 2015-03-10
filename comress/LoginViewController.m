@@ -95,13 +95,14 @@
                     NSString *res_UserName = [ActiveUser valueForKey:@"UserName"];
                     NSString *res_SessionId = [ActiveUser valueForKey:@"SessionId"];
                     NSNumber *res_deviceId = [NSNumber numberWithInt:[[ActiveUser valueForKey:@"DeviceId"] intValue]];
+                    NSNumber *is_active = [NSNumber numberWithInt:1];
                     
                     //update/insert user
                     FMResultSet *rsUser = [db executeQuery:@"select user_id from users where user_id = ?",res_UserId];
                     if([rsUser next])
                     {
 
-                        user_q = [db executeUpdate:@"update users set company_id = ?, user_id = ?, company_name = ?, group_id = ?, group_name = ?, full_name = ? guid = ?, device_id = ?" ,res_CompanyId,res_UserId,res_CompanyName,res_GroupId,res_GroupName,res_UserName,res_SessionId,res_deviceId, nil];
+                        user_q = [db executeUpdate:@"update users set company_id = ?, user_id = ?, company_name = ?, group_id = ?, group_name = ?, full_name = ? guid = ?, device_id = ? is_active" ,res_CompanyId,res_UserId,res_CompanyName,res_GroupId,res_GroupName,res_UserName,res_SessionId,res_deviceId,is_active];
                         if(!user_q)
                         {
                             *rollback = YES;
@@ -110,7 +111,7 @@
                     }
                     else
                     {
-                        user_q = [db executeUpdate:@"insert into users (company_id, user_id, company_name, group_id, group_name, full_name, guid, device_id) values (?,?,?,?,?,?,?,?)",res_CompanyId,res_UserId,res_CompanyName,res_GroupId,res_GroupName,res_UserName,res_SessionId,res_deviceId];
+                        user_q = [db executeUpdate:@"insert into users (company_id, user_id, company_name, group_id, group_name, full_name, guid, device_id, is_active) values (?,?,?,?,?,?,?,?,?)",res_CompanyId,res_UserId,res_CompanyName,res_GroupId,res_GroupName,res_UserName,res_SessionId,res_deviceId,is_active];
                         if(!user_q)
                         {
                             *rollback = YES;

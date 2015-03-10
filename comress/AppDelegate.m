@@ -20,6 +20,14 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     
+    //-- Set Notification
+
+    // iOS 8 Notifications
+    [application registerUserNotificationSettings:[UIUserNotificationSettings settingsForTypes:(UIUserNotificationTypeSound | UIUserNotificationTypeAlert | UIUserNotificationTypeBadge) categories:nil]];
+    
+    [application registerForRemoteNotifications];
+    
+    
     if(allowLogging)
         [[AFNetworkActivityLogger sharedLogger] startLogging];
     
@@ -37,15 +45,45 @@
     
     //migrate database
     //[myDatabase migrateDatabase];
+
+    sync = [Synchronize  sharedManager];
     
     [application setKeepAliveTimeout:ping_interval handler:^{
-        [self pingServer];
+        [myDatabase notifyLocallyWithMessage:@"wake up"];
+        
+        [self createBackgroundTaskWithSync:YES];
     }];
     
-    sync = [Synchronize  sharedManager];
     [sync kickStartSync];
     
     return YES;
+}
+- (void)createBackgroundTaskWithSync:(BOOL)withSync
+{
+    UIApplication *theApplication = [UIApplication sharedApplication];
+    
+    if(theApplication.applicationState == UIApplicationStateBackground)
+    {
+        [theApplication endBackgroundTask:bgTask];
+        bgTask = UIBackgroundTaskInvalid;
+        
+        if(bgTask == UIBackgroundTaskInvalid)
+        {
+            [myDatabase notifyLocallyWithMessage:@"create bg task"];
+            
+            bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
+                DDLogVerbose(@"end bg task");
+                [theApplication endBackgroundTask:bgTask];
+                bgTask = UIBackgroundTaskInvalid;
+            }];
+        }
+        
+        if(withSync)
+        {
+            [myDatabase notifyLocallyWithMessage:@"create bg sync"];
+            [sync kickStartSync];
+        }
+    }
 }
 
 - (NSDate *)deserializeJsonDateString: (NSString *)jsonDateString
@@ -86,19 +124,7 @@
     // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
     
-    [application endBackgroundTask:bgTask];
-    bgTask = UIBackgroundTaskInvalid;
-    
-    if(bgTask == UIBackgroundTaskInvalid)
-    {
-        DDLogVerbose(@"create bg task and sync!");
-        
-        bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
-            DDLogVerbose(@"end bg task");
-            [application endBackgroundTask:bgTask];
-            bgTask = UIBackgroundTaskInvalid;
-        }];
-    }
+    [self createBackgroundTaskWithSync:NO];
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
@@ -109,25 +135,6 @@
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
     
     application.applicationIconBadgeNumber = 0;
-    
-    //-- Set Notification
-    if ([application respondsToSelector:@selector(isRegisteredForRemoteNotifications)])
-    {
-        // iOS 8 Notifications
-        [application registerUserNotificationSettings:[UIUserNotificationSettings settingsForTypes:(UIUserNotificationTypeSound | UIUserNotificationTypeAlert | UIUserNotificationTypeBadge) categories:nil]];
-        
-        [application registerForRemoteNotifications];
-    }
- 
-    //ask permission to use location
-    CLLocationManager *locationManager = [[CLLocationManager alloc] init];
-    
-    if([locationManager respondsToSelector:@selector(requestAlwaysAuthorization)])
-        [locationManager requestAlwaysAuthorization];
-    
-    if([locationManager respondsToSelector:@selector(requestWhenInUseAuthorization)])
-        [locationManager requestWhenInUseAuthorization];
-    
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {
@@ -137,10 +144,7 @@
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
 {
     
-    NSString *token = [[[[deviceToken description]
-                                 stringByReplacingOccurrencesOfString: @"<" withString: @""]
-                                stringByReplacingOccurrencesOfString: @">" withString: @""]
-                               stringByReplacingOccurrencesOfString: @" " withString: @""];
+    NSString *token = [[[[deviceToken description] stringByReplacingOccurrencesOfString: @"<" withString: @""] stringByReplacingOccurrencesOfString: @">" withString: @""] stringByReplacingOccurrencesOfString: @" " withString: @""];
 
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
         FMResultSet *rs = [db executeQuery:@"select device_token from device_token"];
@@ -184,6 +188,87 @@
     }];
     
     [myDatabase createDeviceToken];
+}
+
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
+{
+//    POST= "11";
+//    COMMENT= "12";
+//    IMAGE = "13";
+    
+    int silentRemoteNotifValue = [[userInfo valueForKeyPath:@"aps.content-available"] intValue];
+    
+    __block NSDate *jsonDate = [self deserializeJsonDateString:@"/Date(1388505600000+0800)/"];
+    
+    DDLogVerbose(@"silentRemoteNotifValue %d",silentRemoteNotifValue);
+    
+    switch (silentRemoteNotifValue) {
+        case 12:
+        {
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+                //download comments
+                FMResultSet *rs3 = [db executeQuery:@"select date from comment_last_request_date"];
+                
+                if([rs3 next])
+                {
+                    jsonDate = (NSDate *)[rs3 dateForColumn:@"date"];
+                }
+                [sync startDownloadCommentsForPage:1 totalPage:0 requestDate:jsonDate];
+                
+                
+                //download comment noti
+                FMResultSet *rs4 = [db executeQuery:@"select date from comment_noti_last_request_date"];
+                
+                if([rs4 next])
+                {
+                    jsonDate = (NSDate *)[rs4 dateForColumn:@"date"];
+                }
+                [sync startDownloadCommentNotiForPage:1 totalPage:0 requestDate:jsonDate];
+            }];
+            
+            
+
+            break;
+        }
+        
+        case 13:
+        {
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+                //download post image
+                FMResultSet *rs2 = [db executeQuery:@"select date from post_image_last_request_date"];
+                
+                if([rs2 next])
+                {
+                    jsonDate = (NSDate *)[rs2 dateForColumn:@"date"];
+                    
+                }
+                [sync startDownloadPostImagesForPage:1 totalPage:0 requestDate:jsonDate];
+            }];
+            
+            
+            break;
+        }
+        
+            
+        default:
+        {
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+                FMResultSet *rs = [db executeQuery:@"select date from post_last_request_date"];
+                
+                if([rs next])
+                {
+                    jsonDate = (NSDate *)[rs dateForColumn:@"date"];
+                    
+                }
+                [sync startDownloadPostForPage:1 totalPage:0 requestDate:jsonDate];
+            }];
+            
+            break;
+        }
+        
+    }
+    
+    completionHandler(UIBackgroundFetchResultNewData);
 }
 
 @end

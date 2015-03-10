@@ -82,7 +82,9 @@
                     
                     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
                         BOOL q;
-                        q = [db executeUpdate:@"delete from users where guid= ? ",[myDatabase.clientDictionary valueForKey:@"user_guid"]];
+                        NSNumber *isActiveNo = [NSNumber numberWithInt:0];
+
+                        q = [db executeUpdate:@"update users set is_active = ? where guid = ?",isActiveNo,[myDatabase.clientDictionary valueForKey:@"user_guid"]];
                         
                         if(!q)
                         {

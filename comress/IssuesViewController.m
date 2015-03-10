@@ -11,7 +11,7 @@
 @interface IssuesViewController ()
 
 
-@property (nonatomic, strong) NSArray *postsArray;
+@property (nonatomic, strong) NSMutableArray *postsArray;
 @property (nonatomic, strong) NSArray *sectionHeaders;
 
 @end
@@ -35,9 +35,11 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(autoOpenChatViewForPostMe:) name:@"autoOpenChatViewForPostMe" object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(autoOpenChatViewForPostOthers:) name:@"autoOpenChatViewForPostOthers" object:nil];
     
-    
     //notification for reloading issues list when a new issue was downloaded from the server
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadIssuesList) name:@"reloadIssuesList" object:nil];
+    
+    //notification for reloading issues when app recover from background to active;
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(fetchPosts) name:UIApplicationDidBecomeActiveNotification object:nil];
 }
 
 - (void)reloadIssuesList
@@ -87,13 +89,13 @@
     self.tabBarController.tabBar.hidden = NO;
     self.navigationController.navigationBar.hidden = YES;
     self.hidesBottomBarWhenPushed = NO;
-    
-    [self fetchPosts];
 }
 
 - (void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
+    
+    [self fetchPosts];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -157,6 +159,9 @@
 {
     post = nil;
     
+    if (self.postsArray != nil)
+        [self.postsArray removeAllObjects];
+
     self.postsArray = nil;
     
     post = [[Post alloc] init];
@@ -164,10 +169,10 @@
     NSDictionary *params = @{@"order":@"order by post_date desc"};
     
     if(self.segment.selectedSegmentIndex == 0)
-        self.postsArray = [post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES];
+        self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES]];
     else
     {
-        self.postsArray = [post fetchIssuesWithParams:params forPostId:nil filterByBlock:NO];
+        self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:NO]];
         
         NSMutableArray *sectionHeaders = [[NSMutableArray alloc] init];
         
@@ -183,6 +188,7 @@
         
         //remove dupes of sections
         NSArray *cleanSectionHeadersArray = [[NSOrderedSet orderedSetWithArray:sectionHeaders] array];
+        self.sectionHeaders = nil;
         self.sectionHeaders = cleanSectionHeadersArray;
         
         NSMutableArray *groupedPost = [[NSMutableArray alloc] init];
@@ -212,7 +218,9 @@
         self.postsArray = groupedPost;
     }
     
-    [self.issuesTable reloadData];
+    //dispatch_async(dispatch_get_main_queue(), ^{
+        [self.issuesTable reloadData];
+    //});
 }
 
 

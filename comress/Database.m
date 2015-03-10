@@ -41,7 +41,7 @@ static const int newDatabaseVersion = 1; //this database version is incremented 
                 _clientDictionary = [rs resultDictionary];
             }
             
-            rs = [db executeQuery:@"select * from users"];
+            rs = [db executeQuery:@"select * from users where is_active = ?",[NSNumber numberWithInt:1]];
             while ([rs next]) {
                 _userDictionary = [rs resultDictionary];
             }
@@ -69,7 +69,7 @@ static const int newDatabaseVersion = 1; //this database version is incremented 
         
         FMResultSet *rs;
         
-        rs = [db executeQuery:@"select * from users"];
+        rs = [db executeQuery:@"select * from users where is_active = ?",[NSNumber numberWithInt:1]];
         while ([rs next]) {
             _userDictionary = [rs resultDictionary];
         }

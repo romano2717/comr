@@ -27,7 +27,6 @@
     NSDate *date = [NSDate dateWithTimeIntervalSince1970:timeStamp];
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     formatter.dateFormat = @"dd-MMM-YYYY HH:mm:ss";
-    [formatter setTimeZone:[NSTimeZone timeZoneWithName:@"GMT"]];
     NSString *dateString = [formatter stringFromDate:date];
     
     self.dateLabel.text = dateString;

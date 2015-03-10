@@ -25,6 +25,7 @@
 @property (nonatomic, strong) NSTimer *syncKickstartTimerIncoming;
 @property (nonatomic) BOOL imageDownloadComplete;
 @property (nonatomic, strong) NSMutableArray *imagesArr;
+@property (nonatomic) BOOL downloadIsTriggeredBySelf;
 
 + (id)sharedManager;
 
@@ -50,4 +51,6 @@
 - (void)startDownloadPostImagesForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate;
 
 - (void)startDownloadCommentsForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate;
+
+- (void)startDownloadCommentNotiForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate;
 @end

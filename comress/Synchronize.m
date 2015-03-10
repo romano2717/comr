@@ -10,7 +10,7 @@
 
 @implementation Synchronize
 
-@synthesize syncKickstartTimerOutgoing,syncKickstartTimerIncoming,imagesArr,imageDownloadComplete;
+@synthesize syncKickstartTimerOutgoing,syncKickstartTimerIncoming,imagesArr,imageDownloadComplete,downloadIsTriggeredBySelf;
 
 -(id)init {
     if (self = [super init]) {
@@ -35,8 +35,9 @@
     [self uploadPostFromSelf:YES];
     syncKickstartTimerOutgoing = [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(uploadPost) userInfo:nil repeats:YES];
     
-    [self startDownload];
-    syncKickstartTimerIncoming = [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(startDownload) userInfo:nil repeats:YES];
+//    [self startDownload];
+//    downloadIsTriggeredBySelf = YES;
+//    syncKickstartTimerIncoming = [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(startDownload) userInfo:nil repeats:YES];
 }
 
 - (void)uploadPost
@@ -110,14 +111,87 @@
 
 - (void)uploadPostStatusChangeFromSelf:(BOOL)thisSelf
 {
+    if(myDatabase.initializingComplete == NO)
+        return;
+    
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-       
-        FMResultSet *rs = [db executeQuery:@"select * from post where statusWasUpdated = ?",[NSNumber numberWithBool:YES]];
+
+        FMResultSet *rs = [db executeQuery:@"select * from post where statusWasUpdated = ? and post_id is not null",[NSNumber numberWithBool:YES]];
         
-        if([rs next])
+        NSMutableArray *posts = [[NSMutableArray alloc] init];
+
+        while([rs next])
         {
             DDLogVerbose(@"upload post status for post_id %d, client_post_id %d",[rs intForColumn:@"post_id"],[rs intForColumn:@"client_post_id"]);
+            
+            NSNumber *postId = [NSNumber numberWithInt:[rs intForColumn:@"post_id"]];
+            NSNumber *status = [NSNumber numberWithInt:[rs intForColumn:@"status"]];
+            
+            NSDictionary *postList = @{@"PostId":postId,@"ActionStatus":status};
+            
+            [posts addObject:postList];
         }
+        
+        if(posts.count == 0)
+        {
+            if(thisSelf == YES)
+            {
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    [self uploadPostFromSelf:YES];
+                });
+            }
+            
+            return;
+        }
+        
+        NSDictionary *dict = @{@"postList":posts};
+        
+        DDLogVerbose(@"post to update %@",[myDatabase toJsonString:dict]);
+        
+        
+        [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_update_post_status] parameters:dict success:^(AFHTTPRequestOperation *operation, id responseObject) {
+            
+            NSDictionary *dict = (NSDictionary *) responseObject;
+            NSArray *dictArr   = (NSArray *)[dict objectForKey:@"AckPostObj"];
+            
+            for (int i = 0 ; i < dictArr.count; i ++) {
+                NSDictionary *postAck = [dictArr objectAtIndex:i];
+                
+                NSNumber *postId = [NSNumber numberWithInt:[[postAck valueForKey:@"PostId"] intValue]];
+                NSString *error = [postAck valueForKey:@"ErrorMessage"];
+                NSNumber *statusWasUpdatedNo = [NSNumber numberWithBool:NO];
+                
+                if([error isEqualToString:@"Successful"] == YES)
+                {
+                    BOOL upPostStat = [db executeUpdate:@"update post set statusWasUpdated = ? where post_id = ?",statusWasUpdatedNo,postId];
+                    
+                    if(!upPostStat)
+                    {
+                        *rollback = YES;
+                        return;
+                    }
+                }
+                
+                if(thisSelf)
+                {
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                        [self uploadPostFromSelf:YES];
+                    });
+                }
+
+            }
+        } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+            
+            DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+            
+            if(thisSelf)
+            {
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    [self uploadPostFromSelf:YES];
+                });
+            }
+            
+        }];
         
     }];
 }
@@ -268,7 +342,7 @@
     
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
         //update comment and post relationship first
-        FMResultSet *rsComment = [db executeQuery:@"select * from comment where post_id is null or post_id = ? and comment",zero];
+        FMResultSet *rsComment = [db executeQuery:@"select * from comment where post_id is null or post_id = ? and comment order by comment_on asc",zero];
         
         while ([rsComment next]) {
             
@@ -289,7 +363,7 @@
             }
         }
         
-        FMResultSet *rs = [db executeQuery:@"select * from comment where comment_id  is null or comment_id = ?",zero];
+        FMResultSet *rs = [db executeQuery:@"select * from comment where comment_id  is null or comment_id = ? order by comment_on asc",zero];
         
         while ([rs next]) {
             NSNumber *ClientCommentId = [NSNumber numberWithInt:[rs intForColumn:@"client_comment_id"]];
@@ -316,7 +390,7 @@
             if(thisSelf)
             {
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    [self uploadPostFromSelf:YES];
+                    [self uploadPostStatusChangeFromSelf:YES];
                 });
                 
                 return;
@@ -354,7 +428,7 @@
             if(thisSelf)
             {
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    [self uploadPostFromSelf:YES];
+                    [self uploadPostStatusChangeFromSelf:YES];
                 });
             }
             
@@ -364,7 +438,7 @@
             if(thisSelf)
             {
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    [self uploadPostFromSelf:YES];
+                    [self uploadPostStatusChangeFromSelf:YES];
                 });
             }
         }];
@@ -518,7 +592,7 @@
 
         int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
             
-        NSDate *LastRequestDate = [dict valueForKey:@"LastRequestDate"];
+        NSDate *LastRequestDate = [myDatabase createNSDateWithWcfDateString:[dict valueForKey:@"LastRequestDate"]];
 
         //prepare to download the blocks!
         NSArray *dictArray = [dict objectForKey:@"PostList"];
@@ -581,25 +655,31 @@
                 [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadIssuesList" object:nil];
             }
             
-            //start download again
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                
-                NSDate *lrd = [self deserializeJsonDateString:[dict valueForKey:@"LastRequestDate"]];
-                
-                [self startDownloadPostForPage:1 totalPage:0 requestDate:lrd];
-            });
+            if(downloadIsTriggeredBySelf)
+            {
+                //start download again
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    
+                    NSDate *lrd = [self deserializeJsonDateString:[dict valueForKey:@"LastRequestDate"]];
+                    
+                    [self startDownloadPostForPage:1 totalPage:0 requestDate:lrd];
+                });
+            }
         }
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        //start download again
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            
-            NSDate *lrd = [self deserializeJsonDateString:jsonDate];
-            
-            [self startDownloadPostForPage:1 totalPage:0 requestDate:lrd];
-        });
+        if(downloadIsTriggeredBySelf)
+        {
+            //start download again
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                
+                NSDate *lrd = [self deserializeJsonDateString:jsonDate];
+                
+                [self startDownloadPostForPage:1 totalPage:0 requestDate:lrd];
+            });
+        }
     }];
 }
 
@@ -620,7 +700,7 @@
         [imagesArr addObject:dict];
         
         int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
-        NSDate *LastRequestDate = [dict valueForKey:@"LastRequestDate"];
+        NSDate *LastRequestDate = [myDatabase createNSDateWithWcfDateString:[dict valueForKey:@"LastRequestDate"]];
         
         if(currentPage < totalPage)
         {
@@ -636,14 +716,17 @@
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        //start download again
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            
-            NSDate *lrd = [self deserializeJsonDateString:jsonDate];
-            
-            [self startDownloadPostImagesForPage:1 totalPage:0 requestDate:lrd];
-            
-        });
+        if(downloadIsTriggeredBySelf)
+        {
+            //start download again
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                
+                NSDate *lrd = [self deserializeJsonDateString:jsonDate];
+                
+                [self startDownloadPostImagesForPage:1 totalPage:0 requestDate:lrd];
+                
+            });
+        }
     }];
 }
 
@@ -770,11 +853,32 @@
                                 
                             });
                         }
+                        
+                        
+                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                            [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadIssuesList" object:nil];
+                        });
                     }];
                 }];
             } // for (int j = 0; j < ImageList.count; j++)
         } // for (int xx = 0; xx < imagesArr.count; xx++)
         if(imageDownloadComplete == YES) //0 ImageList
+        {
+            if(downloadIsTriggeredBySelf)
+            {
+                //start download again
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    
+                    NSDate *lrd = [self deserializeJsonDateString:jsonDate];
+                    
+                    [self startDownloadPostImagesForPage:1 totalPage:0 requestDate:lrd];
+                });
+            }
+        }
+    } // if (imagesArr.count > 0)
+    else
+    {
+        if(downloadIsTriggeredBySelf)
         {
             //start download again
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -785,17 +889,6 @@
                 
             });
         }
-    } // if (imagesArr.count > 0)
-    else
-    {
-        //start download again
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            
-            NSDate *lrd = [self deserializeJsonDateString:jsonDate];
-            
-            [self startDownloadPostImagesForPage:1 totalPage:0 requestDate:lrd];
-            
-        });
     }
 }
 
@@ -818,7 +911,7 @@
         DDLogVerbose(@"new comments %@",dict);
         
         int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
-        NSDate *LastRequestDate = [dict valueForKey:@"LastRequestDate"];
+        NSDate *LastRequestDate = [myDatabase createNSDateWithWcfDateString:[dict valueForKey:@"LastRequestDate"]];
 
         NSArray *dictArray = [dict objectForKey:@"CommentList"];
         
@@ -882,27 +975,29 @@
                 
                 [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadIssuesList" object:nil];
             }
-            
+            if(downloadIsTriggeredBySelf)
+            {
+                //start download again
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    
+                    NSDate *lrd = [self deserializeJsonDateString:[dict valueForKey:@"LastRequestDate"]];
+                    
+                    [self startDownloadCommentsForPage:1 totalPage:0 requestDate:lrd];
+                });
+            }
+        }
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+        if(downloadIsTriggeredBySelf)
+        {
             //start download again
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 
-                NSDate *lrd = [self deserializeJsonDateString:[dict valueForKey:@"LastRequestDate"]];
+                NSDate *lrd = [self deserializeJsonDateString:jsonDate];
                 
                 [self startDownloadCommentsForPage:1 totalPage:0 requestDate:lrd];
             });
         }
-        
-        
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
-        
-        //start download again
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            
-            NSDate *lrd = [self deserializeJsonDateString:jsonDate];
-            
-            [self startDownloadCommentsForPage:1 totalPage:0 requestDate:lrd];
-        });
     }];
 }
 
@@ -913,7 +1008,7 @@
     NSString *jsonDate = [self serializedStringDateJson:reqDate];
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:page], @"lastRequestTime" : jsonDate};
-    DDLogVerbose(@"Post params %@",params);
+    DDLogVerbose(@"comment noti params %@",params);
     
     __block Comment_noti *comment_noti = [[Comment_noti alloc] init];
     
@@ -923,7 +1018,7 @@
         NSDictionary *dict = [responseObject objectForKey:@"CommentNotiContainer"];
         DDLogVerbose(@"comment noti %@",dict);
         int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
-        NSDate *LastRequestDate = [dict valueForKey:@"LastRequestDate"];
+        NSDate *LastRequestDate = [myDatabase createNSDateWithWcfDateString:[dict valueForKey:@"LastRequestDate"]];
         
         NSArray *dictArray = [dict objectForKey:@"CommentNotiList"];
         
@@ -963,28 +1058,34 @@
                 [comment_noti updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
 
                 comment_noti = nil;
+                
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadIssuesList" object:nil];
+                });
             }
-            
+            if(downloadIsTriggeredBySelf)
+            {
+                //start download again
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    
+                    NSDate *lrd = [self deserializeJsonDateString:[dict valueForKey:@"LastRequestDate"]];
+                    
+                    [self startDownloadCommentNotiForPage:1 totalPage:0 requestDate:lrd];
+                });
+            }
+        }
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+        if(downloadIsTriggeredBySelf)
+        {
             //start download again
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 
-                NSDate *lrd = [self deserializeJsonDateString:[dict valueForKey:@"LastRequestDate"]];
+                NSDate *lrd = [self deserializeJsonDateString:jsonDate];
                 
                 [self startDownloadCommentNotiForPage:1 totalPage:0 requestDate:lrd];
             });
         }
-        
-        
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
-        
-        //start download again
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            
-            NSDate *lrd = [self deserializeJsonDateString:jsonDate];
-            
-            [self startDownloadCommentNotiForPage:1 totalPage:0 requestDate:lrd];
-        });
     }];
 }
 

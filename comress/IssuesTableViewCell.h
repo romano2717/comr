@@ -17,6 +17,7 @@
 }
 @property (nonatomic, weak) IBOutlet UIImageView *mainImageView;
 @property (nonatomic, weak) IBOutlet UIImageView *pinImageView;
+@property (nonatomic, weak) IBOutlet UIImageView *readStatusImageView;
 @property (nonatomic, weak) IBOutlet UILabel *statusLabel;
 @property (nonatomic, weak) IBOutlet UIProgressView *statusProgressView;
 @property (nonatomic, weak) IBOutlet UILabel *postTitleLabel;
