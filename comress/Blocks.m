@@ -53,35 +53,64 @@ street_name;
     return arr;
 }
 
-- (BOOL)updateLastRequestDateWithDate:(NSString *)dateString
+- (BOOL)updateLastRequestDateWithDate:(NSString *)dateString forCurrentUser:(BOOL)forCurrentUser
 {
     NSInteger startPosition = [dateString rangeOfString:@"("].location + 1; //start of the date value
     NSTimeInterval unixTime = [[dateString substringWithRange:NSMakeRange(startPosition, 13)] doubleValue] / 1000; //WCF will send 13 digit-long value for the time interval since 1970 (millisecond precision) whereas iOS works with 10 digit-long values (second precision), hence the divide by 1000
     NSDate *date = [NSDate dateWithTimeIntervalSince1970:unixTime];
     
     [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
-        FMResultSet *rs = [theDb executeQuery:@"select * from blocks_last_request_date"];
-        
-        if(![rs next])
+        if(forCurrentUser == NO)
         {
-            BOOL qIns = [theDb executeUpdate:@"insert into blocks_last_request_date(date) values(?)",date];
-
-            if(!qIns)
+            FMResultSet *rs = [theDb executeQuery:@"select * from blocks_last_request_date"];
+            
+            if(![rs next])
             {
-                *rollback = YES;
-                return;
+                BOOL qIns = [theDb executeUpdate:@"insert into blocks_last_request_date(date) values(?)",date];
+                
+                if(!qIns)
+                {
+                    *rollback = YES;
+                    return;
+                }
+            }
+            else
+            {
+                BOOL qUp = [theDb executeUpdate:@"update blocks_last_request_date set date = ? ",date];
+                
+                if(!qUp)
+                {
+                    *rollback = YES;
+                    return;
+                }
             }
         }
         else
         {
-            BOOL qUp = [theDb executeUpdate:@"update blocks_last_request_date set date = ? ",date];
+            FMResultSet *rs = [theDb executeQuery:@"select * from blocks_user_last_request_date"];
             
-            if(!qUp)
+            if(![rs next])
             {
-                *rollback = YES;
-                return;
+                BOOL qIns = [theDb executeUpdate:@"insert into blocks_user_last_request_date(date) values(?)",date];
+                
+                if(!qIns)
+                {
+                    *rollback = YES;
+                    return;
+                }
+            }
+            else
+            {
+                BOOL qUp = [theDb executeUpdate:@"update blocks_user_last_request_date set date = ? ",date];
+                
+                if(!qUp)
+                {
+                    *rollback = YES;
+                    return;
+                }
             }
         }
+        
     }];
     
     return NO;

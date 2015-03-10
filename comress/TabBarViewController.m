@@ -23,15 +23,21 @@
     // Do any additional setup after loading the view.
     
     myDatabase = [Database sharedMyDbManager];
+    
 }
 
 - (void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
     
+    needToActivate = NO;
+    needToLogin = NO;
+    
     //check for a valid activation code
     
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        
+        db.traceExecution = YES;
         
         NSString *activationCode = nil;
         
@@ -47,8 +53,8 @@
         }
         else
         {
-            //check for valid login
-            FMResultSet *rsClient = [db executeQuery:@"select c.user_guid, u.* from client c, users u where c.user_guid = u.guid"];
+            //check for active login
+            FMResultSet *rsClient = [db executeQuery:@"select c.user_guid, u.* from client c, users u where c.user_guid = u.guid and u.is_active = ?",[NSNumber numberWithInt:1]];
             
             if(![rsClient next])
             {
@@ -78,8 +84,16 @@
             }];
             if(needtoInit == YES)
                 [self performSegueWithIdentifier:@"modal_initializer" sender:self];
-            else
-                myDatabase.initializingComplete = 1;
+            else if (myDatabase.userBlocksInitComplete == 0)
+                [self performSegueWithIdentifier:@"modal_initializer" sender:self];
+            
+            return;
+        }
+        else if (myDatabase.userBlocksInitComplete == 0)
+        {
+            [self performSegueWithIdentifier:@"modal_initializer" sender:self];
+            
+            return;
         }
     }
 }

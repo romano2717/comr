@@ -25,7 +25,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import "NavigationBarTitleWithSubtitleView.h"
 #import "MBProgressHUD.h"
-
+#import "Database.h"
 
 
 @class IssuesChatViewController;
@@ -44,6 +44,7 @@
     ImageOptions *imgOpts;
     CLLocationManager *locationManager;
     FPPopoverKeyboardResponsiveController *popover;
+    Database *myDatabase;
 }
 
 @property (nonatomic, weak) id<IssuesChatViewControllerDelegate> delegateModal;

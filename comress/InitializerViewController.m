@@ -40,21 +40,31 @@
 
 - (void)initializingCompleteWithUi:(BOOL)withUi
 {
-    myDatabase.initializingComplete = 1;
+    if(withUi == YES)
+        myDatabase.initializingComplete = 1;
     
     [self dismissViewControllerAnimated:YES completion:^{
        
-        [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-            BOOL upClient = [db executeUpdate:@"update client set initialise = ?",[NSNumber numberWithInt:1]];
-            if(!upClient)
-            {
-                *rollback = YES;
-                return;
-            }
-        }];
-        
+        if(withUi == YES)
+        {
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+                BOOL upClient = [db executeUpdate:@"update client set initialise = ?",[NSNumber numberWithInt:1]];
+                if(!upClient)
+                {
+                    *rollback = YES;
+                    return;
+                }
+            }];
+        }
     }];
 }
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
 
 #pragma mark - check if we need to sync blocks
 - (void)checkBlockCount
@@ -106,23 +116,93 @@
             if(needToDownloadBlocks)
                 [self startDownloadBlocksForPage:1 totalPage:0 requestDate:nil withUi:YES];
             else
-                [self checkPostCount];
+            {
+                if(myDatabase.userBlocksInitComplete == 1)
+                    [self checkPostCount];
+                else
+                    [self checkUserBlockCount];
+            }
+            
             
         } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
             DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
             
-            [self initializingCompleteWithUi:YES];
+            [self initializingCompleteWithUi:NO];
         }];
 
     }];
 }
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+#pragma mark - check if we need to sync user blocks
+- (void)checkUserBlockCount
+{
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        
+        NSDate *last_request_date = nil;
+        
+        FMResultSet *rs = [db executeQuery:@"select date from blocks_user_last_request_date"];
+        while ([rs next]) {
+            last_request_date = [rs dateForColumn:@"date"];
+        }
+        
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+        [formatter setDateFormat:@"Z"]; //for getting the timezone part of the date only.
+        
+        NSString *jsonDate = @"/Date(1388505600000+0800)/";
+        
+        if(last_request_date != nil)
+        {
+            jsonDate = [NSString stringWithFormat:@"/Date(%.0f000%@)/", [last_request_date timeIntervalSince1970],[formatter stringFromDate:last_request_date]];
+        }
+        
+        NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
+        
+        DDLogVerbose(@"checkUserBlockCount %@",[myDatabase toJsonString:params]);
+        DDLogVerbose(@"guid %@",[myDatabase.clientDictionary valueForKey:@"user_guid"]);
+        
+        [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_download_user_blocks] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
+            
+            NSDictionary *dict = [responseObject objectForKey:@"UserBlockContainer"];
+            
+            int totalRows = [[dict valueForKey:@"TotalRows"] intValue];
+            __block BOOL needToDownloadBlocks = NO;
+            
+            //save block count
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+                FMResultSet *rsBlockCount = [theDb executeQuery:@"select count(*) as total from blocks_user"];
+                
+                while ([rsBlockCount next]) {
+                    int total = [rsBlockCount intForColumn:@"total"];
+                    
+                    if(total < totalRows)
+                    {
+                        needToDownloadBlocks = YES;
+                    }
+                    else
+                        myDatabase.userBlocksInitComplete = 1;
+                }
+            }];
+            
+            if(needToDownloadBlocks)
+                [self startDownloadBlocksUserForPage:1 totalPage:0 requestDate:nil withUi:YES];
+            else
+            {
+                myDatabase.userBlocksInitComplete = 1;
+                [self checkPostCount];
+            }
+            
+            
+        } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+            DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+            DDLogVerbose(@"params %@",[myDatabase toJsonString:params]);
+            [self initializingCompleteWithUi:NO];
+        }];
+        
+    }];
 }
 
-#pragma mark - check if we need to sync blocks
+
+#pragma mark - check if we need to sync posts
 - (void)checkPostCount
 {
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
@@ -145,8 +225,6 @@
         }
         
         NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
-        
-        
         
         [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_download_posts] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
             
@@ -177,12 +255,12 @@
         } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
             DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
             
-            [self initializingCompleteWithUi:YES];
+            [self initializingCompleteWithUi:NO];
         }];
     }];
 }
 
-#pragma mark - check if we need to sync blocks
+#pragma mark - check if we need to sync comment
 - (void)checkCommentCount
 {
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
@@ -235,7 +313,7 @@
         } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
             DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
             
-            [self initializingCompleteWithUi:YES];
+            [self initializingCompleteWithUi:NO];
         }];
     }];
 }
@@ -293,7 +371,7 @@
         } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
             DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
             
-            [self initializingCompleteWithUi:YES];
+            [self initializingCompleteWithUi:NO];
         }];
     }];
 }
@@ -349,7 +427,7 @@
         } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
             DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
             
-            [self initializingCompleteWithUi:YES];
+            [self initializingCompleteWithUi:NO];
         }];
     }];
 }
@@ -426,14 +504,14 @@
             
             self.processLabel.text = @"Download complete";
             
-            [self initializingCompleteWithUi:withUi];
+            [self initializingCompleteWithUi:YES];
         }
         
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        [self initializingCompleteWithUi:withUi];
+        [self initializingCompleteWithUi:NO];
     }];
 }
 
@@ -474,7 +552,7 @@
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        [self initializingCompleteWithUi:withUi];
+        [self initializingCompleteWithUi:NO];
     }];
 }
 
@@ -707,7 +785,7 @@
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        [self initializingCompleteWithUi:withUi];
+        [self initializingCompleteWithUi:NO];
     }];
 }
 
@@ -780,7 +858,7 @@
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        [self initializingCompleteWithUi:withUi];
+        [self initializingCompleteWithUi:NO];
     }];
 }
 
@@ -836,11 +914,79 @@
         else
         {
             if(dictArray.count > 0)
-                [blocks updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"]];
+                [blocks updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"] forCurrentUser:NO];
             
             self.processLabel.text = @"Download complete";
             
-            //check for posts
+            if(myDatabase.userBlocksInitComplete == 1)
+                [self checkPostCount];
+            else
+                [self checkUserBlockCount];
+        }
+        
+        
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+        
+        [self initializingCompleteWithUi:NO];
+    }];
+}
+
+
+- (void)startDownloadBlocksUserForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate withUi:(BOOL)withUi
+{
+    __block int currentPage = page;
+    __block NSDate *requestDate = reqDate;
+    
+    NSString *jsonDate = @"/Date(1388505600000+0800)/";
+    
+    if(currentPage > 1)
+        jsonDate = [NSString stringWithFormat:@"%@",requestDate];
+    
+    
+    self.processLabel.text = [NSString stringWithFormat:@"Downloading your blocks page... %d/%d",currentPage,totPage];
+    
+    NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:page], @"lastRequestTime" : jsonDate};
+    
+    [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_download_user_blocks] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        
+        NSDictionary *dict = [responseObject objectForKey:@"UserBlockContainer"];
+        
+        int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
+        NSDate *LastRequestDate = [dict valueForKey:@"LastRequestDate"];
+        DDLogVerbose(@"%@",LastRequestDate);
+        //prepare to download the blocks!
+        NSArray *dictArray = [dict objectForKey:@"UserBlockList"];
+        
+        for (int i = 0; i < dictArray.count; i++) {
+            NSDictionary *dictBlock = [dictArray objectAtIndex:i];
+            NSNumber *BlkId = [NSNumber numberWithInt:[[dictBlock valueForKey:@"BlkId"] intValue]];
+            
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+                BOOL qBlockIns = [theDb executeUpdate:@"insert into blocks_user (block_id) values (?)",BlkId];
+                
+                if(!qBlockIns)
+                {
+                    *rollback = YES;
+                    return;
+                }
+            }];
+        }
+        
+        if(currentPage < totalPage)
+        {
+            currentPage++;
+            [self startDownloadBlocksUserForPage:currentPage totalPage:totalPage requestDate:LastRequestDate withUi:withUi];
+        }
+        else
+        {
+            if(dictArray.count > 0)
+                [blocks updateLastRequestDateWithDate:[dict valueForKey:@"LastRequestDate"] forCurrentUser:YES];
+            
+            self.processLabel.text = @"Download complete";
+            
+            myDatabase.userBlocksInitComplete = 1;
+            
             [self checkPostCount];
         }
         
@@ -848,10 +994,9 @@
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
         
-        [self initializingCompleteWithUi:withUi];
+        [self initializingCompleteWithUi:NO];
     }];
 }
-
 
 
 @end

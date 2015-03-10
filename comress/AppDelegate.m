@@ -135,6 +135,12 @@
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
     
     application.applicationIconBadgeNumber = 0;
+    
+    //we don't need background task while app is active
+    [application endBackgroundTask:bgTask];
+    bgTask = UIBackgroundTaskInvalid;
+    
+    [self downloadNewItems];
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {
@@ -188,6 +194,57 @@
     }];
     
     [myDatabase createDeviceToken];
+}
+
+- (void)downloadNewItems
+{
+    __block NSDate *jsonDate = [self deserializeJsonDateString:@"/Date(1388505600000+0800)/"];
+    
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        //download comments
+        FMResultSet *rs3 = [db executeQuery:@"select date from comment_last_request_date"];
+        
+        if([rs3 next])
+        {
+            jsonDate = (NSDate *)[rs3 dateForColumn:@"date"];
+        }
+        [sync startDownloadCommentsForPage:1 totalPage:0 requestDate:jsonDate];
+        
+        
+        //download comment noti
+        FMResultSet *rs4 = [db executeQuery:@"select date from comment_noti_last_request_date"];
+        
+        if([rs4 next])
+        {
+            jsonDate = (NSDate *)[rs4 dateForColumn:@"date"];
+        }
+        [sync startDownloadCommentNotiForPage:1 totalPage:0 requestDate:jsonDate];
+    }];
+    
+    
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        //download post image
+        FMResultSet *rs2 = [db executeQuery:@"select date from post_image_last_request_date"];
+        
+        if([rs2 next])
+        {
+            jsonDate = (NSDate *)[rs2 dateForColumn:@"date"];
+            
+        }
+        [sync startDownloadPostImagesForPage:1 totalPage:0 requestDate:jsonDate];
+    }];
+    
+    
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        FMResultSet *rs = [db executeQuery:@"select date from post_last_request_date"];
+        
+        if([rs next])
+        {
+            jsonDate = (NSDate *)[rs dateForColumn:@"date"];
+            
+        }
+        [sync startDownloadPostForPage:1 totalPage:0 requestDate:jsonDate];
+    }];
 }
 
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler

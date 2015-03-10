@@ -12,7 +12,7 @@ static const int newDatabaseVersion = 1; //this database version is incremented 
 
 @implementation Database
 
-@synthesize initializingComplete;
+@synthesize initializingComplete,userBlocksInitComplete,allPostWasSeen;
 
 
 +(instancetype)sharedMyDbManager {
@@ -27,40 +27,37 @@ static const int newDatabaseVersion = 1; //this database version is incremented 
 -(id)init {
     if (self = [super init]) {
         initializingComplete = 0;
+        userBlocksInitComplete = 0;
+        allPostWasSeen = YES;
         
         [self copyDbToDocumentsDir];
         
         _databaseQ = [[FMDatabaseQueue alloc] initWithPath:self.dbPath];
         
-        [_databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-            
-            FMResultSet *rs;
-
-            rs = [db executeQuery:@"select * from client"];
-            while ([rs next]) {
-                _clientDictionary = [rs resultDictionary];
-            }
-            
-            rs = [db executeQuery:@"select * from users where is_active = ?",[NSNumber numberWithInt:1]];
-            while ([rs next]) {
-                _userDictionary = [rs resultDictionary];
-            }
-            
-            rs  = [db executeQuery:@"select * from device_token"];
-            while ([rs next]) {
-                _deviceTokenDictionary = [rs resultDictionary];
-            }
-            
-            [self createAfManager];
-        }];
-        
+        [self createClient];
         
         [self createUser];
+        
+        [self createAfManager];
         
         [self createDeviceToken];
         
     }
     return self;
+}
+
+- (void)createClient
+{
+    [_databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        
+        FMResultSet *rs;
+        
+        rs = [db executeQuery:@"select * from client"];
+        while ([rs next]) {
+            _clientDictionary = [rs resultDictionary];
+        }
+    }];
+    
 }
 
 - (void)createUser

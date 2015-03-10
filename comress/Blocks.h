@@ -21,6 +21,6 @@
 @property (nonatomic, strong) NSString *street_name;
 
 - (NSArray *)fetchBlocksWithBlockId:(NSNumber *)the_block_id;
-- (BOOL)updateLastRequestDateWithDate:(NSString *)dateString;
+- (BOOL)updateLastRequestDateWithDate:(NSString *)dateString forCurrentUser:(BOOL)forCurrentUser;
 
 @end

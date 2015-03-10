@@ -53,6 +53,7 @@
         [MBProgressHUD showHUDAddedTo:self.view animated:YES];
         
         [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+            db.traceExecution = YES;
             //get user device token
             FMResultSet *rsToken = [db executeQuery:@"select device_token from device_token"];
             NSString *deviceToken;
@@ -101,8 +102,9 @@
                     FMResultSet *rsUser = [db executeQuery:@"select user_id from users where user_id = ?",res_UserId];
                     if([rsUser next])
                     {
-
-                        user_q = [db executeUpdate:@"update users set company_id = ?, user_id = ?, company_name = ?, group_id = ?, group_name = ?, full_name = ? guid = ?, device_id = ? is_active" ,res_CompanyId,res_UserId,res_CompanyName,res_GroupId,res_GroupName,res_UserName,res_SessionId,res_deviceId,is_active];
+                        //returning user
+                        user_q = [db executeUpdate:@"update users set is_active = ?, guid = ? where user_id = ?",is_active,res_SessionId,res_UserId];
+                        
                         if(!user_q)
                         {
                             *rollback = YES;
@@ -111,6 +113,8 @@
                     }
                     else
                     {
+                        myDatabase.userBlocksInitComplete = 0;
+                        
                         user_q = [db executeUpdate:@"insert into users (company_id, user_id, company_name, group_id, group_name, full_name, guid, device_id, is_active) values (?,?,?,?,?,?,?,?,?)",res_CompanyId,res_UserId,res_CompanyName,res_GroupId,res_GroupName,res_UserName,res_SessionId,res_deviceId,is_active];
                         if(!user_q)
                         {
@@ -119,28 +123,28 @@
                             [myDatabase alertMessageWithMessage:@"Login failed. try again."];
                             return;
                         }
-                        
-                        
-                        //insert/update client user_guid
-                        client_q = [db executeUpdate:@"update client set user_guid = ?",res_SessionId];
-                        
-                        if(!client_q)
-                        {
-                            loginOk = NO;
-                            *rollback = YES;
-                            [myDatabase alertMessageWithMessage:@"Login failed. try again."];
-                            return;
-                        }
-                        else
-                        {
-                            FMResultSet *rs = [db executeQuery:@"select * from client"];
-                            while ([rs next]) {
-                                myDatabase.clientDictionary = [rs resultDictionary];
-                            }
+                    }
+                    
+                    //insert/update client user_guid
+                    client_q = [db executeUpdate:@"update client set user_guid = ?",res_SessionId];
+                    
+                    if(!client_q)
+                    {
+                        loginOk = NO;
+                        *rollback = YES;
+                        [myDatabase alertMessageWithMessage:@"Login failed. try again."];
+                        return;
+                    }
+                    else
+                    {
+                        FMResultSet *rs = [db executeQuery:@"select * from client"];
+                        while ([rs next]) {
+                            myDatabase.clientDictionary = [rs resultDictionary];
                         }
                     }
                     
                     //this will recreate afmanager,user with session id as header;
+                    [myDatabase createClient];
                     [myDatabase createUser];
                     [myDatabase createAfManager];
                     

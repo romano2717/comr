@@ -487,7 +487,7 @@
     NSString *post_by = user.user_id;
     NSDate *post_date = [NSDate date];
     
-    NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:post_topic,@"post_topic",post_by,@"post_by",post_date,@"post_date",post_type,@"post_type",severityNumber,@"severity",@"0",@"status",location,@"address",level,@"level",postal_code,@"postal_code",blockId,@"block_id", nil];
+    NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:post_topic,@"post_topic",post_by,@"post_by",post_date,@"post_date",post_type,@"post_type",severityNumber,@"severity",@"0",@"status",location,@"address",level,@"level",postal_code,@"postal_code",blockId,@"block_id",post_date,@"updated_on", nil];
     
 
     long long lastClientPostId =  [post savePostWithDictionary:dict];
@@ -543,7 +543,7 @@
             [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
                 db.traceExecution = YES;
                 
-                FMResultSet *rs = [db executeQuery:@"select is_own_block from blocks where block_id = ? and is_own_block = ?",blockId,[NSNumber numberWithBool:YES]];
+                FMResultSet *rs = [db executeQuery:@"select block_id from blocks_user where block_id = ?",blockId];
                 
                 if([rs next])
                     [[NSNotificationCenter defaultCenter] postNotificationName:@"autoOpenChatViewForPostMe" object:nil userInfo:useInfo];

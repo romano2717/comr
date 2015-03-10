@@ -386,7 +386,7 @@
                                     <constraint firstAttribute="width" constant="22" id="7tS-YA-KSe"/>
                                     <constraint firstAttribute="height" constant="30" id="twx-sm-YEa"/>
                                 </constraints>
-                                <state key="normal" image="bulb_on.png">
+                                <state key="normal" image="bulb_off.png">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
                             </button>
@@ -410,6 +410,7 @@
                     <nil key="simulatedTopBarMetrics"/>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
+                        <outlet property="bulbButton" destination="GWK-Q5-5Fq" id="xun-RS-hmh"/>
                         <outlet property="issuesTable" destination="vQs-6T-WvI" id="4ov-i5-q6w"/>
                         <outlet property="segment" destination="vSn-Qh-Gcb" id="Ua6-KR-xYn"/>
                         <segue destination="hU5-Vl-PAR" kind="show" identifier="push_chat_issues" id="q2U-TG-uMs"/>
@@ -1555,8 +1556,7 @@
     </scenes>
     <resources>
         <image name="arrow.png" width="32" height="32"/>
-        <image name="bulb_off.png" width="14" height="22"/>
-        <image name="bulb_on.png" width="14" height="22"/>
+        <image name="bulb_off.png" width="22" height="33"/>
         <image name="crm.png" width="27" height="27"/>
         <image name="issue.png" width="30" height="27"/>
         <image name="newmsg.png" width="40" height="40"/>

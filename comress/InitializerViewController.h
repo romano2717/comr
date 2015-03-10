@@ -36,6 +36,8 @@
 
 - (void)checkBlockCount;
 
+- (void)checkUserBlockCount;
+
 - (void)checkPostCount;
 
 - (void)checkCommentCount;

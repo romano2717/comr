@@ -34,6 +34,18 @@
 
     self.messageData.messages = [[NSMutableArray alloc] init];
     self.showLoadEarlierMessagesHeader = YES;
+
+    myDatabase = [Database sharedMyDbManager];
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        NSNumber *seen = [NSNumber numberWithBool:YES];
+        NSNumber *thisPostId = [NSNumber numberWithInt:postId];
+        BOOL postSeen = [db executeUpdate:@"update post set seen = ? where client_post_id = ?", seen,thisPostId];
+        if(!postSeen)
+        {
+            *rollback = YES;
+            return;
+        }
+    }];
     
     [self fetchComments];
     
@@ -58,7 +70,7 @@
     postDict = nil;
     commentsArray = nil;
 
-    NSDictionary *params = @{@"order":@"order by post_date asc"};
+    NSDictionary *params = @{@"order":@"order by updated_on asc"};
     if(isFiltered)
         postDict = [[post fetchIssuesWithParams:params forPostId:[NSNumber numberWithInt:self.postId] filterByBlock:YES] objectAtIndex:0];
     else
@@ -430,6 +442,19 @@
         Synchronize *sync = [Synchronize sharedManager];
         [sync uploadCommentFromSelf:NO];
     });
+    
+    
+    //update post
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        
+        BOOL upPostDateOn = [db executeUpdate:@"update post set updated_on = ? where client_post_id = ?",[NSNumber numberWithInt:postId]];
+        
+        if(!upPostDateOn)
+        {
+            *rollback = YES;
+            return;
+        }
+    }];
 }
 
 - (void)messageReceived

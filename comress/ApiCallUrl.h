@@ -26,7 +26,9 @@ static NSString *api_comment_send = @"Messaging/Comment.svc/UploadComment";
 
 static NSString *api_send_images = @"Messaging/PostImage.svc/UploadImageWithBase64";
 
-static NSString *api_download_blocks = @"Job/Block.svc/GetBlocks";
+static NSString *api_download_blocks = @"PublicSetup.svc/GetBlocks";
+
+static NSString *api_download_user_blocks = @"Job/Block.svc/GetBlocksByUser";
 
 static NSString *api_update_device_token = @"User.svc/UpdateDeviceToken?";
 

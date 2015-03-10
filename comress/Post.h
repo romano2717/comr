@@ -19,6 +19,7 @@
 @property (nonatomic, strong) NSString *post_topic;
 @property (nonatomic, strong) NSString *post_by;
 @property (nonatomic, strong) NSDate *post_date;
+@property (nonatomic, strong) NSDate *updated_on;
 @property (nonatomic, strong) NSString *post_type;
 @property (nonatomic, strong) NSNumber *severity;
 @property (nonatomic, strong) NSString *address;

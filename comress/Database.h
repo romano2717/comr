@@ -25,6 +25,8 @@
 @property (nonatomic, strong) NSString *domain;
 
 @property (nonatomic) int initializingComplete;
+@property (nonatomic) int userBlocksInitComplete;
+@property (nonatomic) BOOL allPostWasSeen;
 
 @property (nonatomic, strong) NSDictionary *clientDictionary;
 @property (nonatomic, strong) NSDictionary *userDictionary;
@@ -51,5 +53,8 @@
 - (void)createUser;
 
 - (void)createDeviceToken;
+
+- (void)createClient;
+
 
 @end

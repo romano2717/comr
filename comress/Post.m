@@ -16,6 +16,7 @@ post_id,
 post_topic,
 post_by,
 post_date,
+updated_on,
 post_type,
 severity,
 address,
@@ -48,9 +49,10 @@ postal_code;
     level           = [dict valueForKey:@"level"];
     block_id        = [dict valueForKey:@"block_id"];
     postal_code     = [dict valueForKey:@"postal_code"];
+    updated_on      = [dict valueForKey:@"updated_on"];
     
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-        postSaved = [db executeUpdate:@"insert into post (post_topic,post_by,post_date,post_type,severity,address,status,level,block_id,isUpdated,postal_code) values (?,?,?,?,?,?,?,?,?,?,?)",post_topic,post_by,post_date,post_type,severity,address,status,level,block_id,[NSNumber numberWithBool:YES],postal_code];
+        postSaved = [db executeUpdate:@"insert into post (post_topic,post_by,post_date,post_type,severity,address,status,level,block_id,isUpdated,postal_code,updated_on) values (?,?,?,?,?,?,?,?,?,?,?,?)",post_topic,post_by,post_date,post_type,severity,address,status,level,block_id,[NSNumber numberWithBool:YES],postal_code,updated_on];
         
         if(!postSaved)
         {
@@ -104,17 +106,32 @@ postal_code;
             NSMutableDictionary *postDict = [[NSMutableDictionary alloc] init];
             NSMutableDictionary *postChild = [[NSMutableDictionary alloc] init];
             
+            if([rsPost boolForColumn:@"seen"] == NO) //if we found at leas one we flag it to no
+                myDatabase.allPostWasSeen = NO;
+            
             /*
              add post info to our dict. this will be the top most level of our dictionary entry.
              but first check if this post under this block belongs to current user or others
              */
             
-            FMResultSet *rsBlock = [db executeQuery:@"select is_own_block from blocks where block_id = ? and is_own_block = ?", [rsPost stringForColumn:@"block_id"],[NSNumber numberWithBool:filter]];
-            
-            if([rsBlock next] == NO)
-                continue;
+            if(filter == YES)
+            {
+                db.traceExecution = YES;
+                FMResultSet *rsBlock = [db executeQuery:@"select block_id from blocks_user where block_id = ?",[rsPost stringForColumn:@"block_id"]];
+                
+                if([rsBlock next] == NO)
+                    continue;
+            }
+            else
+            {
+                FMResultSet *rsBlock = [db executeQuery:@"select block_id from blocks_user where block_id = ?",[rsPost stringForColumn:@"block_id"]];
+                
+                if([rsBlock next] == YES)
+                    continue;
+            }
             
             [postChild setObject:[rsPost resultDictionary] forKey:@"post"];
+            
             
             //check if this post is not yet read by the user
             NSNumber *readStatus = [NSNumber numberWithInt:1]; //already read
@@ -205,7 +222,10 @@ postal_code;
     if(mutArr.count == arr.count)
         return mutArr;
 
-    DDLogVerbose(@"mutArr %@",mutArr);
+    if(myDatabase.allPostWasSeen)
+    {
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"allPostWasSeen" object:nil];
+    }
     
     return arr;
 }

@@ -40,6 +40,14 @@
     
     //notification for reloading issues when app recover from background to active;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(fetchPosts) name:UIApplicationDidBecomeActiveNotification object:nil];
+   
+    //notification for turning on/off the bulb
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(allPostWasSeen) name:@"allPostWasSeen" object:nil];
+}
+
+- (void)allPostWasSeen
+{
+    [self.bulbButton setImage:[UIImage imageNamed:@"bulb_off@2x.png"] forState:UIControlStateNormal];
 }
 
 - (void)reloadIssuesList
@@ -166,7 +174,7 @@
     
     post = [[Post alloc] init];
     
-    NSDictionary *params = @{@"order":@"order by post_date desc"};
+    NSDictionary *params = @{@"order":@"order by updated_on desc"};
     
     if(self.segment.selectedSegmentIndex == 0)
         self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES]];

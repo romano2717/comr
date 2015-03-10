@@ -77,14 +77,29 @@
                 NSDictionary *dict = (NSDictionary *)responseObject;
                 if([[dict valueForKey:@"Result"] intValue] == 1)
                 {
-                    
-                    
-                    
                     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+                        
+                        //new user, clear user blocks
+                        BOOL clearUserBLk = [db executeUpdate:@"delete from blocks_user"];
+                        if(!clearUserBLk)
+                        {
+                            *rollback = YES;
+                            return;
+                        }
+                        
+                        BOOL clearUserBlkLrd = [db executeUpdate:@"delete from blocks_user_last_request_date"];
+                        if(!clearUserBlkLrd)
+                        {
+                            *rollback = YES;
+                            return;
+                        }
+                        
                         BOOL q;
                         NSNumber *isActiveNo = [NSNumber numberWithInt:0];
 
                         q = [db executeUpdate:@"update users set is_active = ? where guid = ?",isActiveNo,[myDatabase.clientDictionary valueForKey:@"user_guid"]];
+                        
+                        myDatabase.userBlocksInitComplete = 0;
                         
                         if(!q)
                         {
@@ -93,7 +108,7 @@
                         }
                         else
                         {
-                            if(self.presentingViewController != nil) //the tab was presented modall, dismiss it first.
+                            if(self.presentingViewController != nil) //the tab was presented modally, dismiss it first.
                             {
                                 [self dismissViewControllerAnimated:YES completion:nil];
                                 [self.navigationController popToRootViewControllerAnimated:YES];
@@ -181,6 +196,24 @@
             [myDatabase alertMessageWithMessage:[NSString stringWithFormat:@"Reset failed. %@",[theDb lastError]]];
             return;
         }
+        
+        
+        BOOL qBlocks2 = [theDb executeUpdate:@"delete from blocks_user"];
+        if(!qBlocks2)
+        {
+            *rollback = YES;
+            [myDatabase alertMessageWithMessage:[NSString stringWithFormat:@"Reset failed. %@",[theDb lastError]]];
+            return;
+        }
+        
+        BOOL qReqDate22 = [theDb executeUpdate:@"delete from blocks_user_last_request_date"];
+        if(!qReqDate22)
+        {
+            *rollback = YES;
+            [myDatabase alertMessageWithMessage:[NSString stringWithFormat:@"Reset failed. %@",[theDb lastError]]];
+            return;
+        }
+        
         
         BOOL qReqDate2 = [theDb executeUpdate:@"delete from comment_last_request_date"];
         if(!qReqDate2)
