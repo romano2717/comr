@@ -23,7 +23,8 @@ address,
 status,
 level,
 block_id,
-postal_code;
+postal_code,
+seen;
 
 -(id)init {
     if (self = [super init]) {
@@ -50,9 +51,10 @@ postal_code;
     block_id        = [dict valueForKey:@"block_id"];
     postal_code     = [dict valueForKey:@"postal_code"];
     updated_on      = [dict valueForKey:@"updated_on"];
+    seen            = [dict valueForKey:@"seen"];
     
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-        postSaved = [db executeUpdate:@"insert into post (post_topic,post_by,post_date,post_type,severity,address,status,level,block_id,isUpdated,postal_code,updated_on) values (?,?,?,?,?,?,?,?,?,?,?,?)",post_topic,post_by,post_date,post_type,severity,address,status,level,block_id,[NSNumber numberWithBool:YES],postal_code,updated_on];
+        postSaved = [db executeUpdate:@"insert into post (post_topic,post_by,post_date,post_type,severity,address,status,level,block_id,isUpdated,postal_code,updated_on,seen) values (?,?,?,?,?,?,?,?,?,?,?,?,?)",post_topic,post_by,post_date,post_type,severity,address,status,level,block_id,[NSNumber numberWithBool:YES],postal_code,updated_on,seen];
         
         if(!postSaved)
         {
@@ -65,8 +67,10 @@ postal_code;
     return posClienttId;
 }
 
-- (NSArray *)fetchIssuesWithParams:(NSDictionary *)params forPostId:(NSNumber *)postId filterByBlock:(BOOL)filter
+- (NSArray *)fetchIssuesWithParams:(NSDictionary *)params forPostId:(NSNumber *)postId filterByBlock:(BOOL)filter newIssuesFirst:(BOOL)newIssuesFirst
 {
+    myDatabase.allPostWasSeen = YES;
+    
     NSMutableArray *arr = [[NSMutableArray alloc] init];
     
     client_post_id      = [[params valueForKey:@"client_post_id"] intValue];
@@ -192,8 +196,6 @@ postal_code;
         }
     }];
     
-    DDLogVerbose(@"arr %@",arr);
-
     NSMutableArray *mutArr = [[NSMutableArray alloc] initWithArray:arr];
     
     //re-order the posts according to unread messages
@@ -218,6 +220,24 @@ postal_code;
             }
         }
     }];
+    
+    //reorder the posts according to new issues
+    if(newIssuesFirst)
+    {
+        for (int i = 0; i < arr.count; i++) {
+            NSDictionary *dict = (NSDictionary *)[arr objectAtIndex:i];
+            NSNumber *key = [[dict allKeys] lastObject];
+            NSNumber *seenPost = [[[dict objectForKey:key] objectForKey:@"post"] valueForKey:@"seen"];
+            
+            if([seenPost intValue] == 0)
+            {
+                
+                DDLogVerbose(@"%@",dict);
+                [mutArr removeObject:dict];
+                [mutArr insertObject:dict atIndex:0];
+            }
+        }
+    }
 
     if(mutArr.count == arr.count)
         return mutArr;

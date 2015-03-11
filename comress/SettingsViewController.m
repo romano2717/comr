@@ -72,64 +72,74 @@
     {
         if(buttonIndex == 1)
         {
-            [myDatabase.AfManager GET:[NSString stringWithFormat:@"%@%@%@",myDatabase.api_url,api_logout,[myDatabase.clientDictionary valueForKey:@"user_guid"] ] parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
-                
-                NSDictionary *dict = (NSDictionary *)responseObject;
-                if([[dict valueForKey:@"Result"] intValue] == 1)
-                {
-                    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-                        
-                        //new user, clear user blocks
-                        BOOL clearUserBLk = [db executeUpdate:@"delete from blocks_user"];
-                        if(!clearUserBLk)
-                        {
-                            *rollback = YES;
-                            return;
-                        }
-                        
-                        BOOL clearUserBlkLrd = [db executeUpdate:@"delete from blocks_user_last_request_date"];
-                        if(!clearUserBlkLrd)
-                        {
-                            *rollback = YES;
-                            return;
-                        }
-                        
-                        BOOL q;
-                        NSNumber *isActiveNo = [NSNumber numberWithInt:0];
-
-                        q = [db executeUpdate:@"update users set is_active = ? where guid = ?",isActiveNo,[myDatabase.clientDictionary valueForKey:@"user_guid"]];
-                        
-                        myDatabase.userBlocksInitComplete = 0;
-                        
-                        if(!q)
-                        {
-                            *rollback = YES;
-                            return;
-                        }
-                        else
-                        {
-                            if(self.presentingViewController != nil) //the tab was presented modally, dismiss it first.
-                            {
-                                [self dismissViewControllerAnimated:YES completion:nil];
-                                [self.navigationController popToRootViewControllerAnimated:YES];
-                            }
-                            else //the tab was presented at first launch(user previously logged)
-                            {
-                                [self dismissViewControllerAnimated:YES completion:nil];
-                                [self performSegueWithIdentifier:@"modal_login" sender:self];
-                            }
-                        }
-                    }];
-                }
-            } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-                DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
-            }];
+            [self logoutWithRelogin:YES];
         }
     }
 }
 
+- (void)logoutWithRelogin:(BOOL )relogin
+{
+    [myDatabase.AfManager GET:[NSString stringWithFormat:@"%@%@%@",myDatabase.api_url,api_logout,[myDatabase.clientDictionary valueForKey:@"user_guid"] ] parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        
+        NSDictionary *dict = (NSDictionary *)responseObject;
+        if([[dict valueForKey:@"Result"] intValue] == 1)
+        {
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+                
+                //new user, clear user blocks
+                BOOL clearUserBLk = [db executeUpdate:@"delete from blocks_user"];
+                if(!clearUserBLk)
+                {
+                    *rollback = YES;
+                    return;
+                }
+                
+                BOOL clearUserBlkLrd = [db executeUpdate:@"delete from blocks_user_last_request_date"];
+                if(!clearUserBlkLrd)
+                {
+                    *rollback = YES;
+                    return;
+                }
+                
+                BOOL q;
+                NSNumber *isActiveNo = [NSNumber numberWithInt:0];
+                
+                q = [db executeUpdate:@"update users set is_active = ? where guid = ?",isActiveNo,[myDatabase.clientDictionary valueForKey:@"user_guid"]];
+                
+                myDatabase.userBlocksInitComplete = 0;
+                
+                if(!q)
+                {
+                    *rollback = YES;
+                    return;
+                }
+                else
+                {
+                    if(!relogin)
+                        return;
+                    
+                    if(self.presentingViewController != nil) //the tab was presented modally, dismiss it first.
+                    {
+                        [self dismissViewControllerAnimated:YES completion:nil];
+                        [self.navigationController popToRootViewControllerAnimated:YES];
+                    }
+                    else //the tab was presented at first launch(user previously logged)
+                    {
+                        [self dismissViewControllerAnimated:YES completion:nil];
+                        [self performSegueWithIdentifier:@"modal_login" sender:self];
+                    }
+                }
+            }];
+        }
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+    }];
+}
+
 - (IBAction)reset:(id)sender
 {
+    [self logoutWithRelogin:NO];
+    
     [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
         [theDb executeUpdate:@"delete from client"];
         
@@ -263,8 +273,14 @@
                 }
             }
         }
+        
+        myDatabase.initializingComplete = 0;
+        myDatabase.userBlocksInitComplete = 0;
     }];
-    
+}
+
+- (void)exit
+{
     exit(1);
 }
 

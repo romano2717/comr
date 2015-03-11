@@ -137,6 +137,8 @@
 - (void)checkUserBlockCount
 {
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+
+        myDatabase.userBlocksInitComplete = 0;
         
         NSDate *last_request_date = nil;
         
@@ -193,8 +195,7 @@
             
             
         } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-            DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
-            DDLogVerbose(@"params %@",[myDatabase toJsonString:params]);
+            myDatabase.userBlocksInitComplete = 0;
             [self initializingCompleteWithUi:NO];
         }];
         
@@ -883,7 +884,7 @@
 
         int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
         NSDate *LastRequestDate = [dict valueForKey:@"LastRequestDate"];
-        DDLogVerbose(@"%@",LastRequestDate);
+
         //prepare to download the blocks!
         NSArray *dictArray = [dict objectForKey:@"BlockList"];
         

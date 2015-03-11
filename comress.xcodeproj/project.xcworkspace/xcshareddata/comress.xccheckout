@@ -10,6 +10,8 @@
 	<string>comress</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
+		<key>D0DCC439C01AFE3979B3C16EE3777A43A19534F6</key>
+		<string>https://github.com/TheLevelUp/ZXingObjC.git</string>
 		<key>E860D08FFBC3C8E7180448B175482D63AFAE87B2</key>
 		<string>https://github.com/romano2717/comr.git</string>
 	</dict>
@@ -17,6 +19,8 @@
 	<string>comress.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
+		<key>D0DCC439C01AFE3979B3C16EE3777A43A19534F6</key>
+		<string>../../ZXingObjC/</string>
 		<key>E860D08FFBC3C8E7180448B175482D63AFAE87B2</key>
 		<string>../..</string>
 	</dict>
@@ -35,6 +39,14 @@
 			<string>E860D08FFBC3C8E7180448B175482D63AFAE87B2</string>
 			<key>IDESourceControlWCCName</key>
 			<string>comr</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>D0DCC439C01AFE3979B3C16EE3777A43A19534F6</string>
+			<key>IDESourceControlWCCName</key>
+			<string>ZXingObjC</string>
 		</dict>
 	</array>
 </dict>

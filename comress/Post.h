@@ -27,10 +27,11 @@
 @property (nonatomic, strong) NSString *level;
 @property (nonatomic, strong) NSNumber *block_id;
 @property (nonatomic, strong) NSString *postal_code;
+@property (nonatomic, strong) NSNumber *seen;
 
 - (long long)savePostWithDictionary:(NSDictionary *)dict;
 
-- (NSArray *)fetchIssuesWithParams:(NSDictionary *)params forPostId:(NSNumber *)postId filterByBlock:(BOOL)filter;
+- (NSArray *)fetchIssuesWithParams:(NSDictionary *)params forPostId:(NSNumber *)postId filterByBlock:(BOOL)filter newIssuesFirst:(BOOL)newIssuesFirst;
 
 - (NSArray *)postsToSend;
 

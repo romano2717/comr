@@ -9,7 +9,9 @@
 #import "IssuesViewController.h"
 
 @interface IssuesViewController ()
-
+{
+    BOOL didReorderListForNewIssue;
+}
 
 @property (nonatomic, strong) NSMutableArray *postsArray;
 @property (nonatomic, strong) NSArray *sectionHeaders;
@@ -22,6 +24,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+    
+    myDatabase = [Database sharedMyDbManager];
     
     comment = [[Comment alloc] init];
     user = [[Users alloc] init];
@@ -39,20 +43,26 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadIssuesList) name:@"reloadIssuesList" object:nil];
     
     //notification for reloading issues when app recover from background to active;
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(fetchPosts) name:UIApplicationDidBecomeActiveNotification object:nil];
-   
-    //notification for turning on/off the bulb
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(allPostWasSeen) name:@"allPostWasSeen" object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(fetchPostFromRecovery) name:UIApplicationDidBecomeActiveNotification object:nil];
 }
 
-- (void)allPostWasSeen
+- (void)fetchPostFromRecovery
 {
-    [self.bulbButton setImage:[UIImage imageNamed:@"bulb_off@2x.png"] forState:UIControlStateNormal];
+    [self fetchPostsWithNewIssuesUp:NO];
+}
+
+- (IBAction)moveNewIssuesUp:(id)sender
+{
+    didReorderListForNewIssue = YES;
+    
+    [self fetchPostsWithNewIssuesUp:YES];
+    
+    didReorderListForNewIssue = NO;
 }
 
 - (void)reloadIssuesList
 {
-    [self fetchPosts];
+    [self fetchPostsWithNewIssuesUp:NO];
 }
 
 - (void)autoOpenChatViewForPostMe:(NSNotification *)notif
@@ -78,7 +88,7 @@
     UISegmentedControl *segment = (UISegmentedControl *)sender;
     self.segment = segment;
     
-    [self fetchPosts];
+    [self fetchPostsWithNewIssuesUp:NO];
 }
 
 
@@ -105,7 +115,7 @@
 {
     [super viewDidAppear:animated];
     
-    [self fetchPosts];
+    [self fetchPostsWithNewIssuesUp:NO];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -165,7 +175,7 @@
 }
 
 #pragma mark - fetch posts
-- (void)fetchPosts
+- (void)fetchPostsWithNewIssuesUp:(BOOL)newIssuesUp
 {
     post = nil;
     
@@ -179,10 +189,19 @@
     NSDictionary *params = @{@"order":@"order by updated_on desc"};
     
     if(self.segment.selectedSegmentIndex == 0)
-        self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES]];
+    {
+        if(newIssuesUp)
+            self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES newIssuesFirst:YES]];
+        else
+            self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES newIssuesFirst:NO]];
+    }
+
     else
     {
-        self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:NO]];
+        if(newIssuesUp)
+            self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES newIssuesFirst:NO]];
+        else
+            self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:NO newIssuesFirst:NO]];
         
         NSMutableArray *sectionHeaders = [[NSMutableArray alloc] init];
         
@@ -228,9 +247,15 @@
         self.postsArray = groupedPost;
     }
     
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    //dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [self.issuesTable reloadData];
-    });
+    //});
+    
+    
+    if(myDatabase.allPostWasSeen == NO)
+        [self.bulbButton setImage:[UIImage imageNamed:@"bulb_on@2x.png"] forState:UIControlStateNormal];
+    else
+        [self.bulbButton setImage:[UIImage imageNamed:@"bulb_off@2x.png"] forState:UIControlStateNormal];
 }
 
 
@@ -312,7 +337,7 @@
         
         NSDictionary *dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
         [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:4] withPostDict:dict];
-        [self fetchPosts];
+        [self fetchPostsWithNewIssuesUp:NO];
     }];
     close.backgroundColor = [UIColor darkGrayColor];
     
@@ -321,7 +346,7 @@
         NSDictionary *dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
         
         [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:3] withPostDict:dict];
-        [self fetchPosts];
+        [self fetchPostsWithNewIssuesUp:NO];
     }];
     completed.backgroundColor = [UIColor greenColor];
     
@@ -330,7 +355,7 @@
         NSDictionary *dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
         
         [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:1] withPostDict:dict];
-        [self fetchPosts];
+        [self fetchPostsWithNewIssuesUp:NO];
     }];
     start.backgroundColor = [UIColor orangeColor];
     
@@ -339,7 +364,7 @@
         NSDictionary *dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
         
         [self setPostStatusAtIndexPath:indexPath withStatus:[NSNumber numberWithInt:2] withPostDict:dict];
-        [self fetchPosts];
+        [self fetchPostsWithNewIssuesUp:NO];
     }];
     stop.backgroundColor = [UIColor redColor];
     

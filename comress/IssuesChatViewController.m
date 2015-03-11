@@ -69,9 +69,9 @@
 
     NSDictionary *params = @{@"order":@"order by updated_on asc"};
     if(isFiltered)
-        postDict = [[post fetchIssuesWithParams:params forPostId:[NSNumber numberWithInt:self.postId] filterByBlock:YES] objectAtIndex:0];
+        postDict = [[post fetchIssuesWithParams:params forPostId:[NSNumber numberWithInt:self.postId] filterByBlock:YES newIssuesFirst:NO] objectAtIndex:0];
     else
-        postDict = [[post fetchIssuesWithParams:params forPostId:[NSNumber numberWithInt:self.postId] filterByBlock:NO] objectAtIndex:0];
+        postDict = [[post fetchIssuesWithParams:params forPostId:[NSNumber numberWithInt:self.postId] filterByBlock:NO newIssuesFirst:NO] objectAtIndex:0];
     
     //get the post information so we can do a pop-up view for post
     self.postInfoDict = [NSDictionary dictionaryWithObjectsAndKeys:[[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"post"],@"post",[[postDict objectForKey:[NSNumber numberWithInt:self.postId]] objectForKey:@"postImages"],@"images", nil];
@@ -449,11 +449,11 @@
         [sync uploadCommentFromSelf:NO];
     });
     
-    
+    NSDate *rightNow = [NSDate date];
     //update post
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
         
-        BOOL upPostDateOn = [db executeUpdate:@"update post set updated_on = ? where client_post_id = ?",[NSNumber numberWithInt:postId]];
+        BOOL upPostDateOn = [db executeUpdate:@"update post set updated_on = ? where client_post_id = ?",rightNow,[NSNumber numberWithInt:postId]];
         
         if(!upPostDateOn)
         {

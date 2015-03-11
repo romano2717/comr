@@ -12,6 +12,7 @@
 #import "IssuesChatViewController.h"
 #import "Comment.h"
 #import "Users.h"
+#import "Database.h"
 
 @interface IssuesViewController : UIViewController<UITableViewDataSource,UITableViewDelegate,IssuesChatViewControllerDelegate>
 {
@@ -19,6 +20,7 @@
     IssuesTableViewCell *issuesCell;
     Comment *comment;
     Users *user;
+    Database *myDatabase;
 }
 
 @property (nonatomic, weak) IBOutlet UITableView *issuesTable;
