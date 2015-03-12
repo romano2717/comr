@@ -140,6 +140,9 @@
             
             if(badge > 0)
                 [[self.tabBarController.tabBar.items objectAtIndex:0] setBadgeValue:[NSString stringWithFormat:@"%d",badge]];
+            else
+                [[self.tabBarController.tabBar.items objectAtIndex:0] setBadgeValue:0];
+                
         }
         else
             [[self.tabBarController.tabBar.items objectAtIndex:0] setBadgeValue:0];
@@ -212,9 +215,6 @@
     
     @try {
         post = nil;
-        
-        if (self.postsArray != nil)
-            [self.postsArray removeAllObjects];
         
         self.postsArray = nil;
         
@@ -306,6 +306,24 @@
     @finally {
         
     }
+    
+    //update badge count
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        
+        FMResultSet *rs = [db executeQuery:@"select count(*) as count from comment_noti"];
+        if([rs next])
+        {
+            int badge = [rs intForColumn:@"count"];
+            
+            if(badge > 0)
+                [[self.tabBarController.tabBar.items objectAtIndex:0] setBadgeValue:[NSString stringWithFormat:@"%d",badge]];
+            else
+                [[self.tabBarController.tabBar.items objectAtIndex:0] setBadgeValue:0];
+            
+        }
+        else
+            [[self.tabBarController.tabBar.items objectAtIndex:0] setBadgeValue:0];
+    }];
 }
 
 
@@ -339,18 +357,26 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
-     IssuesTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
-     
-     NSDictionary *dict;
-     
-     if(self.segment.selectedSegmentIndex == 0)
-         dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
-     else
-         dict = (NSDictionary *)[[self.postsArray objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
-
-     [cell initCellWithResultSet:dict];
-     
-     return cell;
+    @try {
+        IssuesTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
+        
+        NSDictionary *dict;
+        
+        if(self.segment.selectedSegmentIndex == 0)
+            dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
+        else
+            dict = (NSDictionary *)[[self.postsArray objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
+        
+        [cell initCellWithResultSet:dict];
+        
+        return cell;
+    }
+    @catch (NSException *exception) {
+        DDLogVerbose(@"cellForRowAtIndexPath exception: %@ [%@-%@]",exception,THIS_FILE,THIS_METHOD);
+    }
+    @finally {
+        
+    }
 }
 
 - (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView

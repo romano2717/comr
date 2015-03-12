@@ -10,7 +10,7 @@
 
 @implementation Synchronize
 
-@synthesize syncKickstartTimerOutgoing,syncKickstartTimerIncoming,imagesArr,imageDownloadComplete,downloadIsTriggeredBySelf;
+@synthesize syncKickstartTimerOutgoing,syncKickstartTimerIncoming,imagesArr,imageDownloadComplete,downloadIsTriggeredBySelf,stopSync,syncIsRunning;
 
 -(id)init {
     if (self = [super init]) {
@@ -34,10 +34,18 @@
     //outgoing
     [self uploadPostFromSelf:YES];
     syncKickstartTimerOutgoing = [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(uploadPost) userInfo:nil repeats:YES];
+    stopSync = NO;
+    
     
 //    [self startDownload];
 //    downloadIsTriggeredBySelf = YES;
 //    syncKickstartTimerIncoming = [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(startDownload) userInfo:nil repeats:YES];
+}
+
+- (void)stopSynchronize
+{
+    stopSync = YES;
+    syncIsRunning = NO;
 }
 
 - (void)uploadPost
@@ -45,6 +53,8 @@
     if(myDatabase.initializingComplete == NO)
         return;
     
+    syncIsRunning = YES;
+
     [self uploadPostFromSelf:YES];
 }
 
@@ -200,6 +210,12 @@
 
 - (void)uploadPostFromSelf:(BOOL )thisSelf
 {
+    if(syncIsRunning == YES)
+        return;
+        
+    if(stopSync)
+        return;
+    
     if(myDatabase.initializingComplete == NO)
         return;
     

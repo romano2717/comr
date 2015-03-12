@@ -23,6 +23,8 @@
 #import "Client.h"
 #import <CoreLocation/CoreLocation.h>
 
+#import "Reachability.h"
+
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 {
     DDFileLogger *fileLogger;
@@ -31,6 +33,11 @@
 }
 @property (strong, nonatomic) UIWindow *window;
 @property (nonatomic)UIBackgroundTaskIdentifier bgTask;
+
+@property (nonatomic) Reachability *hostReachability;
+@property (nonatomic) Reachability *internetReachability;
+@property (nonatomic) Reachability *wifiReachability;
+
 
 @end
 

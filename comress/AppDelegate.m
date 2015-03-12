@@ -54,12 +54,84 @@
         [self createBackgroundTaskWithSync:YES];
     }];
     
-    [sync kickStartSync];
     
+    //watcher used in didbecomeactive and reload list
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(downloadNewItems) name:@"downloadNewItems" object:nil];
+    
+    //start reachability watchers
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reachabilityChanged:) name:kReachabilityChangedNotification object:nil];
+    
+    //Change the host name here to change the server you want to monitor.
+    NSString *remoteHostName = [myDatabase.clientDictionary valueForKey:@"api_url"];
+
+    self.hostReachability = [Reachability reachabilityWithHostName:remoteHostName];
+    [self.hostReachability startNotifier];
+    [self updateInterfaceWithReachability:self.hostReachability];
+    
+    self.internetReachability = [Reachability reachabilityForInternetConnection];
+    [self.internetReachability startNotifier];
+    [self updateInterfaceWithReachability:self.internetReachability];
+    
+    self.wifiReachability = [Reachability reachabilityForLocalWiFi];
+    [self.wifiReachability startNotifier];
+    [self updateInterfaceWithReachability:self.wifiReachability];
     
     return YES;
 }
+
+
+/*!
+ * Called by Reachability whenever status changes.
+ */
+- (void) reachabilityChanged:(NSNotification *)note
+{
+    Reachability* curReach = [note object];
+    NSParameterAssert([curReach isKindOfClass:[Reachability class]]);
+    [self updateInterfaceWithReachability:curReach];
+}
+
+
+- (void)updateInterfaceWithReachability:(Reachability *)reachability
+{
+    if (reachability == self.hostReachability)
+    {
+        [self configureConnectionWithReachability:reachability];
+    }
+    
+    if (reachability == self.internetReachability)
+    {
+        [self configureConnectionWithReachability:reachability];
+    }
+    
+    if (reachability == self.wifiReachability)
+    {
+        [self configureConnectionWithReachability:reachability];
+    }
+}
+
+
+- (void)configureConnectionWithReachability:(Reachability *)reachability
+{
+    NetworkStatus netStatus = [reachability currentReachabilityStatus];
+    
+    switch (netStatus)
+    {
+        case NotReachable:        {
+            [sync stopSynchronize];
+            break;
+        }
+            
+        case ReachableViaWWAN:        {
+            [sync kickStartSync];
+            break;
+        }
+        case ReachableViaWiFi:        {
+            [sync kickStartSync];
+            break;
+        }
+    }
+}
+
 - (void)createBackgroundTaskWithSync:(BOOL)withSync
 {
     UIApplication *theApplication = [UIApplication sharedApplication];
