@@ -15,6 +15,7 @@
 
 @property (nonatomic, strong) NSMutableArray *postsArray;
 @property (nonatomic, strong) NSArray *sectionHeaders;
+@property (nonatomic, strong) NSMutableArray *postsNotSeen;
 
 @end
 
@@ -30,6 +31,8 @@
     comment = [[Comment alloc] init];
     user = [[Users alloc] init];
     
+    self.postsNotSeen = [[NSMutableArray alloc] init];
+    
     UIRefreshControl *refreshControl = [[UIRefreshControl alloc] init];
     [refreshControl addTarget:self action:@selector(refresh:) forControlEvents:UIControlEventValueChanged];
     
@@ -44,7 +47,18 @@
     
     //notification for reloading issues when app recover from background to active;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(fetchPostFromRecovery) name:UIApplicationDidBecomeActiveNotification object:nil];
+    
+    //turn on bulb icon for new unread posts
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(toggleBulbIcon:) name:@"toggleBulbIcon" object:nil];
 }
+
+- (void)toggleBulbIcon:(NSNotification *)notif
+{
+    NSString *toggle = [[notif userInfo] valueForKey:@"toggle"];
+    
+    [self.bulbButton setImage:[UIImage imageNamed:[NSString stringWithFormat:@"bulb_%@@2x.png",toggle]] forState:UIControlStateNormal];
+}
+
 
 - (void)fetchPostFromRecovery
 {
@@ -116,6 +130,20 @@
     [super viewDidAppear:animated];
     
     [self fetchPostsWithNewIssuesUp:NO];
+    
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        
+        FMResultSet *rs = [db executeQuery:@"select count(*) as count from comment_noti"];
+        if([rs next])
+        {
+            int badge = [rs intForColumn:@"count"];
+            
+            if(badge > 0)
+                [[self.tabBarController.tabBar.items objectAtIndex:0] setBadgeValue:[NSString stringWithFormat:@"%d",badge]];
+        }
+        else
+            [[self.tabBarController.tabBar.items objectAtIndex:0] setBadgeValue:0];
+    }];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -139,12 +167,13 @@
         self.navigationController.navigationBar.hidden = NO;
         
         NSNumber *postId;
+        NSDictionary *dict;
         
         if([sender isKindOfClass:[NSIndexPath class]])
         {
             NSIndexPath *indexPath = (NSIndexPath *)sender;
             
-            NSDictionary *dict;
+            
             
             if (self.segment.selectedSegmentIndex == 0)
             {
@@ -161,6 +190,8 @@
         else
             postId = sender;
         
+        int ServerPostId = [[[[dict objectForKey:postId] objectForKey:@"post"] valueForKey:@"post_id"] intValue];
+        
         
         BOOL isFiltered = NO;
         
@@ -171,91 +202,110 @@
         issuesVc.postId = [postId intValue];
         issuesVc.isFiltered = isFiltered;
         issuesVc.delegateModal = self;
+        issuesVc.ServerPostId = ServerPostId;
     }
 }
 
 #pragma mark - fetch posts
 - (void)fetchPostsWithNewIssuesUp:(BOOL)newIssuesUp
 {
-    post = nil;
     
-    if (self.postsArray != nil)
-        [self.postsArray removeAllObjects];
-
-    self.postsArray = nil;
-    
-    post = [[Post alloc] init];
-    
-    NSDictionary *params = @{@"order":@"order by updated_on desc"};
-    
-    if(self.segment.selectedSegmentIndex == 0)
-    {
-        if(newIssuesUp)
-            self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES newIssuesFirst:YES]];
-        else
-            self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES newIssuesFirst:NO]];
-    }
-
-    else
-    {
-        if(newIssuesUp)
-            self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES newIssuesFirst:NO]];
-        else
-            self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:NO newIssuesFirst:NO]];
+    @try {
+        post = nil;
         
-        NSMutableArray *sectionHeaders = [[NSMutableArray alloc] init];
+        if (self.postsArray != nil)
+            [self.postsArray removeAllObjects];
         
-        //reconstruct array to create headers
-        for (int i = 0; i < self.postsArray.count; i++) {
-            NSDictionary *top = (NSDictionary *)[self.postsArray objectAtIndex:i];
-            NSString *topKey = [[top allKeys] objectAtIndex:0];
-            
-            NSString *post_by = [[[top objectForKey:topKey] objectForKey:@"post"] valueForKey:@"post_by"];
-            
-            [sectionHeaders addObject:post_by];
+        self.postsArray = nil;
+        
+        post = [[Post alloc] init];
+        
+        NSDictionary *params = @{@"order":@"order by updated_on desc"};
+        
+        if(self.segment.selectedSegmentIndex == 0)
+        {
+            if(newIssuesUp)
+                self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES newIssuesFirst:YES]];
+            else
+                self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES newIssuesFirst:NO]];
         }
         
-        //remove dupes of sections
-        NSArray *cleanSectionHeadersArray = [[NSOrderedSet orderedSetWithArray:sectionHeaders] array];
-        self.sectionHeaders = nil;
-        self.sectionHeaders = cleanSectionHeadersArray;
-        
-        NSMutableArray *groupedPost = [[NSMutableArray alloc] init];
-        
-        for (int i = 0; i < cleanSectionHeadersArray.count; i++) {
+        else
+        {
+            if(newIssuesUp)
+                self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:NO newIssuesFirst:YES]];
+            else
+                self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:NO newIssuesFirst:NO]];
             
-            NSString *section = [cleanSectionHeadersArray objectAtIndex:i];
+            NSMutableArray *sectionHeaders = [[NSMutableArray alloc] init];
             
-            NSMutableArray *row = [[NSMutableArray alloc] init];
-            
-            for (int j = 0; j < self.postsArray.count; j++) {
-
-                NSDictionary *top = (NSDictionary *)[self.postsArray objectAtIndex:j];
+            //reconstruct array to create headers
+            for (int i = 0; i < self.postsArray.count; i++) {
+                NSDictionary *top = (NSDictionary *)[self.postsArray objectAtIndex:i];
                 NSString *topKey = [[top allKeys] objectAtIndex:0];
+                
                 NSString *post_by = [[[top objectForKey:topKey] objectForKey:@"post"] valueForKey:@"post_by"];
                 
-                if([post_by isEqualToString:section])
-                {
-                    [row addObject:top];
-                }
+                [sectionHeaders addObject:post_by];
             }
             
-
-            [groupedPost addObject:row];
+            //remove dupes of sections
+            NSArray *cleanSectionHeadersArray = [[NSOrderedSet orderedSetWithArray:sectionHeaders] array];
+            self.sectionHeaders = nil;
+            self.sectionHeaders = cleanSectionHeadersArray;
+            
+            NSMutableArray *groupedPost = [[NSMutableArray alloc] init];
+            
+            for (int i = 0; i < cleanSectionHeadersArray.count; i++) {
+                
+                NSString *section = [cleanSectionHeadersArray objectAtIndex:i];
+                
+                NSMutableArray *row = [[NSMutableArray alloc] init];
+                
+                for (int j = 0; j < self.postsArray.count; j++) {
+                    
+                    NSDictionary *top = (NSDictionary *)[self.postsArray objectAtIndex:j];
+                    NSString *topKey = [[top allKeys] objectAtIndex:0];
+                    NSString *post_by = [[[top objectForKey:topKey] objectForKey:@"post"] valueForKey:@"post_by"];
+                    
+                    if([post_by isEqualToString:section])
+                    {
+                        [row addObject:top];
+                    }
+                }
+                
+                
+                [groupedPost addObject:row];
+            }
+            
+            self.postsArray = groupedPost;
         }
         
-        self.postsArray = groupedPost;
+        dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            [self.issuesTable reloadData];
+        });
+        
+        
+        if(myDatabase.allPostWasSeen == NO)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"toggleBulbIcon" object:nil userInfo:@{@"toggle":@"on"}];
+            });
+            
+        }
+        else
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"toggleBulbIcon" object:nil userInfo:@{@"toggle":@"off"}];
+            });
+        }
     }
-    
-    //dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [self.issuesTable reloadData];
-    //});
-    
-    
-    if(myDatabase.allPostWasSeen == NO)
-        [self.bulbButton setImage:[UIImage imageNamed:@"bulb_on@2x.png"] forState:UIControlStateNormal];
-    else
-        [self.bulbButton setImage:[UIImage imageNamed:@"bulb_off@2x.png"] forState:UIControlStateNormal];
+    @catch (NSException *exception) {
+        DDLogVerbose(@"fetchPostsWithNewIssuesUp: %@ [%@-%@]",exception,THIS_FILE,THIS_METHOD);
+    }
+    @finally {
+        
+    }
 }
 
 
@@ -287,8 +337,7 @@
     return count;
 }
 
-
- - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
      IssuesTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
      

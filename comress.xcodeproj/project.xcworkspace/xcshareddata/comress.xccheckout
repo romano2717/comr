@@ -20,7 +20,7 @@
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>D0DCC439C01AFE3979B3C16EE3777A43A19534F6</key>
-		<string>../../ZXingObjC/</string>
+		<string>../../ZXingObjC</string>
 		<key>E860D08FFBC3C8E7180448B175482D63AFAE87B2</key>
 		<string>../..</string>
 	</dict>

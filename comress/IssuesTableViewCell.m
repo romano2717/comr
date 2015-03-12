@@ -10,7 +10,7 @@
 
 @implementation IssuesTableViewCell
 
-@synthesize mainImageView,statusLabel,statusProgressView,postTitleLabel,addressLabel,lastMessagByLabel,lastMessageLabel,dateLabel,messageCountLabel,pinImageView,readStatusImageView;
+@synthesize mainImageView,statusLabel,statusProgressView,postTitleLabel,addressLabel,lastMessagByLabel,lastMessageLabel,dateLabel,messageCountLabel,pinImageView,commentsCount;
 
 
 - (void)awakeFromNib {
@@ -52,7 +52,7 @@
         NSString *lastMsg = @"";
         
         //read status
-        int readStatus = [[topDict valueForKey:@"readStatus"] intValue];
+        int newCommentsCounter = [[topDict valueForKey:@"newCommentsCount"] intValue];
         
         int severity = [[postDict valueForKey:@"severity"] intValue];
         
@@ -111,7 +111,6 @@
         
         
         //set ui
-        
         [mainImageView sd_setImageWithURL:imageUrl placeholderImage:[UIImage imageNamed:@"noImage"] options:SDWebImageProgressiveDownload];
         statusLabel.text = statusString;
         statusProgressView.progress = progress;
@@ -125,17 +124,31 @@
         if(severity == 2)//Routine
             pinImageView.hidden = YES;
         
-        if(readStatus == 1)
+        if(newCommentsCounter > 0)
         {
-            readStatusImageView.hidden = YES;
+            commentsCount.hidden = NO;
+            commentsCount.text = [NSString stringWithFormat:@"%d",newCommentsCounter];
+            commentsCount.backgroundColor = [UIColor blueColor];
+            commentsCount.hasBorder = YES;
+            commentsCount.textColor = [UIColor whiteColor];
+            
         }
+        else
+            commentsCount.hidden = YES;
     }
     @catch (NSException *exception) {
         DDLogVerbose(@"ek ek ek %@",exception);
     }
     @finally {
-        DDLogVerbose(@"go ahead");
+ 
     }
+}
+
+- (UILabel *)deepLabelCopy:(UILabel *)label {
+    UILabel *duplicateLabel = [[UILabel alloc] initWithFrame:label.frame];
+    duplicateLabel.text = label.text;
+    duplicateLabel.textColor = label.textColor;
+    return duplicateLabel;
 }
 
 

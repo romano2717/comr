@@ -11,6 +11,7 @@
 		4D0717951AB0108C0055191A /* QrCodeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D0717941AB0108C0055191A /* QrCodeViewController.m */; };
 		4D0717971AB016E00055191A /* crosshair@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D0717961AB016E00055191A /* crosshair@2x.png */; };
 		4D07179B1AB02E710055191A /* comress.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 4D07179A1AB02E710055191A /* comress.sqlite */; };
+		4D0717A11AB1707E0055191A /* BadgeLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D0717A01AB1707E0055191A /* BadgeLabel.m */; };
 		4D0C2F691A7B205A009E5E53 /* LoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D0C2F681A7B205A009E5E53 /* LoginViewController.m */; };
 		4D0C2F831A7B4C6F009E5E53 /* Client.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D0C2F821A7B4C6F009E5E53 /* Client.m */; };
 		4D0C2F861A7B4C7C009E5E53 /* Comment.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D0C2F851A7B4C7C009E5E53 /* Comment.m */; };
@@ -182,6 +183,8 @@
 		4D0717941AB0108C0055191A /* QrCodeViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QrCodeViewController.m; sourceTree = "<group>"; };
 		4D0717961AB016E00055191A /* crosshair@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "crosshair@2x.png"; sourceTree = "<group>"; };
 		4D07179A1AB02E710055191A /* comress.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = comress.sqlite; sourceTree = "<group>"; };
+		4D07179F1AB1707E0055191A /* BadgeLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BadgeLabel.h; sourceTree = "<group>"; };
+		4D0717A01AB1707E0055191A /* BadgeLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BadgeLabel.m; sourceTree = "<group>"; };
 		4D0C2F671A7B205A009E5E53 /* LoginViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoginViewController.h; sourceTree = "<group>"; };
 		4D0C2F681A7B205A009E5E53 /* LoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LoginViewController.m; sourceTree = "<group>"; };
 		4D0C2F701A7B2960009E5E53 /* ApiCallUrl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ApiCallUrl.h; sourceTree = "<group>"; };
@@ -547,6 +550,8 @@
 		4D4CB5251A89D703008AFD00 /* Listing */ = {
 			isa = PBXGroup;
 			children = (
+				4D07179F1AB1707E0055191A /* BadgeLabel.h */,
+				4D0717A01AB1707E0055191A /* BadgeLabel.m */,
 				4DA41DF11A80804600184A18 /* IssuesViewController.h */,
 				4DA41DF21A80804600184A18 /* IssuesViewController.m */,
 				4DAEA6AA1A8337DE00A6EFBE /* IssuesTableViewCell.h */,
@@ -1329,6 +1334,7 @@
 				4DA207F91A79DA0A00C7E5C7 /* JSQMessagesCollectionViewCellOutgoing.m in Sources */,
 				4DA204121A79CC5B00C7E5C7 /* AFHTTPRequestOperationManager.m in Sources */,
 				4DA207E31A79DA0A00C7E5C7 /* JSQMessagesViewController.m in Sources */,
+				4D0717A11AB1707E0055191A /* BadgeLabel.m in Sources */,
 				4DD6FEA81A884CFF00CBBE1D /* UIImage+GIF.m in Sources */,
 				4DA207DE1A79DA0A00C7E5C7 /* UIColor+JSQMessages.m in Sources */,
 				4DA207DD1A79DA0A00C7E5C7 /* NSString+JSQMessages.m in Sources */,
@@ -1559,7 +1565,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-2";
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer: Diffy Romano (8Q83M4ZU37)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Diffy Romano (8Q83M4ZU37)";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
 					"$(PROJECT_DIR)",
@@ -1584,7 +1590,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-2";
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer: Diffy Romano (8Q83M4ZU37)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Diffy Romano (8Q83M4ZU37)";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
 					"$(PROJECT_DIR)",

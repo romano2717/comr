@@ -310,9 +310,12 @@
                                                 <imageView userInteractionEnabled="NO" tag="11" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="pin2.png" translatesAutoresizingMaskIntoConstraints="NO" id="SYh-uD-1Tw">
                                                     <rect key="frame" x="8" y="8" width="25" height="25"/>
                                                 </imageView>
-                                                <imageView userInteractionEnabled="NO" tag="333" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="newmsg.png" translatesAutoresizingMaskIntoConstraints="NO" id="yCI-H9-lvv">
-                                                    <rect key="frame" x="571" y="52" width="10" height="10"/>
-                                                </imageView>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="999" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="29M-os-3wM" customClass="BadgeLabel">
+                                                    <rect key="frame" x="566" y="51" width="30" height="30"/>
+                                                    <fontDescription key="fontDescription" type="boldSystem" pointSize="14"/>
+                                                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
                                             </subviews>
                                             <constraints>
                                                 <constraint firstItem="Ah2-SA-x4L" firstAttribute="trailing" secondItem="mJO-bY-14V" secondAttribute="trailing" id="1ZA-W4-Kdr"/>
@@ -320,8 +323,8 @@
                                                 <constraint firstItem="w8M-Ff-YNm" firstAttribute="top" secondItem="SYh-uD-1Tw" secondAttribute="bottom" constant="50" id="3A0-NG-JcP"/>
                                                 <constraint firstItem="Vgv-sF-0wZ" firstAttribute="centerY" secondItem="mJO-bY-14V" secondAttribute="centerY" id="4G8-nH-jg6"/>
                                                 <constraint firstItem="SYh-uD-1Tw" firstAttribute="leading" secondItem="Q3Z-C5-mK3" secondAttribute="leadingMargin" id="84S-AH-hDx"/>
-                                                <constraint firstAttribute="trailingMargin" secondItem="yCI-H9-lvv" secondAttribute="trailing" constant="11" id="ECC-P6-udL"/>
                                                 <constraint firstItem="Ah2-SA-x4L" firstAttribute="top" secondItem="Vgv-sF-0wZ" secondAttribute="top" id="G9P-iH-yXi"/>
+                                                <constraint firstItem="29M-os-3wM" firstAttribute="trailing" secondItem="fcd-46-5wU" secondAttribute="trailing" constant="4" id="G9t-ff-QV9"/>
                                                 <constraint firstItem="w8M-Ff-YNm" firstAttribute="top" secondItem="Q3Z-C5-mK3" secondAttribute="topMargin" constant="75" id="HPu-Dl-g4a"/>
                                                 <constraint firstItem="w8M-Ff-YNm" firstAttribute="leading" secondItem="Vgv-sF-0wZ" secondAttribute="leading" id="HYP-Ni-g9R"/>
                                                 <constraint firstItem="QPf-Px-e54" firstAttribute="trailing" secondItem="xkB-bL-bS9" secondAttribute="trailing" id="Iy2-6d-Pgf"/>
@@ -342,18 +345,18 @@
                                                 <constraint firstItem="Ah2-SA-x4L" firstAttribute="top" secondItem="Q3Z-C5-mK3" secondAttribute="topMargin" id="ctO-ye-yJo"/>
                                                 <constraint firstItem="xkB-bL-bS9" firstAttribute="leading" secondItem="a9k-pE-rtO" secondAttribute="trailing" constant="8" symbolic="YES" id="egZ-Yp-u33"/>
                                                 <constraint firstItem="3VU-Rc-g1n" firstAttribute="trailing" secondItem="Q3Z-C5-mK3" secondAttribute="trailingMargin" id="fy9-Fh-bWQ"/>
+                                                <constraint firstItem="29M-os-3wM" firstAttribute="baseline" secondItem="mJO-bY-14V" secondAttribute="baseline" constant="19.5" id="g3G-XH-g7d"/>
                                                 <constraint firstItem="w8M-Ff-YNm" firstAttribute="leading" secondItem="Q3Z-C5-mK3" secondAttribute="leadingMargin" id="g7D-hj-eeJ"/>
                                                 <constraint firstItem="fcd-46-5wU" firstAttribute="top" secondItem="3VU-Rc-g1n" secondAttribute="bottom" constant="8" symbolic="YES" id="hBx-mK-umE"/>
                                                 <constraint firstItem="a9k-pE-rtO" firstAttribute="leading" secondItem="w8M-Ff-YNm" secondAttribute="leading" id="izH-Rs-MwG"/>
                                                 <constraint firstItem="SYh-uD-1Tw" firstAttribute="leading" secondItem="w8M-Ff-YNm" secondAttribute="leading" id="kIN-ev-yPn"/>
                                                 <constraint firstAttribute="bottomMargin" secondItem="QPf-Px-e54" secondAttribute="bottom" constant="26" id="ldw-WZ-gEB"/>
-                                                <constraint firstItem="yCI-H9-lvv" firstAttribute="leading" secondItem="mJO-bY-14V" secondAttribute="trailing" constant="40" id="pDw-rZ-GDL"/>
                                                 <constraint firstItem="mJO-bY-14V" firstAttribute="leading" secondItem="Ah2-SA-x4L" secondAttribute="leading" id="pbZ-Pp-xLI"/>
                                                 <constraint firstItem="SYh-uD-1Tw" firstAttribute="top" secondItem="Q3Z-C5-mK3" secondAttribute="topMargin" id="qWW-mE-e6d"/>
                                                 <constraint firstItem="SYh-uD-1Tw" firstAttribute="top" secondItem="Vgv-sF-0wZ" secondAttribute="top" id="r43-QU-bgb"/>
+                                                <constraint firstItem="29M-os-3wM" firstAttribute="top" secondItem="fcd-46-5wU" secondAttribute="bottom" constant="7" id="rOK-dA-oq0"/>
                                                 <constraint firstItem="Ah2-SA-x4L" firstAttribute="leading" secondItem="Vgv-sF-0wZ" secondAttribute="trailing" constant="8" symbolic="YES" id="s7E-dD-JkC"/>
-                                                <constraint firstItem="yCI-H9-lvv" firstAttribute="top" secondItem="fcd-46-5wU" secondAttribute="bottom" constant="8" symbolic="YES" id="sHR-wp-JOe"/>
-                                                <constraint firstAttribute="bottomMargin" secondItem="yCI-H9-lvv" secondAttribute="bottom" constant="44.5" id="vlp-YK-khw"/>
+                                                <constraint firstItem="29M-os-3wM" firstAttribute="leading" secondItem="mJO-bY-14V" secondAttribute="trailing" constant="35" id="u8W-aX-MKv"/>
                                                 <constraint firstItem="3VU-Rc-g1n" firstAttribute="leading" secondItem="Ah2-SA-x4L" secondAttribute="trailing" constant="8" symbolic="YES" id="wmn-fr-nm9"/>
                                                 <constraint firstItem="fcd-46-5wU" firstAttribute="leading" secondItem="mJO-bY-14V" secondAttribute="trailing" constant="46" id="xRE-bg-MTF"/>
                                                 <constraint firstItem="fcd-46-5wU" firstAttribute="trailing" secondItem="3VU-Rc-g1n" secondAttribute="trailing" id="yEO-sh-nhG"/>
@@ -362,13 +365,13 @@
                                         </tableViewCellContentView>
                                         <connections>
                                             <outlet property="addressLabel" destination="mJO-bY-14V" id="bDj-be-BnL"/>
+                                            <outlet property="commentsCount" destination="29M-os-3wM" id="8bG-zX-S0S"/>
                                             <outlet property="dateLabel" destination="3VU-Rc-g1n" id="RQH-BS-Lb4"/>
                                             <outlet property="lastMessagByLabel" destination="QPf-Px-e54" id="zD2-t0-na7"/>
                                             <outlet property="lastMessageLabel" destination="xkB-bL-bS9" id="hEa-25-2DX"/>
                                             <outlet property="mainImageView" destination="Vgv-sF-0wZ" id="JxJ-iB-JBs"/>
                                             <outlet property="pinImageView" destination="SYh-uD-1Tw" id="jcd-AU-QUV"/>
                                             <outlet property="postTitleLabel" destination="Ah2-SA-x4L" id="Y1f-ix-I6b"/>
-                                            <outlet property="readStatusImageView" destination="yCI-H9-lvv" id="hym-ah-Efb"/>
                                             <outlet property="statusLabel" destination="w8M-Ff-YNm" id="Alq-Ha-YZf"/>
                                             <outlet property="statusProgressView" destination="a9k-pE-rtO" id="jYu-oI-3Sr"/>
                                         </connections>
@@ -1349,7 +1352,6 @@
         <image name="bulb_off.png" width="22" height="33"/>
         <image name="crm.png" width="27" height="27"/>
         <image name="issue.png" width="30" height="27"/>
-        <image name="newmsg.png" width="40" height="40"/>
         <image name="pin2.png" width="75" height="75"/>
         <image name="routine.png" width="23" height="27"/>
         <image name="settings.png" width="27" height="27"/>

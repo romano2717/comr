@@ -50,6 +50,7 @@
 @property (nonatomic, weak) id<IssuesChatViewControllerDelegate> delegateModal;
 @property (nonatomic, strong) MessageData *messageData;
 @property (nonatomic) int postId;
+@property (nonatomic) int ServerPostId;
 @property (nonatomic, strong) NSDictionary *postDict;
 @property (nonatomic, strong) NSDictionary *postInfoDict;
 @property (nonatomic, strong) UIImagePickerController *imagePicker;

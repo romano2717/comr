@@ -1031,17 +1031,14 @@
             
             [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
                 
-                FMResultSet *rs = [theDb executeQuery:@"select * from comment_noti where comment_id = ? or post_id = ?",CommentId,PostId];
-                if([rs next] == NO)//does not exist
+                BOOL qIns = [theDb executeUpdate:@"insert into comment_noti(comment_id, user_id, post_id, status) values(?,?,?,?)",CommentId,UserId,PostId,Status];
+                
+                if(!qIns)
                 {
-                    BOOL qIns = [theDb executeUpdate:@"insert into comment_noti(comment_id, user_id, post_id, status) values(?,?,?,?)",CommentId,UserId,PostId,Status];
-                    
-                    if(!qIns)
-                    {
-                        *rollback = YES;
-                        return;
-                    }
+                    *rollback = YES;
+                    return;
                 }
+
             }];
         }
         

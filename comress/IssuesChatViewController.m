@@ -15,7 +15,7 @@
 
 @implementation IssuesChatViewController
 
-@synthesize postId,postDict,commentsArray,theNewSelectedStatus,isFiltered;
+@synthesize postId,postDict,commentsArray,theNewSelectedStatus,isFiltered,ServerPostId;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -37,6 +37,7 @@
 
     myDatabase = [Database sharedMyDbManager];
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        //update this post as seen
         NSNumber *seen = [NSNumber numberWithBool:YES];
         NSNumber *thisPostId = [NSNumber numberWithInt:postId];
         BOOL postSeen = [db executeUpdate:@"update post set seen = ? where client_post_id = ?", seen,thisPostId];
@@ -45,7 +46,19 @@
             *rollback = YES;
             return;
         }
+        
+        //remove this post from comment noti
+        BOOL rmNoti = [db executeUpdate:@"delete from comment_noti where post_id = ?", [NSNumber numberWithInt:ServerPostId]];
+        
+        if(!rmNoti)
+        {
+            *rollback = YES;
+            return;
+        }
     }];
+    
+    
+    
     
     [self fetchComments];
     

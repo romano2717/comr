@@ -10,14 +10,16 @@
 #import "AppWideImports.h"
 #import "NSDate+HumanizedTime.h"
 #import "UIImageView+WebCache.h"
+#import "BadgeLabel.h"
+
 
 @interface IssuesTableViewCell : UITableViewCell
 {
-    
+
 }
 @property (nonatomic, weak) IBOutlet UIImageView *mainImageView;
 @property (nonatomic, weak) IBOutlet UIImageView *pinImageView;
-@property (nonatomic, weak) IBOutlet UIImageView *readStatusImageView;
+@property (nonatomic, weak) IBOutlet BadgeLabel *commentsCount;
 @property (nonatomic, weak) IBOutlet UILabel *statusLabel;
 @property (nonatomic, weak) IBOutlet UIProgressView *statusProgressView;
 @property (nonatomic, weak) IBOutlet UILabel *postTitleLabel;
