@@ -20,4 +20,5 @@
 @property (nonatomic, strong) MTBBarcodeScanner *scanner;
 @property (nonatomic, weak) IBOutlet UILabel *result;
 @property (nonatomic, weak) IBOutlet UIView *previewView;
+@property (nonatomic, strong) UIView *laserView;
 @end

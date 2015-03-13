@@ -16,9 +16,13 @@
 
 @implementation QrCodeViewController
 
+@synthesize laserView;
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+    
+    laserView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.previewView.frame.size.width, 2)];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -87,27 +91,47 @@
 
 - (void)startScanning {
     [self.scanner startScanningWithResultBlock:^(NSArray *codes) {
-        for (AVMetadataMachineReadableCodeObject *code in codes) {
-
-            self.result.text = code.stringValue;
-            [self stopScanning];
-            
-            //start download again
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                
-                [self dismissViewControllerAnimated:YES completion:^{
-                    
-                    NSDictionary *dict;
-                    
-                    if(self.location != nil)
-                        dict = @{@"scanValue":code.stringValue,@"location":self.location};
-                    else
-                        dict = @{@"scanValue":code.stringValue,@"location":[NSNull null]};
-                    
-                    [[NSNotificationCenter defaultCenter] postNotificationName:@"scanningQrCodeComplete" object:dict userInfo:dict];
-                }];
-            });
+        laserView.backgroundColor = [UIColor redColor];
+        laserView.layer.shadowOffset = CGSizeMake(0.5, 0.5);
+        laserView.layer.shadowOpacity = 0.6;
+        laserView.layer.shadowRadius = 1.5;
+        laserView.alpha = 1.0;
+        
+        if (![[self.previewView subviews] containsObject:laserView])
+        {
+            DDLogVerbose(@"add");
+            [self.previewView addSubview:laserView];
         }
+        
+        [UIView animateWithDuration:1.0 delay:0.0 options: UIViewAnimationOptionAutoreverse | UIViewAnimationOptionRepeat | UIViewAnimationOptionCurveEaseInOut animations:^{
+            laserView.frame = CGRectMake(0, self.previewView.frame.size.height, self.previewView.frame.size.width, 2);
+        } completion:nil];
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            for (AVMetadataMachineReadableCodeObject *code in codes) {
+
+                [self.laserView removeFromSuperview];
+                
+                self.result.text = code.stringValue;
+                
+                [self stopScanning];
+                
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    
+                    [self dismissViewControllerAnimated:YES completion:^{
+                        
+                        NSDictionary *dict;
+                        
+                        if(self.location != nil)
+                            dict = @{@"scanValue":code.stringValue,@"location":self.location};
+                        else
+                            dict = @{@"scanValue":code.stringValue,@"location":[NSNull null]};
+                        
+                        [[NSNotificationCenter defaultCenter] postNotificationName:@"scanningQrCodeComplete" object:dict userInfo:dict];
+                    }];
+                });
+            }
+        });
     }];
 }
 
@@ -118,6 +142,10 @@
 #pragma mark - Actions
 
 - (IBAction)toggleScanningTapped:(id)sender {
+    
+    
+    
+    
     if ([self.scanner isScanning]) {
         [self stopScanning];
     } else {

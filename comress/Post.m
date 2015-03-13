@@ -214,6 +214,9 @@ seen;
                     NSNumber *key = [[dict allKeys] lastObject];
                     NSNumber *postIdNum = [[[dict objectForKey:key] objectForKey:@"post"] valueForKey:@"post_id"];
                     
+                    if([postIdNum isEqual:[NSNull null]])
+                        return;
+                    
                     if([postId intValue] == [postIdNum intValue])
                     {
                         [mutArr removeObject:dict];

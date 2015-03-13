@@ -60,6 +60,7 @@
     {
         DDLogVerbose(@"pass qr code: %@",scanValue);
         DDLogVerbose(@"pass location: %@",location);
+        [myDatabase alertMessageWithMessage:[NSString stringWithFormat:@"scan: %@, loc: %@",scanValue,location]];
     }
     else
     {
