@@ -79,8 +79,6 @@ image_type
     
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
         
-        db.traceExecution = YES;
-        
         FMResultSet *rs = [db executeQuery:@"select * from post_image where post_image_id is null or post_image_id = ?",zero];
         users = [[Users alloc] init];
         

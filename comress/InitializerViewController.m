@@ -40,13 +40,14 @@
 
 - (void)initializingCompleteWithUi:(BOOL)withUi
 {
-    if(withUi == YES)
+    //if(withUi == YES)
         myDatabase.initializingComplete = 1;
+        myDatabase.userBlocksInitComplete = 1;
     
     [self dismissViewControllerAnimated:YES completion:^{
        
-        if(withUi == YES)
-        {
+        //if(withUi == YES)
+        //{
             [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
                 BOOL upClient = [db executeUpdate:@"update client set initialise = ?",[NSNumber numberWithInt:1]];
                 if(!upClient)
@@ -55,7 +56,7 @@
                     return;
                 }
             }];
-        }
+        //}
     }];
 }
 
@@ -90,8 +91,6 @@
         
         NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
 
-        DDLogVerbose(@"%@",[myDatabase toJsonString:params]);
-        
         [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_download_blocks] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
             
             NSDictionary *dict = [responseObject objectForKey:@"BlockContainer"];
@@ -158,9 +157,6 @@
         }
         
         NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
-        
-        DDLogVerbose(@"checkUserBlockCount %@",[myDatabase toJsonString:params]);
-        DDLogVerbose(@"guid %@",[myDatabase.clientDictionary valueForKey:@"user_guid"]);
         
         [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_download_user_blocks] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
             
@@ -298,7 +294,6 @@
                 
                 while ([rsCount next]) {
                     int total = [rsCount intForColumn:@"total"];
-                    DDLogVerbose(@"total %d, totalRows %d",total,totalRows);
                     if(total < totalRows)
                     {
                         needToDownload = YES;
@@ -343,7 +338,7 @@
         }
         
         NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:1], @"lastRequestTime" : jsonDate};
-        DDLogVerbose(@"params %@",[myDatabase toJsonString:params]);
+
         [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_download_images] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
             
             NSDictionary *dict = [responseObject objectForKey:@"ImageContainer"];
@@ -356,7 +351,7 @@
             
             while ([rsCount next]) {
                 int total = [rsCount intForColumn:@"total"];
-                DDLogVerbose(@"total %d, totalRows %d",total,totalRows);
+
                 if(total < totalRows)
                 {
                     needToDownload = YES;
@@ -413,7 +408,7 @@
             
             while ([rsCount next]) {
                 int total = [rsCount intForColumn:@"total"];
-                DDLogVerbose(@"total %d, totalRows %d",total,totalRows);
+
                 if(total < totalRows)
                 {
                     needToDownload = YES;
@@ -464,8 +459,8 @@
         
         int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
         NSDate *LastRequestDate = [dict valueForKey:@"LastRequestDate"];
-        DDLogVerbose(@"%@",LastRequestDate);
-        //prepare to download the blocks!
+
+        //prepare to download the comment_noti!
         NSArray *dictArray = [dict objectForKey:@"CommentNotiList"];
         
         for (int i = 0; i < dictArray.count; i++) {
@@ -478,18 +473,15 @@
 
             
             [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+                theDb.traceExecution = YES;
+                BOOL qIns = [theDb executeUpdate:@"insert into comment_noti(comment_id, user_id, post_id, status) values(?,?,?,?)",CommentId,UserId,PostId,Status];
                 
-                FMResultSet *rs = [theDb executeQuery:@"select * from comment_noti where comment_id = ? or post_id = ?",CommentId,PostId];
-                if([rs next] == NO)//does not exist
+                if(!qIns)
                 {
-                    BOOL qIns = [theDb executeUpdate:@"insert into comment_noti(comment_id, user_id, post_id, status) values(?,?,?,?)",CommentId,UserId,PostId,Status];
-                    
-                    if(!qIns)
-                    {
-                        *rollback = YES;
-                        return;
-                    }
+                    *rollback = YES;
+                    return;
                 }
+                
             }];
         }
         
@@ -529,11 +521,11 @@
     self.processLabel.text = [NSString stringWithFormat:@"Downloading images page... %d/%d",currentPage,totPage];
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:page], @"lastRequestTime" : jsonDate};
-    DDLogVerbose(@"GetImages %@",[myDatabase toJsonString:params]);
+
     [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_download_images] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
         
         NSDictionary *dict = [responseObject objectForKey:@"ImageContainer"];
-        DDLogVerbose(@"%@",responseObject);
+
         [imagesArr addObject:dict];
         
         int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
@@ -562,7 +554,7 @@
 {
     
     NSDictionary *topDict = (NSDictionary *)[imagesArr lastObject];
-    DDLogVerbose(@"%@",topDict);
+
     NSDate *lastRequestDate = [myDatabase createNSDateWithWcfDateString:[topDict valueForKey:@"LastRequestDate"]];
     
     if (imagesArr.count > 0) {
@@ -583,9 +575,6 @@
                 NSNumber *ImageType = [NSNumber numberWithInt:[[ImageListDict valueForKey:@"ImageType"] intValue]];
                 NSNumber *PostId = [NSNumber numberWithInt:[[ImageListDict valueForKey:@"PostId"] intValue]];
                 NSNumber *PostImageId = [NSNumber numberWithInt:[[ImageListDict valueForKey:@"PostImageId"] intValue]];
-                
-                DDLogVerbose(@"PostImageId %@",PostImageId);
-                
                 NSMutableString *ImagePath = [[NSMutableString alloc] initWithString:myDatabase.domain];
                 NSString *imageFilename = [ImageListDict valueForKey:@"ImagePath"];
                 
@@ -629,11 +618,9 @@
                     [imgOpts resizeImageAtPath:filePath];
                     
                     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-                        DDLogVerbose(@"j index %d",j);
-                        db.traceExecution = YES;
-                        
+
                         FMResultSet *rsPostImage = [db executeQuery:@"select post_image_id from post_image where post_image_id = ? and (post_image_id is not null or post_image_id > ?)",PostImageId,[NSNumber numberWithInt:0]];
-                        DDLogVerbose(@"imageUrl %@",imageURL);
+
                         if([rsPostImage next] == NO) //does not exist, insert
                         {
                             BOOL qIns = [db executeUpdate:@"insert into post_image(comment_id, image_type, post_id, post_image_id, image_path) values(?,?,?,?,?)",CommentId,ImageType,PostId,PostImageId,imageFilename];
@@ -672,8 +659,6 @@
                             
                             imageDownloadComplete = YES;
     
-                            DDLogVerbose(@"image count %lu, current index %d",(unsigned long)ImageList.count,j);
-                            
                             self.processLabel.text = @"Download complete";
                         }
                     }];
@@ -712,7 +697,7 @@
         
         int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
         NSDate *LastRequestDate = [dict valueForKey:@"LastRequestDate"];
-        DDLogVerbose(@"%@",LastRequestDate);
+
         //prepare to download the blocks!
         NSArray *dictArray = [dict objectForKey:@"CommentList"];
         
@@ -811,7 +796,7 @@
         
         int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
         NSDate *LastRequestDate = [dict valueForKey:@"LastRequestDate"];
-        DDLogVerbose(@"%@",LastRequestDate);
+
         //prepare to download the blocks!
         NSArray *dictArray = [dict objectForKey:@"PostList"];
         
@@ -955,7 +940,7 @@
         
         int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
         NSDate *LastRequestDate = [dict valueForKey:@"LastRequestDate"];
-        DDLogVerbose(@"%@",LastRequestDate);
+
         //prepare to download the blocks!
         NSArray *dictArray = [dict objectForKey:@"UserBlockList"];
         

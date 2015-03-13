@@ -37,8 +37,6 @@
     
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
         
-        db.traceExecution = YES;
-        
         NSString *activationCode = nil;
         
         FMResultSet *rs = [db executeQuery:@"select activation_code from client"];

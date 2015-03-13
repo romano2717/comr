@@ -7,6 +7,7 @@
 //
 
 #import "Post.h"
+#import "Synchronize.h"
 
 @implementation Post
 
@@ -122,7 +123,6 @@ seen;
                 
                 if(filter == YES)
                 {
-                    db.traceExecution = YES;
                     FMResultSet *rsBlock = [db executeQuery:@"select block_id from blocks_user where block_id = ?",[rsPost stringForColumn:@"block_id"]];
                     
                     if([rsBlock next] == NO)
@@ -141,11 +141,13 @@ seen;
                 
                 //check if this post is not yet read by the user
                 NSNumber *newCommentsCount = [NSNumber numberWithInt:0];
-                FMResultSet *rsRead = [db executeQuery:@"select count(*) as count from comment_noti where post_id = ? group by post_id",serverPostId];
+                FMResultSet *rsRead = [db executeQuery:@"select count(*) as count from comment_noti where post_id = ? and status = ? group by post_id",serverPostId,[NSNumber numberWithInt:1]];
                 if([rsRead next] == YES)
                     newCommentsCount = [NSNumber numberWithInt:[rsRead intForColumn:@"count"]];
                 
                 [postChild setObject:newCommentsCount forKey:@"newCommentsCount"];
+                
+                
                 
                 //add all images of this post
                 FMResultSet *rsPostImage;
@@ -212,8 +214,6 @@ seen;
                     NSNumber *key = [[dict allKeys] lastObject];
                     NSNumber *postIdNum = [[[dict objectForKey:key] objectForKey:@"post"] valueForKey:@"post_id"];
                     
-                    DDLogVerbose(@"postId:%d key:%d",[postIdNum intValue],[postId intValue]);
-                    
                     if([postId intValue] == [postIdNum intValue])
                     {
                         [mutArr removeObject:dict];
@@ -233,8 +233,6 @@ seen;
                 
                 if([seenPost intValue] == 0)
                 {
-                    
-                    DDLogVerbose(@"%@",dict);
                     [mutArr removeObject:dict];
                     [mutArr insertObject:dict atIndex:0];
                 }
@@ -349,6 +347,42 @@ seen;
     }];
     
     return YES;
+}
+
+- (BOOL)updatePostAsSeen:(NSNumber *)clientPostId serverPostId:(NSNumber *)serverPostId
+{
+    __block BOOL ok = YES;
+    
+    myDatabase = [Database sharedMyDbManager];
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+
+        //update this post as seen
+        NSNumber *wasSeen = [NSNumber numberWithBool:YES];
+
+        BOOL postSeen = [db executeUpdate:@"update post set seen = ? where client_post_id = ?", wasSeen,clientPostId];
+        if(!postSeen)
+        {
+            ok = NO;
+            *rollback = YES;
+            return;
+        }
+        
+        //set status = 2 of this post from comment noti
+        BOOL rmNoti = [db executeUpdate:@"update comment_noti set status = ? where post_id = ?",[NSNumber numberWithInt:2],serverPostId];
+        
+        if(!rmNoti)
+        {
+            ok = NO;
+            *rollback = YES;
+            return;
+        }
+    }];
+    
+    Synchronize *sync = [Synchronize sharedManager];
+    
+    [sync uploadCommentNotiAlreadyReadFromSelf:NO];
+    
+    return ok;
 }
 
 @end

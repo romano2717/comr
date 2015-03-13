@@ -53,7 +53,7 @@
         [MBProgressHUD showHUDAddedTo:self.view animated:YES];
         
         [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-            db.traceExecution = YES;
+
             //get user device token
             FMResultSet *rsToken = [db executeQuery:@"select device_token from device_token"];
             NSString *deviceToken;

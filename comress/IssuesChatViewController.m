@@ -21,6 +21,8 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
+    myDatabase = [Database sharedMyDbManager];
+    
     user = [[Users alloc] init];
     comment = [[Comment alloc] init];
     post = [[Post alloc] init];
@@ -35,30 +37,8 @@
     self.messageData.messages = [[NSMutableArray alloc] init];
     self.showLoadEarlierMessagesHeader = YES;
 
-    myDatabase = [Database sharedMyDbManager];
-    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-        //update this post as seen
-        NSNumber *seen = [NSNumber numberWithBool:YES];
-        NSNumber *thisPostId = [NSNumber numberWithInt:postId];
-        BOOL postSeen = [db executeUpdate:@"update post set seen = ? where client_post_id = ?", seen,thisPostId];
-        if(!postSeen)
-        {
-            *rollback = YES;
-            return;
-        }
-        
-        //remove this post from comment noti
-        BOOL rmNoti = [db executeUpdate:@"delete from comment_noti where post_id = ?", [NSNumber numberWithInt:ServerPostId]];
-        
-        if(!rmNoti)
-        {
-            *rollback = YES;
-            return;
-        }
-    }];
-    
-    
-    
+    //update post as seen
+    [post updatePostAsSeen:[NSNumber numberWithInt:postId] serverPostId:[NSNumber numberWithInt:ServerPostId]];
     
     [self fetchComments];
     

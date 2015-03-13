@@ -47,10 +47,9 @@
     //[myDatabase migrateDatabase];
 
     sync = [Synchronize  sharedManager];
+    [sync kickStartSync];
     
     [application setKeepAliveTimeout:ping_interval handler:^{
-        [myDatabase notifyLocallyWithMessage:@"wake up"];
-        
         [self createBackgroundTaskWithSync:YES];
     }];
     
@@ -117,17 +116,17 @@
     switch (netStatus)
     {
         case NotReachable:        {
-            [sync stopSynchronize];
-            break;
+            //[sync stopSynchronize];
+            //break;
         }
             
         case ReachableViaWWAN:        {
-            [sync kickStartSync];
-            break;
+            //[sync kickStartSync];
+            //break;
         }
         case ReachableViaWiFi:        {
-            [sync kickStartSync];
-            break;
+            //[sync kickStartSync];
+            //break;
         }
     }
 }
@@ -143,8 +142,6 @@
         
         if(bgTask == UIBackgroundTaskInvalid)
         {
-            [myDatabase notifyLocallyWithMessage:@"create bg task"];
-            
             bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
                 DDLogVerbose(@"end bg task");
                 [theApplication endBackgroundTask:bgTask];
@@ -154,7 +151,6 @@
         
         if(withSync)
         {
-            [myDatabase notifyLocallyWithMessage:@"create bg sync"];
             [sync kickStartSync];
         }
     }

@@ -24,8 +24,6 @@
 @property (nonatomic, strong) NSTimer *syncKickstartTimerOutgoing;
 @property (nonatomic, strong) NSTimer *syncKickstartTimerIncoming;
 @property (nonatomic) BOOL imageDownloadComplete;
-@property (nonatomic) BOOL stopSync;
-@property (nonatomic) BOOL syncIsRunning;
 @property (nonatomic, strong) NSMutableArray *imagesArr;
 @property (nonatomic) BOOL downloadIsTriggeredBySelf;
 
@@ -46,7 +44,7 @@
 
 - (void)uploadPostStatusChangeFromSelf:(BOOL )thisSelf;
 
-
+- (void)uploadCommentNotiAlreadyReadFromSelf:(BOOL)thisSelf;
 
 //download
 

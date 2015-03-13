@@ -61,7 +61,6 @@ comment_type
     else //comment with image
     {
         [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
-            theDb.traceExecution = YES;
             BOOL qComment2 = [theDb executeUpdate:@"insert into comment (client_post_id, comment, comment_on, comment_by, comment_type) values (?,?,?,?,?)",[NSNumber numberWithInt:[[dict valueForKey:@"client_post_id"] intValue]], @"<image>", [dict valueForKey:@"date"], [dict valueForKey:@"senderId"], [dict valueForKey:@"comment_type"]];
             
             if(!qComment2)

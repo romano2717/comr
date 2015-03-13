@@ -131,9 +131,14 @@
     
     [self fetchPostsWithNewIssuesUp:NO];
     
+    [self updateBadgeCount];
+}
+
+- (void)updateBadgeCount
+{
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
         
-        FMResultSet *rs = [db executeQuery:@"select count(*) as count from comment_noti"];
+        FMResultSet *rs = [db executeQuery:@"select count(*) as count from comment_noti where status = ?",[NSNumber numberWithInt:1]];
         if([rs next])
         {
             int badge = [rs intForColumn:@"count"];
@@ -142,7 +147,7 @@
                 [[self.tabBarController.tabBar.items objectAtIndex:0] setBadgeValue:[NSString stringWithFormat:@"%d",badge]];
             else
                 [[self.tabBarController.tabBar.items objectAtIndex:0] setBadgeValue:0];
-                
+            
         }
         else
             [[self.tabBarController.tabBar.items objectAtIndex:0] setBadgeValue:0];
@@ -307,23 +312,7 @@
         
     }
     
-    //update badge count
-    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-        
-        FMResultSet *rs = [db executeQuery:@"select count(*) as count from comment_noti"];
-        if([rs next])
-        {
-            int badge = [rs intForColumn:@"count"];
-            
-            if(badge > 0)
-                [[self.tabBarController.tabBar.items objectAtIndex:0] setBadgeValue:[NSString stringWithFormat:@"%d",badge]];
-            else
-                [[self.tabBarController.tabBar.items objectAtIndex:0] setBadgeValue:0];
-            
-        }
-        else
-            [[self.tabBarController.tabBar.items objectAtIndex:0] setBadgeValue:0];
-    }];
+    [self updateBadgeCount];
 }
 
 

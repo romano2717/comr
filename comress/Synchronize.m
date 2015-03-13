@@ -10,7 +10,7 @@
 
 @implementation Synchronize
 
-@synthesize syncKickstartTimerOutgoing,syncKickstartTimerIncoming,imagesArr,imageDownloadComplete,downloadIsTriggeredBySelf,stopSync,syncIsRunning;
+@synthesize syncKickstartTimerOutgoing,syncKickstartTimerIncoming,imagesArr,imageDownloadComplete,downloadIsTriggeredBySelf;
 
 -(id)init {
     if (self = [super init]) {
@@ -34,27 +34,18 @@
     //outgoing
     [self uploadPostFromSelf:YES];
     syncKickstartTimerOutgoing = [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(uploadPost) userInfo:nil repeats:YES];
-    stopSync = NO;
-    
-    
+
 //    [self startDownload];
 //    downloadIsTriggeredBySelf = YES;
 //    syncKickstartTimerIncoming = [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(startDownload) userInfo:nil repeats:YES];
 }
 
-- (void)stopSynchronize
-{
-    stopSync = YES;
-    syncIsRunning = NO;
-}
 
 - (void)uploadPost
 {
     if(myDatabase.initializingComplete == NO)
         return;
     
-    syncIsRunning = YES;
-
     [self uploadPostFromSelf:YES];
 }
 
@@ -68,7 +59,7 @@
         [syncKickstartTimerIncoming invalidate]; //init is done, no need for timer. post, comment and image will recurse automatically.
     
     //incoming
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(10 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         
         __block NSDate *jsonDate = [self deserializeJsonDateString:@"/Date(1388505600000+0800)/"];
 
@@ -210,12 +201,6 @@
 
 - (void)uploadPostFromSelf:(BOOL )thisSelf
 {
-    if(syncIsRunning == YES)
-        return;
-        
-    if(stopSync)
-        return;
-    
     if(myDatabase.initializingComplete == NO)
         return;
     
@@ -445,6 +430,8 @@
             {
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     [self uploadPostStatusChangeFromSelf:YES];
+                    
+                    [self uploadCommentNotiAlreadyReadFromSelf:YES];
                 });
             }
             
@@ -454,12 +441,86 @@
             if(thisSelf)
             {
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    [self uploadPostStatusChangeFromSelf:YES];
+                    
+                    
+                    [self uploadCommentNotiAlreadyReadFromSelf:YES];
                 });
             }
         }];
     }];
 }
+
+- (void)uploadCommentNotiAlreadyReadFromSelf:(BOOL)thisSelf
+{
+    NSMutableArray *posts = [[NSMutableArray alloc] init];
+    
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        FMResultSet *commentNotiUp = [db executeQuery:@"select * from comment_noti where status = ? and uploaded = ?",[NSNumber numberWithInt:2],[NSNumber numberWithBool:NO]];
+        
+        while ([commentNotiUp next]) {
+            NSNumber *postId = [NSNumber numberWithInt:[commentNotiUp intForColumn:@"post_id"]];
+            NSNumber *commentId = [NSNumber numberWithInt:[commentNotiUp intForColumn:@"comment_id"]];
+            NSString *userId = [commentNotiUp stringForColumn:@"user_id"];
+            NSNumber *status = [NSNumber numberWithInt:2];
+            
+            NSDictionary *rows = [NSDictionary dictionaryWithObjectsAndKeys:postId,@"PostId",commentId,@"CommentId",userId,@"UserId",status,@"Status", nil];
+            
+            [posts addObject:rows];
+            
+            rows = nil;
+        }
+    }];
+        
+    NSDictionary *params = @{@"commentNotiList":posts};
+    DDLogVerbose(@"comment noti to upload: %@",params);
+    
+    [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_upload_comment_noti] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        
+        NSDictionary *AckCommentNotiObj = (NSDictionary *)responseObject;
+       
+        NSArray *postsAckArray = [AckCommentNotiObj objectForKey:@"AckCommentNotiObj"];
+        
+        for (int i = 0; i < postsAckArray.count; i++) {
+            NSDictionary *ackDict   = (NSDictionary *)[postsAckArray objectAtIndex:i];
+            NSNumber *CommentId     = [NSNumber numberWithInt:[[ackDict valueForKey:@"CommentId"] intValue]];
+            NSNumber *PostId        = [NSNumber numberWithInt:[[ackDict valueForKey:@"PostId"] intValue]];
+            NSString *UserId        = [ackDict valueForKey:@"UserId"];
+            BOOL IsSuccessful       = [[ackDict valueForKey:@"IsSuccessful"] boolValue];
+            
+            if(IsSuccessful)
+            {
+                [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+                    BOOL up = [db executeUpdate:@"update comment_noti set uploaded = ? where post_id = ? and comment_id = ? and user_id = ?",[NSNumber numberWithBool:YES],PostId,CommentId,UserId];
+                    
+                    if(!up)
+                    {
+                        *rollback = YES;
+                        return;
+                    }
+                }];
+            }
+        }
+        
+        if(thisSelf)
+        {
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self uploadPostStatusChangeFromSelf:YES];
+            });
+        }
+        
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+        
+        if(thisSelf)
+        {
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(sync_interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self uploadPostStatusChangeFromSelf:YES];
+            });
+        }
+    }];
+    
+}
+
 
 - (void)uploadImageFromSelf:(BOOL )thisSelf
 {
@@ -472,8 +533,6 @@
     
     //get images to send!
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-        
-        db.traceExecution = YES;
         
         FMResultSet *rs = [db executeQuery:@"select * from post_image where post_image_id is null or post_image_id = ?",[NSNumber numberWithInt:0]];
 
@@ -815,8 +874,6 @@
                     [imgOpts resizeImageAtPath:filePath];
                     
                     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-                        DDLogVerbose(@"j index %d",j);
-                        db.traceExecution = YES;
                         
                         FMResultSet *rsPostImage = [db executeQuery:@"select post_image_id from post_image where post_image_id = ? and (post_image_id is not null or post_image_id > ?)",PostImageId,[NSNumber numberWithInt:0]];
                         DDLogVerbose(@"imageUrl %@",imageURL);
@@ -874,6 +931,13 @@
                             [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadIssuesList" object:nil];
                         });
                     }];
+                    
+                    if(CommentId > 0)//the image was in a form of a comment, so we need to reload our chat view to reflect the image
+                    {
+                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                            [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadChatView" object:nil];
+                        });
+                    }
                 }];
             } // for (int j = 0; j < ImageList.count; j++)
         } // for (int xx = 0; xx < imagesArr.count; xx++)
@@ -1046,7 +1110,7 @@
             NSNumber *Status = [NSNumber numberWithInt:[[dictNoti valueForKey:@"Status"] intValue]];
             
             [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
-                
+                theDb.traceExecution = YES;
                 BOOL qIns = [theDb executeUpdate:@"insert into comment_noti(comment_id, user_id, post_id, status) values(?,?,?,?)",CommentId,UserId,PostId,Status];
                 
                 if(!qIns)

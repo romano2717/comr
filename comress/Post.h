@@ -39,5 +39,6 @@
 
 - (BOOL)updateLastRequestDateWithDate:(NSString *)dateString;
 
+- (BOOL)updatePostAsSeen:(NSNumber *)clientPostId serverPostId:(NSNumber *)serverPostId;
 
 @end

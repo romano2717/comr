@@ -10,9 +10,9 @@
 		4D07178D1AB00D420055191A /* MTBBarcodeScanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D07178C1AB00D420055191A /* MTBBarcodeScanner.m */; };
 		4D0717951AB0108C0055191A /* QrCodeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D0717941AB0108C0055191A /* QrCodeViewController.m */; };
 		4D0717971AB016E00055191A /* crosshair@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D0717961AB016E00055191A /* crosshair@2x.png */; };
-		4D07179B1AB02E710055191A /* comress.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 4D07179A1AB02E710055191A /* comress.sqlite */; };
 		4D0717A11AB1707E0055191A /* BadgeLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D0717A01AB1707E0055191A /* BadgeLabel.m */; };
 		4D0717A41AB199120055191A /* Reachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D0717A31AB199120055191A /* Reachability.m */; };
+		4D0717A81AB286800055191A /* comress.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 4D0717A71AB286800055191A /* comress.sqlite */; };
 		4D0C2F691A7B205A009E5E53 /* LoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D0C2F681A7B205A009E5E53 /* LoginViewController.m */; };
 		4D0C2F831A7B4C6F009E5E53 /* Client.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D0C2F821A7B4C6F009E5E53 /* Client.m */; };
 		4D0C2F861A7B4C7C009E5E53 /* Comment.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D0C2F851A7B4C7C009E5E53 /* Comment.m */; };
@@ -183,11 +183,11 @@
 		4D0717931AB0108C0055191A /* QrCodeViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QrCodeViewController.h; sourceTree = "<group>"; };
 		4D0717941AB0108C0055191A /* QrCodeViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QrCodeViewController.m; sourceTree = "<group>"; };
 		4D0717961AB016E00055191A /* crosshair@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "crosshair@2x.png"; sourceTree = "<group>"; };
-		4D07179A1AB02E710055191A /* comress.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = comress.sqlite; sourceTree = "<group>"; };
 		4D07179F1AB1707E0055191A /* BadgeLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BadgeLabel.h; sourceTree = "<group>"; };
 		4D0717A01AB1707E0055191A /* BadgeLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BadgeLabel.m; sourceTree = "<group>"; };
 		4D0717A21AB199120055191A /* Reachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Reachability.h; sourceTree = "<group>"; };
 		4D0717A31AB199120055191A /* Reachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Reachability.m; sourceTree = "<group>"; };
+		4D0717A71AB286800055191A /* comress.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = comress.sqlite; sourceTree = "<group>"; };
 		4D0C2F671A7B205A009E5E53 /* LoginViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoginViewController.h; sourceTree = "<group>"; };
 		4D0C2F681A7B205A009E5E53 /* LoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LoginViewController.m; sourceTree = "<group>"; };
 		4D0C2F701A7B2960009E5E53 /* ApiCallUrl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ApiCallUrl.h; sourceTree = "<group>"; };
@@ -819,7 +819,7 @@
 		4DA204251A79CF8C00C7E5C7 /* db */ = {
 			isa = PBXGroup;
 			children = (
-				4D07179A1AB02E710055191A /* comress.sqlite */,
+				4D0717A71AB286800055191A /* comress.sqlite */,
 			);
 			name = db;
 			sourceTree = "<group>";
@@ -1272,7 +1272,6 @@
 				4DA207E41A79DA0A00C7E5C7 /* JSQMessagesViewController.xib in Resources */,
 				4D8AC9721AAD91A4008F7652 /* bulb_off@2x.png in Resources */,
 				4DA208041A79DA0A00C7E5C7 /* JSQMessagesTypingIndicatorFooterView.xib in Resources */,
-				4D07179B1AB02E710055191A /* comress.sqlite in Resources */,
 				4D91D5FA1A91927D00A21DBA /* status_bubble.png in Resources */,
 				4D8AC95F1AAD8AE3008F7652 /* crm.png in Resources */,
 				4DA204221A79CF8800C7E5C7 /* btn_small.png in Resources */,
@@ -1297,6 +1296,7 @@
 				4DA207FA1A79DA0A00C7E5C7 /* JSQMessagesCollectionViewCellOutgoing.xib in Resources */,
 				4DAEA6B81A83505E00A6EFBE /* Localizable_full.strings in Resources */,
 				4DAEA6B71A83505E00A6EFBE /* Localizable.strings in Resources */,
+				4D0717A81AB286800055191A /* comress.sqlite in Resources */,
 				4D37BDB81A9C2271006B414A /* back.png in Resources */,
 				4D8AC9671AAD8CD4008F7652 /* routine@2x.png in Resources */,
 				4DA207DB1A79DA0A00C7E5C7 /* JSQMessages.strings in Resources */,
@@ -1585,7 +1585,7 @@
 					/Users/diffyromano/Desktop,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "0e703b06-6f8a-405c-8cda-c8673a799c6c";
+				PROVISIONING_PROFILE = "2a15b16c-eb51-4725-8c1e-a611d103a9c4";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -1610,7 +1610,7 @@
 					/Users/diffyromano/Desktop,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "0e703b06-6f8a-405c-8cda-c8673a799c6c";
+				PROVISIONING_PROFILE = "2a15b16c-eb51-4725-8c1e-a611d103a9c4";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

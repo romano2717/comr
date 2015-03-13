@@ -541,7 +541,6 @@
             NSDictionary *useInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithLongLong:lastClientPostId] forKey:@"lastClientPostId"];
             
             [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-                db.traceExecution = YES;
                 
                 FMResultSet *rs = [db executeQuery:@"select block_id from blocks_user where block_id = ?",blockId];
                 

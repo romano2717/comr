@@ -40,6 +40,8 @@ static NSString *api_download_images = @"Messaging/PostImage.svc/GetImages";
 
 static NSString *api_download_comment_noti = @"Messaging/CommentNoti.svc/GetCommentNotis";
 
+static NSString *api_upload_comment_noti = @"Messaging/CommentNoti.svc/UpdateStatusAfterRead";
+
 static NSString *api_update_status_after_read = @"Messaging/CommentNoti.svc/UpdateStatusAfterRead";
 
 static NSString *api_update_post_status = @"Messaging/Post.svc/UpdatePostActionStatus";
